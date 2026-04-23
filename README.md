@@ -6,6 +6,7 @@ This is a simple static landing page for `CineWall`.
 
 - `index.html`: main landing page
 - `styles.css`: all styling
+- `script.js`: reveal and motion effects
 
 ## What To Replace Before Launch
 
@@ -19,7 +20,7 @@ In [index.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/
 
 1. Create a Vercel account.
 2. Import this repo.
-3. Set the project root directory to `website`.
+3. Keep the root directory as `./`.
 4. Deploy.
 
 You can also host this as plain static files anywhere else.
