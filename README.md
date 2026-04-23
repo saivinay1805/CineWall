@@ -12,7 +12,7 @@ This is a simple static landing page for `CineWall`.
 In [index.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/index.html):
 
 - Replace `https://your-download-link.example.com` with your real download URL
-- Replace `https://your-store.lemonsqueezy.com/buy/cinewall-pro` with your real Lemon Squeezy checkout URL
+- Replace `https://your-checkout-link.example.com` with your real Pro checkout URL
 - Update the final price if you change it
 
 ## Easy Deployment
