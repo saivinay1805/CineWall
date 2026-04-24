@@ -3,299 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineWall</title>
-  <meta
-    name="description"
-    content="Liquid glass video wallpapers for macOS with local folders, playlists, timers, and lock screen sync."
-  >
+  <title>CineWall — Video Wallpapers for macOS</title>
+  <meta name="description" content="Turn your local video folders into living macOS wallpapers. Liquid glass UI, playlists, timer rotation, and lock screen sync.">
+  <meta property="og:title" content="CineWall — Video Wallpapers for macOS">
+  <meta property="og:description" content="Your videos. Your desktop. Your lock screen.">
+  <link rel="icon" href="./logo.png" type="image/png">
   <link rel="stylesheet" href="./styles.css">
-  <script src="./script.js" defer></script>
 </head>
 <body>
-  <div class="ambient-field" aria-hidden="true">
-    <div class="orb orb-a"></div>
-    <div class="orb orb-b"></div>
-    <div class="orb orb-c"></div>
-    <div class="light-beam beam-a"></div>
-    <div class="light-beam beam-b"></div>
-  </div>
 
-  <div class="page-shell">
-    <header class="hero-card" data-reveal>
-      <nav class="topbar">
-        <div class="brand-lockup">
-          <div class="brand-mark" aria-hidden="true"></div>
-          <div>
-            <p class="eyebrow">macOS Video Wallpaper App</p>
-            <h1>CineWall</h1>
+  <!-- Nav -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="./logo.png" alt="CineWall">
+        <span>CineWall</span>
+      </a>
+      <div class="nav-links">
+        <a href="#demo" class="hide-mobile">Demo</a>
+        <a href="#features" class="hide-mobile">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq" class="hide-mobile">FAQ</a>
+        <a href="https://github.com/saivinay1805/SimpleVideoWallpaper/releases" class="nav-dl" target="_blank">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg">
+      <video autoplay muted loop playsinline poster="./app-screenshot.jpg">
+        <source src="./app-demo.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="hero-grain"></div>
+    <div class="hero-content hero-centered">
+      <div class="hero-text">
+        <div class="hero-tag">
+          <span class="pulse"></span>
+          Version 2 — Now Available
+        </div>
+        <h1>Your videos.<br><em>Your desktop.<br>Your lock screen.</em></h1>
+        <p class="sub">
+          CineWall turns your local video folders into a living wallpaper system with playlists, timer rotation, lock screen sync, and a liquid glass menu that feels like part of macOS.
+        </p>
+        <div class="hero-btns">
+          <a href="https://github.com/saivinay1805/SimpleVideoWallpaper/releases" class="btn btn-primary" target="_blank">↓ Download Free</a>
+          <a href="#pricing" class="btn btn-ghost">Unlock Pro — $6.99</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Video -->
+  <section class="demo" id="demo">
+    <div class="container">
+      <div class="demo-header" data-reveal>
+        <div class="eyebrow">See It In Action</div>
+        <h2>Liquid glass, in motion.</h2>
+        <p>Watch the control center open sub-menus, switch playlists, and manage your wallpaper library.</p>
+      </div>
+      <div class="demo-video-wrap" data-reveal>
+        <video controls playsinline preload="metadata" poster="./app-screenshot.jpg">
+          <source src="./app-demo.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <hr class="glow-divider">
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Features</div>
+        <h2>Built around your media, not someone else's catalog.</h2>
+        <p>No cloud library. No subscriptions. No accounts. Just your videos.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feat" data-reveal>
+          <span class="feat-icon">📁</span>
+          <h3>Local Folder Library</h3>
+          <p>Point CineWall at any folder on your Mac or external drive. Your video collection becomes a reusable wallpaper library — no uploads required.</p>
+        </div>
+        <div class="feat" data-reveal>
+          <span class="feat-icon">🎬</span>
+          <h3>Playlists & Timer Rotation</h3>
+          <p>Create mood-based playlists, rotate wallpapers on a timer, or shuffle your entire library. Build the exact vibe you want.</p>
+        </div>
+        <div class="feat" data-reveal>
+          <span class="feat-icon">🔒</span>
+          <h3>Lock Screen Sync</h3>
+          <p>Your desktop wallpaper extends to your macOS lock screen. Fast and compatible sync modes — a feature most apps skip entirely.</p>
+        </div>
+        <div class="feat" data-reveal>
+          <span class="feat-icon">💎</span>
+          <h3>Liquid Glass UI</h3>
+          <p>A native-feeling glass control center instead of a generic settings panel. Every interaction feels like part of macOS itself.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="glow-divider">
+
+  <!-- V1 vs V2 -->
+  <section class="section" id="whats-new">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Evolution</div>
+        <h2>From V1 to V2.</h2>
+        <p>Drag the slider to see the transformation.</p>
+      </div>
+      <div class="compare-wrap" data-reveal>
+        <div class="compare-slider" id="compareSlider">
+          <div class="compare-side compare-old">
+            <img src="./v1-screenshot.jpg" alt="CineWall V1" draggable="false">
+            <div class="compare-label compare-label-old">V1</div>
+          </div>
+          <div class="compare-side compare-new">
+            <img src="./app-screenshot.jpg" alt="CineWall V2" draggable="false">
+            <div class="compare-label compare-label-new">V2</div>
+          </div>
+          <div class="compare-handle" id="compareHandle">
+            <div class="compare-handle-line"></div>
+            <div class="compare-handle-grip">
+              <span>‹</span><span>›</span>
+            </div>
+            <div class="compare-handle-line"></div>
           </div>
         </div>
-        <div class="topbar-actions">
-          <a class="ghost-button" href="#features">Features</a>
-          <a class="ghost-button" href="#pricing">Pricing</a>
-          <a class="ghost-button" href="#faq">FAQ</a>
+      </div>
+    </div>
+  </section>
+
+  <hr class="glow-divider">
+
+  <!-- Pricing -->
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">Pricing</div>
+        <h2>Start free. Unlock once.</h2>
+        <p>No subscriptions. No accounts. No tracking.</p>
+      </div>
+      <div class="price-grid">
+        <div class="price-card" data-reveal>
+          <p class="price-label">Free</p>
+          <h3>$0</h3>
+          <p class="price-sub">Free forever</p>
+          <ul>
+            <li>Single video playback</li>
+            <li>Folder-based local library</li>
+            <li>Core playback controls</li>
+            <li>Desktop wallpaper setup</li>
+            <li>GIF wallpaper support</li>
+            <li>7-day Pro trial included</li>
+          </ul>
+          <a href="https://github.com/saivinay1805/SimpleVideoWallpaper/releases" class="btn btn-ghost btn-wide btn-sm" target="_blank">Download Free</a>
         </div>
-      </nav>
-
-      <section class="hero-grid">
-        <div class="hero-copy">
-          <p class="kicker">Local videos. Liquid UI. Lock screen support.</p>
-          <h2>Bring your own wallpaper library to life on macOS.</h2>
-          <p class="lead">
-            CineWall turns your own folders into a fluid wallpaper setup with playlists,
-            timer rotation, lock screen sync, and a menu that feels like part of the desktop
-            instead of a boring utility app.
-          </p>
-
-          <div class="hero-actions">
-            <a class="primary-button" href="https://your-download-link.example.com">
-              Download Free
-            </a>
-            <a class="secondary-button" href="https://your-checkout-link.example.com">
-              Unlock Pro
-            </a>
-          </div>
-
-          <div class="proof-strip">
-            <span>Version 2 release</span>
-            <span>One-time Pro unlock</span>
-            <span>Local-first workflow</span>
-          </div>
-
-          <div class="value-rail">
-            <article class="value-pill" data-reveal>
-              <strong>Folder-driven</strong>
-              <small>Use your own video collection without a cloud catalog.</small>
-            </article>
-            <article class="value-pill" data-reveal>
-              <strong>Lock screen sync</strong>
-              <small>Carry the same mood from desktop to lock screen.</small>
-            </article>
-            <article class="value-pill" data-reveal>
-              <strong>Glass-native controls</strong>
-              <small>Playlists, timers, and smart settings in one liquid menu.</small>
-            </article>
-          </div>
+        <div class="price-card featured" data-reveal>
+          <div class="price-badge">Recommended</div>
+          <p class="price-label">Pro</p>
+          <h3>$6.99</h3>
+          <p class="price-sub">One-time purchase · Lifetime</p>
+          <ul>
+            <li>Everything in Free</li>
+            <li>Playlists & favorites workflow</li>
+            <li>Timer rotation & shuffle</li>
+            <li>Lock screen sync</li>
+            <li>Smart pause & battery saver</li>
+            <li>Focus-aware playback</li>
+            <li>All future Pro updates</li>
+          </ul>
+          <a href="https://your-checkout-link.example.com" class="btn btn-primary btn-wide btn-sm" id="unlock-pro-btn">Unlock Pro — $6.99</a>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="hero-preview" data-parallax>
-          <div class="preview-panel preview-tall">
-            <div class="preview-ripple preview-ripple-a"></div>
-            <div class="preview-ripple preview-ripple-b"></div>
-            <div class="preview-header">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+  <hr class="glow-divider">
 
-            <div class="preview-chip">Liquid glass menu</div>
-
-            <div class="preview-player">
-              <div class="preview-art">
-                <div class="art-sheen"></div>
-                <div class="art-badge">Now Playing</div>
-              </div>
-              <div class="preview-controls">
-                <span></span>
-                <span class="is-active"></span>
-                <span></span>
-              </div>
-            </div>
-
-            <div class="preview-card wide">
-              <div>
-                <strong>Display <em>PRO</em></strong>
-                <small>Fill • Timer • Smooth rotation</small>
-              </div>
-              <b>›</b>
-            </div>
-
-            <div class="preview-row">
-              <div class="preview-card">
-                <strong>Playlists <em>PRO</em></strong>
-                <small>Favorites • Filters</small>
-              </div>
-              <div class="preview-card">
-                <strong>Library <em>PRO</em></strong>
-                <small>Folders • Bulk add</small>
-              </div>
-            </div>
-
-            <div class="preview-card wide">
-              <div>
-                <strong>Settings</strong>
-                <small>Smart pause • Lock sync</small>
-              </div>
-              <b>›</b>
-            </div>
-
-            <div class="preview-footer">
-              <div class="preview-footer-card">Bring Here</div>
-              <div class="preview-footer-card is-glow">Pro</div>
-              <div class="preview-footer-card">Quit</div>
-            </div>
-          </div>
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div class="eyebrow">FAQ</div>
+        <h2>Questions answered.</h2>
+      </div>
+      <div class="faq-list" data-reveal>
+        <div class="faq-item">
+          <button class="faq-q"><span>Is CineWall on the Mac App Store?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">No. CineWall is distributed directly because some advanced features like lock screen sync require system-level access that isn't available through the App Store sandbox.</div></div>
         </div>
-      </section>
-    </header>
-
-    <main>
-      <section class="section-block" id="features">
-        <div class="section-heading" data-reveal>
-          <p class="eyebrow">Why It Feels Different</p>
-          <h3>CineWall is built around your own media, not someone else’s wallpaper feed.</h3>
+        <div class="faq-item">
+          <button class="faq-q"><span>Do I need a subscription?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">No. Pro is a one-time $6.99 unlock. The free version stays available forever. No accounts, no tracking, no recurring charges.</div></div>
         </div>
-
-        <div class="feature-grid">
-          <article class="feature-card" data-reveal>
-            <p class="feature-tag">Local First</p>
-            <h4>Choose folders, not just one uploaded file.</h4>
-            <p>
-              Point CineWall at a folder and turn it into a reusable wallpaper library
-              without changing how you already organize your collection.
-            </p>
-          </article>
-
-          <article class="feature-card" data-reveal>
-            <p class="feature-tag">Power Workflow</p>
-            <h4>Playlists, favorites, and timer control in one place.</h4>
-            <p>
-              Build mood-based sets, rotate them automatically, or keep one favorite clip
-              running when you want a cleaner setup.
-            </p>
-          </article>
-
-          <article class="feature-card" data-reveal>
-            <p class="feature-tag">Rare Support</p>
-            <h4>Lock screen sync is part of the design, not an afterthought.</h4>
-            <p>
-              Fast and compatible sync modes help extend your current wallpaper mood
-              beyond the desktop itself.
-            </p>
-          </article>
-
-          <article class="feature-card" data-reveal>
-            <p class="feature-tag">Liquid UI</p>
-            <h4>A native-feeling glass menu instead of a generic settings panel.</h4>
-            <p>
-              The controls feel closer to a living desktop layer than a plain utility app,
-              which makes the whole thing more fun to use every day.
-            </p>
-          </article>
+        <div class="faq-item">
+          <button class="faq-q"><span>What makes Pro worth it?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">Pro unlocks playlists, timer rotation, lock screen sync, smart pause, battery-aware playback, and focus rules. It also includes all future Pro updates.</div></div>
         </div>
-      </section>
-
-      <section class="section-block spotlight-section">
-        <div class="section-heading" data-reveal>
-          <p class="eyebrow">What Pro Adds</p>
-          <h3>The advanced workflow lives behind one clean unlock, not a subscription.</h3>
+        <div class="faq-item">
+          <button class="faq-q"><span>Does CineWall include wallpapers?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">CineWall is built around your own video collection. Point it at any folder of MP4, MOV, M4V, or GIF files and they become your wallpaper library.</div></div>
         </div>
-
-        <div class="spotlight-grid">
-          <article class="spotlight-card" data-reveal>
-            <div class="spotlight-line"></div>
-            <strong>Playlists and favorites</strong>
-            <p>Sort your library into reusable sets and switch modes without rebuilding folders every time.</p>
-          </article>
-          <article class="spotlight-card" data-reveal>
-            <div class="spotlight-line"></div>
-            <strong>Timer rotation</strong>
-            <p>Use presets or custom timing to rotate clips automatically while keeping the menu flow simple.</p>
-          </article>
-          <article class="spotlight-card" data-reveal>
-            <div class="spotlight-line"></div>
-            <strong>Smart controls</strong>
-            <p>Focus-aware pause, battery behavior, and lock screen sync make CineWall feel like a complete setup.</p>
-          </article>
+        <div class="faq-item">
+          <button class="faq-q"><span>Is there a free trial?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">Yes! CineWall includes a 7-day Pro trial so you can test every feature before deciding. No credit card required.</div></div>
         </div>
-      </section>
-
-      <section class="section-block" id="pricing">
-        <div class="section-heading" data-reveal>
-          <p class="eyebrow">Pricing</p>
-          <h3>Start free, then unlock the full workflow once.</h3>
+        <div class="faq-item">
+          <button class="faq-q"><span>What macOS versions are supported?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">CineWall runs on macOS with desktop wallpaper support. Lock screen sync works on both older and newer macOS versions — unlike some apps that require macOS 26+.</div></div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="pricing-grid">
-          <article class="pricing-card" data-reveal>
-            <p class="pricing-tier">Free</p>
-            <h4>Try the core desktop setup.</h4>
-            <ul>
-              <li>Single video playback</li>
-              <li>Folder-based local library</li>
-              <li>Core playback controls</li>
-              <li>Desktop wallpaper setup</li>
-            </ul>
-          </article>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/saivinay1805/SimpleVideoWallpaper" target="_blank">GitHub</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <p>CineWall — macOS video wallpaper app. Built with care. © 2026</p>
+    </div>
+  </footer>
 
-          <article class="pricing-card featured" data-reveal>
-            <div class="featured-pill">Recommended</div>
-            <p class="pricing-tier">Pro</p>
-            <h4>$7.99 launch price</h4>
-            <ul>
-              <li>7-day Pro trial</li>
-              <li>Playlists and favorites workflow</li>
-              <li>Timer rotation and advanced controls</li>
-              <li>Lock screen sync support</li>
-              <li>Smart settings and future Pro updates</li>
-            </ul>
-            <a class="primary-button wide-button" href="https://your-checkout-link.example.com">
-              Unlock Pro
-            </a>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-block">
-        <div class="section-heading" data-reveal>
-          <p class="eyebrow">Launch Setup</p>
-          <h3>Keep the first release simple and trustworthy.</h3>
-        </div>
-
-        <div class="launch-grid">
-          <article class="mini-card" data-reveal>
-            <strong>1. Download</strong>
-            <p>Host the app zip or dmg and point the free download button to it.</p>
-          </article>
-          <article class="mini-card" data-reveal>
-            <strong>2. Checkout</strong>
-            <p>Use a hosted checkout page for the one-time Pro unlock instead of building your own cart.</p>
-          </article>
-          <article class="mini-card" data-reveal>
-            <strong>3. Activation</strong>
-            <p>Let the app handle the trial and license key activation after the customer completes checkout.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-block" id="faq">
-        <div class="section-heading" data-reveal>
-          <p class="eyebrow">FAQ</p>
-          <h3>The quick questions people ask before they install.</h3>
-        </div>
-
-        <div class="faq-list">
-          <article class="faq-card" data-reveal>
-            <strong>Is this on the Mac App Store?</strong>
-            <p>
-              No. CineWall is distributed directly because some advanced wallpaper and lock screen
-              workflows are better handled outside the App Store.
-            </p>
-          </article>
-          <article class="faq-card" data-reveal>
-            <strong>Do I need a subscription?</strong>
-            <p>No. Pro is a one-time unlock. Free stays available.</p>
-          </article>
-          <article class="faq-card" data-reveal>
-            <strong>What makes Pro worth it?</strong>
-            <p>
-              Pro unlocks the advanced workflow: playlists, timer-based rotation, lock screen sync,
-              and smarter playback controls.
-            </p>
-          </article>
-        </div>
-      </section>
-    </main>
-  </div>
+  <script src="./script.js"></script>
 </body>
 </html>
