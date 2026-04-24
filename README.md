@@ -8,6 +8,8 @@ This is a simple static landing page for `CineWall`.
 - `styles.css`: all styling
 - `script.js`: reveal and motion effects
 - `api/activate-license.js`: server endpoint for Pro key activation
+- `appcast.xml`: Sparkle update feed for the macOS app
+- `updates/`: signed Sparkle archives and delta files
 
 ## What To Replace Before Launch
 
@@ -40,3 +42,14 @@ Optional Vercel environment variables:
 If you do not set either one, the endpoint defaults to checking for:
 
 - `CineWall Pro Lifetime`
+
+## Sparkle Hosting
+
+The app is configured to look for updates at:
+
+- `https://cinewall-site.vercel.app/appcast.xml`
+
+When you prepare a new release, commit and push:
+
+- `appcast.xml`
+- everything generated inside `updates/`

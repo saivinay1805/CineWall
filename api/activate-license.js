@@ -60,7 +60,16 @@ module.exports = async (req, res) => {
     });
   }
 
-  const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+  let body = {};
+  try {
+    body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+  } catch {
+    return sendJson(res, 400, {
+      success: false,
+      message: "Invalid JSON payload."
+    });
+  }
+
   const licenseKey = String(body.license_key || "").trim();
   const instanceName = String(body.device_name || "Mac").trim() || "Mac";
   const productSlug = String(body.product || "").trim();
