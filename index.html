@@ -64,7 +64,7 @@
         <p>Watch the control center open sub-menus, switch playlists, and manage your wallpaper library.</p>
       </div>
       <div class="demo-video-wrap" data-reveal>
-        <video controls playsinline preload="metadata" poster="./app-screenshot.jpg">
+        <video controls playsinline preload="metadata">
           <source src="./app-demo.mp4" type="video/mp4">
         </video>
       </div>
@@ -111,27 +111,29 @@
   <!-- V1 vs V2 -->
   <section class="section" id="whats-new">
     <div class="container">
-      <div class="section-head" data-reveal>
-        <div class="eyebrow">Evolution</div>
-        <h2>From V1 to V2.</h2>
-        <p>Drag the slider to see the transformation.</p>
-      </div>
-      <div class="compare-wrap" data-reveal>
-        <div class="compare-slider" id="compareSlider">
-          <div class="compare-side compare-old">
-            <img src="./v1-screenshot.jpg" alt="CineWall V1" draggable="false">
-            <div class="compare-label compare-label-old">V1</div>
-          </div>
-          <div class="compare-side compare-new">
-            <img src="./app-screenshot.jpg" alt="CineWall V2" draggable="false">
-            <div class="compare-label compare-label-new">V2</div>
-          </div>
-          <div class="compare-handle" id="compareHandle">
-            <div class="compare-handle-line"></div>
-            <div class="compare-handle-grip">
-              <span>‹</span><span>›</span>
+      <div class="evo-layout">
+        <div class="evo-text" data-reveal>
+          <div class="eyebrow">Evolution</div>
+          <h2>From V1<br>to V2.</h2>
+          <p>Drag the slider to see the transformation. A complete redesign — from a basic list to a native liquid glass control center.</p>
+        </div>
+        <div class="compare-wrap" data-reveal>
+          <div class="compare-slider" id="compareSlider">
+            <div class="compare-side compare-old">
+              <img src="./v1-screenshot.jpg" alt="CineWall V1" draggable="false">
+              <div class="compare-label compare-label-old">V1</div>
             </div>
-            <div class="compare-handle-line"></div>
+            <div class="compare-side compare-new">
+              <img src="./app-screenshot.jpg" alt="CineWall V2" draggable="false">
+              <div class="compare-label compare-label-new">V2</div>
+            </div>
+            <div class="compare-handle" id="compareHandle">
+              <div class="compare-handle-line"></div>
+              <div class="compare-handle-grip">
+                <span>‹</span><span>›</span>
+              </div>
+              <div class="compare-handle-line"></div>
+            </div>
           </div>
         </div>
       </div>
