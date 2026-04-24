@@ -7,6 +7,7 @@ This is a simple static landing page for `CineWall`.
 - `index.html`: main landing page
 - `styles.css`: all styling
 - `script.js`: reveal and motion effects
+- `api/activate-license.js`: server endpoint for Pro key activation
 
 ## What To Replace Before Launch
 
@@ -24,3 +25,18 @@ In [index.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/
 4. Deploy.
 
 You can also host this as plain static files anywhere else.
+
+## Activation Endpoint
+
+The website repo now includes a Vercel serverless function at:
+
+- `/api/activate-license`
+
+Optional Vercel environment variables:
+
+- `LEMON_PRODUCT_NAME`
+- `LEMON_PRODUCT_ID`
+
+If you do not set either one, the endpoint defaults to checking for:
+
+- `CineWall Pro Lifetime`
