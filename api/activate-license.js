@@ -91,19 +91,30 @@ module.exports = async (req, res) => {
   const guardConfig = normalizeProductGuard();
 
   try {
+    const validate = await callLicenseApi("/validate", {
+      license_key: licenseKey
+    });
+
+    if (!validate.ok || !validate.data?.valid) {
+      return sendJson(res, 200, {
+        success: false,
+        message: validate.data?.error || "That license key is invalid or could not be verified."
+      });
+    }
+
+    if (!isExpectedProduct(validate.data.meta, guardConfig)) {
+      return sendJson(res, 403, {
+        success: false,
+        message: "This license key does not belong to CineWall Pro."
+      });
+    }
+
     const activation = await callLicenseApi("/activate", {
       license_key: licenseKey,
       instance_name: instanceName
     });
 
     if (activation.ok && activation.data?.activated) {
-      if (!isExpectedProduct(activation.data.meta, guardConfig)) {
-        return sendJson(res, 403, {
-          success: false,
-          message: "This license key does not belong to CineWall Pro."
-        });
-      }
-
       return sendJson(res, 200, {
         success: true,
         message: "License activated.",
@@ -112,26 +123,9 @@ module.exports = async (req, res) => {
       });
     }
 
-    const validate = await callLicenseApi("/validate", {
-      license_key: licenseKey
-    });
-
-    if (validate.ok && validate.data?.valid) {
-      if (!isExpectedProduct(validate.data.meta, guardConfig)) {
-        return sendJson(res, 403, {
-          success: false,
-          message: "This license key does not belong to CineWall Pro."
-        });
-      }
-    }
-
-    const message = activation.data?.error
-      || validate.data?.error
-      || "That license key could not be activated.";
-
     return sendJson(res, 200, {
       success: false,
-      message
+      message: activation.data?.error || "That license key could not be activated."
     });
   } catch (error) {
     return sendJson(res, 500, {
