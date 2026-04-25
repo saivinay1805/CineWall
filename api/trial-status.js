@@ -1,81 +1,13 @@
-const crypto = require("crypto");
-
 const TRIAL_LENGTH_SECONDS = 7 * 24 * 60 * 60;
 const TRIAL_RETENTION_SECONDS = 365 * 24 * 60 * 60;
-const KV_REST_API_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
-const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
-
-function sendJson(res, status, body) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.end(JSON.stringify(body));
-}
-
-function isKvConfigured() {
-  return KV_REST_API_URL && KV_REST_API_TOKEN;
-}
-
-async function kvPipeline(commands) {
-  const response = await fetch(`${KV_REST_API_URL}/pipeline`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${KV_REST_API_TOKEN}`,
-      Accept: "application/json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(commands)
-  });
-
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !Array.isArray(data)) {
-    throw new Error("The trial store returned an invalid response.");
-  }
-
-  return data;
-}
-
-async function kvGet(key) {
-  const results = await kvPipeline([["GET", key]]);
-  const record = results[0];
-  if (!record || record.error) {
-    if (record?.error) {
-      throw new Error(record.error);
-    }
-    return null;
-  }
-
-  if (!record.result) return null;
-
-  try {
-    return JSON.parse(record.result);
-  } catch {
-    throw new Error("Stored trial data is invalid.");
-  }
-}
-
-async function kvCreateTrial(key, record) {
-  const results = await kvPipeline([[
-    "SET",
-    key,
-    JSON.stringify(record),
-    "EX",
-    String(TRIAL_RETENTION_SECONDS),
-    "NX"
-  ]]);
-  const outcome = results[0];
-  if (!outcome || outcome.error) {
-    throw new Error(outcome?.error || "The trial could not be created.");
-  }
-  return outcome.result === "OK";
-}
-
-function buildTrialKey(installId) {
-  const digest = crypto.createHash("sha256").update(installId).digest("hex");
-  return `cinewall:trial:${digest}`;
-}
+const {
+  buildTrialKey,
+  isKvConfigured,
+  kvGet,
+  kvSetJson,
+  normalizeClientMeta,
+  sendJson
+} = require("./_analytics");
 
 function normalizeTrialRecord(record) {
   if (!record?.startedAt || !record?.expiresAt) return null;
@@ -83,7 +15,22 @@ function normalizeTrialRecord(record) {
     startedAt: String(record.startedAt),
     expiresAt: String(record.expiresAt),
     deviceName: String(record.deviceName || "Mac"),
+    osVersion: String(record.osVersion || "Unknown"),
+    architecture: String(record.architecture || "Unknown"),
+    appVersion: String(record.appVersion || "Unknown"),
+    installHash: String(record.installHash || ""),
     version: Number(record.version || 1)
+  };
+}
+
+function enrichTrialRecord(record, clientMeta) {
+  return {
+    ...record,
+    deviceName: record.deviceName || clientMeta.deviceName,
+    osVersion: record.osVersion || clientMeta.osVersion,
+    architecture: record.architecture || clientMeta.architecture,
+    appVersion: record.appVersion || clientMeta.appVersion,
+    installHash: record.installHash || clientMeta.installHash
   };
 }
 
@@ -143,7 +90,7 @@ module.exports = async (req, res) => {
   }
 
   const installId = String(body.install_id || "").trim();
-  const deviceName = String(body.device_name || "Mac").trim() || "Mac";
+  const clientMeta = normalizeClientMeta(body);
   const action = String(body.action || "status").trim().toLowerCase();
 
   if (!installId) {
@@ -168,22 +115,30 @@ module.exports = async (req, res) => {
     if (!record && action === "start") {
       const startedAt = new Date();
       const expiresAt = new Date(startedAt.getTime() + TRIAL_LENGTH_SECONDS * 1000);
-      const created = await kvCreateTrial(key, {
+      const freshRecord = {
         version: 1,
         startedAt: startedAt.toISOString(),
         expiresAt: expiresAt.toISOString(),
-        deviceName
-      });
+        deviceName: clientMeta.deviceName,
+        osVersion: clientMeta.osVersion,
+        architecture: clientMeta.architecture,
+        appVersion: clientMeta.appVersion,
+        installHash: clientMeta.installHash
+      };
+      const created = await kvSetJson(key, freshRecord, TRIAL_RETENTION_SECONDS, true);
 
       if (created) {
-        record = {
-          version: 1,
-          startedAt: startedAt.toISOString(),
-          expiresAt: expiresAt.toISOString(),
-          deviceName
-        };
+        record = freshRecord;
       } else {
         record = await kvGet(key);
+      }
+    }
+
+    if (record) {
+      const enrichedRecord = enrichTrialRecord(record, clientMeta);
+      if (JSON.stringify(enrichedRecord) !== JSON.stringify(record)) {
+        await kvSetJson(key, enrichedRecord, TRIAL_RETENTION_SECONDS, false);
+        record = enrichedRecord;
       }
     }
 

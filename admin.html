@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineWall Admin</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="./logo.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="admin-page">
+  <main class="admin-shell">
+    <section class="admin-hero">
+      <div class="admin-brand">
+        <img src="./logo.png" alt="CineWall">
+        <div>
+          <p class="admin-kicker">Private Dashboard</p>
+          <h1>CineWall Admin</h1>
+        </div>
+      </div>
+      <p class="admin-sub">Downloads, trial starts, active trials, activations, and platform breakdowns in one place.</p>
+    </section>
+
+    <section class="admin-auth" id="admin-auth">
+      <div class="admin-panel">
+        <label class="admin-label" for="admin-token">Admin token</label>
+        <div class="admin-auth-row">
+          <input id="admin-token" class="admin-input" type="password" placeholder="Enter your dashboard token">
+          <button id="admin-login" class="btn btn-primary">Open Dashboard</button>
+        </div>
+        <p class="admin-helper" id="admin-auth-message">This page stays private by requiring your token before the API responds.</p>
+      </div>
+    </section>
+
+    <section class="admin-content hidden" id="admin-content">
+      <div class="admin-topline">
+        <p id="admin-generated">Waiting for stats...</p>
+        <button id="admin-refresh" class="btn btn-ghost btn-sm">Refresh</button>
+      </div>
+
+      <section class="admin-card-grid" id="admin-summary"></section>
+
+      <section class="admin-grid-two">
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h2>Trial Breakdown</h2>
+            <p>Server-backed trial starts by platform.</p>
+          </div>
+          <div class="admin-chart-block">
+            <div>
+              <h3>macOS Version</h3>
+              <div id="trial-os-chart" class="admin-chart-list"></div>
+            </div>
+            <div>
+              <h3>CPU Type</h3>
+              <div id="trial-arch-chart" class="admin-pill-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h2>Activation Breakdown</h2>
+            <p>Successful Pro unlocks by platform.</p>
+          </div>
+          <div class="admin-chart-block">
+            <div>
+              <h3>macOS Version</h3>
+              <div id="activation-os-chart" class="admin-chart-list"></div>
+            </div>
+            <div>
+              <h3>CPU Type</h3>
+              <div id="activation-arch-chart" class="admin-pill-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-grid-two">
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h2>Recent Trial Starts</h2>
+            <p>Latest installs that started the 7-day Pro trial.</p>
+          </div>
+          <div id="recent-trials" class="admin-table"></div>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-head">
+            <h2>Recent Activations</h2>
+            <p>Latest successful Pro unlocks.</p>
+          </div>
+          <div id="recent-activations" class="admin-table"></div>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-head">
+          <h2>GitHub Releases</h2>
+          <p>Download totals from the public CineWall release assets.</p>
+        </div>
+        <div id="github-releases" class="admin-table"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="./admin.js"></script>
+</body>
+</html>

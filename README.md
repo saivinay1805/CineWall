@@ -8,6 +8,7 @@ This is a simple static landing page for `CineWall`.
 - `styles.css`: all styling
 - `script.js`: reveal and motion effects
 - `api/activate-license.js`: server endpoint for Pro key activation
+- `api/admin-stats.js`: private dashboard stats endpoint
 - `api/trial-status.js`: server endpoint for the server-backed 7-day trial
 - `appcast.xml`: Sparkle update feed for the macOS app
 - `updates/`: signed Sparkle archives and delta files
@@ -35,6 +36,7 @@ The website repo now includes a Vercel serverless function at:
 
 - `/api/activate-license`
 - `/api/trial-status`
+- `/api/admin-stats`
 
 Optional Vercel environment variables:
 
@@ -63,6 +65,33 @@ Required Vercel environment variables for the trial endpoint:
 - `KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_TOKEN`
 
 If those variables are missing, `/api/trial-status` returns a clear configuration error instead of silently falling back.
+
+The app now also sends:
+
+- `os_version`
+- `architecture`
+- `app_version`
+
+That metadata is used for the admin dashboard breakdowns.
+
+## Private Admin Dashboard
+
+The website repo now includes a private dashboard at:
+
+- `/admin.html`
+
+Required Vercel environment variable:
+
+- `ADMIN_TOKEN`
+
+Open the page, enter that token, and the dashboard will load:
+
+- GitHub release downloads
+- total trial starts
+- active trials
+- successful license activations
+- breakdowns by macOS version
+- breakdowns by Intel vs Apple Silicon
 
 ## Sparkle Hosting
 

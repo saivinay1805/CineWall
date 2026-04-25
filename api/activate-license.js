@@ -1,14 +1,11 @@
 const LICENSE_API_BASE = "https://api.lemonsqueezy.com/v1/licenses";
 const DEFAULT_PRODUCT_NAME = "CineWall Pro Lifetime";
-
-function sendJson(res, status, body) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.end(JSON.stringify(body));
-}
+const {
+  isKvConfigured,
+  logEvent,
+  normalizeClientMeta,
+  sendJson
+} = require("./_analytics");
 
 async function callLicenseApi(path, params) {
   const response = await fetch(`${LICENSE_API_BASE}${path}`, {
@@ -71,7 +68,8 @@ module.exports = async (req, res) => {
   }
 
   const licenseKey = String(body.license_key || "").trim();
-  const instanceName = String(body.device_name || "Mac").trim() || "Mac";
+  const clientMeta = normalizeClientMeta(body);
+  const instanceName = clientMeta.deviceName;
   const productSlug = String(body.product || "").trim();
 
   if (!licenseKey) {
@@ -115,6 +113,23 @@ module.exports = async (req, res) => {
     });
 
     if (activation.ok && activation.data?.activated) {
+      if (isKvConfigured()) {
+        try {
+          await logEvent("activation", {
+            activatedAt: new Date().toISOString(),
+            deviceName: clientMeta.deviceName,
+            osVersion: clientMeta.osVersion,
+            architecture: clientMeta.architecture,
+            appVersion: clientMeta.appVersion,
+            installHash: clientMeta.installHash,
+            productName: activation.data.meta?.product_name ?? null,
+            instanceID: activation.data.instance?.id ?? null
+          });
+        } catch {
+          // Activation should still succeed even if dashboard analytics logging fails.
+        }
+      }
+
       return sendJson(res, 200, {
         success: true,
         message: "License activated.",
