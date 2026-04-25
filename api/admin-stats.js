@@ -1,5 +1,6 @@
 const {
   isKvConfigured,
+  kvGet,
   scanJsonRecords,
   sendJson
 } = require("./_analytics");
@@ -19,6 +20,17 @@ function parseToken(req) {
 
   const requestURL = new URL(req.url || "/", "https://cinewall-site.vercel.app");
   return String(requestURL.searchParams.get("token") || "").trim();
+}
+
+async function loadTestInstallSet() {
+  if (!isKvConfigured()) return new Set();
+  const record = await kvGet("cinewall:test-installs").catch(() => null);
+  const hashes = Array.isArray(record?.installHashes) ? record.installHashes : [];
+  return new Set(hashes.map((value) => String(value || "").trim()).filter(Boolean));
+}
+
+function isTestRecord(record, testInstalls) {
+  return testInstalls.has(String(record.installHash || "").trim());
 }
 
 function tally(records, key) {
@@ -110,35 +122,47 @@ module.exports = async (req, res) => {
     const github = await fetchGitHubDownloads();
     const trialRecords = isKvConfigured() ? await scanJsonRecords("cinewall:trial:*") : [];
     const activationRecords = isKvConfigured() ? await scanJsonRecords("cinewall:activation:*") : [];
+    const testInstalls = await loadTestInstallSet();
+    const productionTrials = trialRecords.filter((record) => !isTestRecord(record, testInstalls));
+    const productionActivations = activationRecords.filter((record) => !isTestRecord(record, testInstalls));
     const now = Date.now();
-    const activeTrials = trialRecords.filter((record) => new Date(record.expiresAt || 0).getTime() > now);
+    const activeTrials = productionTrials.filter((record) => new Date(record.expiresAt || 0).getTime() > now);
 
     const payload = {
       success: true,
       generatedAt: new Date().toISOString(),
       github,
       trials: {
-        totalStarts: trialRecords.length,
+        totalStarts: productionTrials.length,
         active: activeTrials.length,
-        uniqueInstalls: uniqueInstallCount(trialRecords),
-        byOSVersion: tally(trialRecords, "osVersion"),
-        byArchitecture: tally(trialRecords, "architecture"),
-        recent: recent(trialRecords, "startedAt")
+        uniqueInstalls: uniqueInstallCount(productionTrials),
+        byOSVersion: tally(productionTrials, "osVersion"),
+        byArchitecture: tally(productionTrials, "architecture"),
+        recent: recent(trialRecords, "startedAt").map((record) => ({
+          ...record,
+          isTest: isTestRecord(record, testInstalls)
+        }))
       },
       activations: {
-        totalSuccessfulActivations: activationRecords.length,
-        uniqueInstalls: uniqueInstallCount(activationRecords),
-        byOSVersion: tally(activationRecords, "osVersion"),
-        byArchitecture: tally(activationRecords, "architecture"),
-        recent: recent(activationRecords, "activatedAt")
+        totalSuccessfulActivations: productionActivations.length,
+        uniqueInstalls: uniqueInstallCount(productionActivations),
+        byOSVersion: tally(productionActivations, "osVersion"),
+        byArchitecture: tally(productionActivations, "architecture"),
+        recent: recent(activationRecords, "activatedAt").map((record) => ({
+          ...record,
+          isTest: isTestRecord(record, testInstalls)
+        }))
       },
       conversion: {
-        downloadToTrialRate: github.totalDownloads > 0 ? trialRecords.length / github.totalDownloads : null,
-        trialToActivationRate: trialRecords.length > 0 ? activationRecords.length / trialRecords.length : null
+        downloadToTrialRate: github.totalDownloads > 0 ? productionTrials.length / github.totalDownloads : null,
+        trialToActivationRate: productionTrials.length > 0 ? productionActivations.length / productionTrials.length : null
       },
       notes: {
         kvConfigured: isKvConfigured(),
-        trackingNote: "OS version and CPU breakdowns come from app-side analytics fields shipped with trial starts and successful activations."
+        trackingNote: "OS version and CPU breakdowns come from app-side analytics fields shipped with trial starts and successful activations.",
+        excludedTestInstalls: testInstalls.size,
+        rawTrialStarts: trialRecords.length,
+        rawActivations: activationRecords.length
       }
     };
 
