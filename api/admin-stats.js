@@ -17,9 +17,7 @@ function parseToken(req) {
 
   const customHeader = String(req.headers["x-admin-token"] || "").trim();
   if (customHeader) return customHeader;
-
-  const requestURL = new URL(req.url || "/", "https://cinewall-site.vercel.app");
-  return String(requestURL.searchParams.get("token") || "").trim();
+  return "";
 }
 
 async function loadTestInstallSet() {
