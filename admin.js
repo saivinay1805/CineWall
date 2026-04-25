@@ -101,9 +101,20 @@ function renderTable(targetID, records, columns) {
 
 function renderDashboard(data) {
   document.getElementById("admin-generated").textContent = `Updated ${formatDate(data.generatedAt)}`;
-  adminNote.textContent = data.notes?.excludedTestInstalls
-    ? `Ignoring ${formatNumber(data.notes.excludedTestInstalls)} test install${data.notes.excludedTestInstalls === 1 ? "" : "s"} from conversion stats.`
-    : "Conversion stats are currently using all recorded installs.";
+  const excludedInstalls = Number(data.notes?.excludedTestInstalls || 0);
+  const excludedLegacyRows = Number(data.notes?.excludedLegacyTestRows || 0);
+  if (excludedInstalls || excludedLegacyRows) {
+    const parts = [];
+    if (excludedInstalls) {
+      parts.push(`${formatNumber(excludedInstalls)} marked test install${excludedInstalls === 1 ? "" : "s"}`);
+    }
+    if (excludedLegacyRows) {
+      parts.push(`${formatNumber(excludedLegacyRows)} legacy unknown test row${excludedLegacyRows === 1 ? "" : "s"}`);
+    }
+    adminNote.textContent = `Ignoring ${parts.join(" and ")} from conversion stats.`;
+  } else {
+    adminNote.textContent = "Conversion stats are currently using all recorded installs.";
+  }
   renderSummaryCards(data);
   renderBarList("trial-os-chart", data.trials.byOSVersion);
   renderPills("trial-arch-chart", data.trials.byArchitecture);

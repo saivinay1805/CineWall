@@ -30,7 +30,19 @@ async function loadTestInstallSet() {
 }
 
 function isTestRecord(record, testInstalls) {
-  return testInstalls.has(String(record.installHash || "").trim());
+  const installHash = String(record.installHash || "").trim();
+  if (installHash && testInstalls.has(installHash)) {
+    return true;
+  }
+
+  // Legacy local test rows created before install hashes/platform metadata shipped.
+  const hasLegacyShape =
+    !installHash &&
+    String(record.osVersion || "Unknown") === "Unknown" &&
+    String(record.architecture || "Unknown") === "Unknown" &&
+    String(record.appVersion || "Unknown") === "Unknown";
+
+  return hasLegacyShape;
 }
 
 function tally(records, key) {
@@ -161,6 +173,7 @@ module.exports = async (req, res) => {
         kvConfigured: isKvConfigured(),
         trackingNote: "OS version and CPU breakdowns come from app-side analytics fields shipped with trial starts and successful activations.",
         excludedTestInstalls: testInstalls.size,
+        excludedLegacyTestRows: trialRecords.filter((record) => isTestRecord(record, testInstalls) && !String(record.installHash || "").trim()).length,
         rawTrialStarts: trialRecords.length,
         rawActivations: activationRecords.length
       }
