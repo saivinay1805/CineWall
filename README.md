@@ -4,7 +4,7 @@
 **The Native Video Wallpaper Engine for macOS.**
 
 [![macOS](https://img.shields.io/badge/Platform-macOS-black?logo=apple)](https://www.apple.com/macos)
-[![Release](https://img.shields.io/github/v/release/saivinay1805/CineWall-App?color=blue&label=Latest%20Version)](https://github.com/saivinay1805/CineWall-App/releases/latest)
+[![Release](https://img.shields.io/github/v/release/saivinay1805/CineWall?color=blue&label=Latest%20Version)](https://github.com/saivinay1805/CineWall/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
@@ -66,16 +66,34 @@ It features a stunning **"Liquid Glass" UI** (inspired by macOS Tahoe concepts) 
 
 ---
 
+### 🛠️ Building from Source
+
+Requirements:
+- macOS 13.0 or higher
+- Xcode 15+ with Swift 5.9+
+
+```bash
+# Clone the repository
+git clone https://github.com/saivinay1805/CineWall.git
+cd CineWall
+
+# Open the project in Xcode
+open SimpleVideoWallpaper.xcodeproj
+```
+
+Select the `SimpleVideoWallpaper` target and click **Run** (or `Cmd + R`).
+
+---
+
 ### 🗺️ Roadmap & Known Limitations
-*   **Current:** Supports the main primary display.
-*   **Planned:** Lock Screen support (Currently investigating native APIs to prevent the wallpaper from resetting on lock).
+*   **Current:** Supports the main primary display with Lock Screen video sync (Fast & Compatible modes).
 *   **Planned:** Multi-monitor support (Different wallpapers for different screens).
 
 ---
 
 ### 🤝 Contributing & Feedback
-This project was built to scratch a personal itch, but feedback is welcome!
-If you encounter bugs or have feature requests, please [open an issue](https://github.com/saivinay1805/CineWall-App/issues).
+This project is open source under the MIT License! Contributions and feedback are welcome!
+If you encounter bugs or have feature requests, please [open an issue](https://github.com/saivinay1805/CineWall/issues).
 
 ---
 
