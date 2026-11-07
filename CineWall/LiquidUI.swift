@@ -104,9 +104,11 @@ final class PlayerThumbnailView: NSView {
         wantsLayer = true
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         layer?.cornerRadius = cornerRadius
+        layer?.cornerCurve = .continuous
         layer?.masksToBounds = true
-        layer?.borderWidth = 1.0
+        layer?.borderWidth = 0.5
         layer?.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
+        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.35).cgColor
         layer?.contentsGravity = .resizeAspectFill
 
         gradientOverlay.colors = [
@@ -278,8 +280,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private var isSelectingPlaylistVideos: Bool = false
     private var expandedArtworkView: PlayerThumbnailView!
     private var expandedTrackMarquee: MarqueeLabelView!
+    private var expandedTrackSubtitle: NSTextField!
     private var expandedPlayButton: NSButton!
     private var expandedFavButton: NSButton!
+    private var expandedMoreButton: NSButton!
     private var addToPlaylistButton: NSButton!
     private var proFooterButton: NSButton!
     private var proFooterCardView: LiquidGlassCardView!
@@ -927,80 +931,132 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerDetailView = contentView
         playerDetailView.translatesAutoresizingMaskIntoConstraints = false
 
-        expandedArtworkView = PlayerThumbnailView(cornerRadius: 14, showsGradient: false)
+        // 1. Artwork: 56x56 square with continuous rounded corners
+        expandedArtworkView = PlayerThumbnailView(cornerRadius: 12, showsGradient: false)
         expandedArtworkView.translatesAutoresizingMaskIntoConstraints = false
-        expandedArtworkView.widthAnchor.constraint(equalToConstant: 120).isActive = true
-        expandedArtworkView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        expandedArtworkView.widthAnchor.constraint(equalToConstant: 56).isActive = true
+        expandedArtworkView.heightAnchor.constraint(equalToConstant: 56).isActive = true
         let initialImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         expandedArtworkView.thumbnailImage = initialImg
 
-        expandedTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 16, weight: .bold), color: .white)
+        // 2. Title & Subtitle Stack
+        expandedTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 15, weight: .bold), color: .white)
         expandedTrackMarquee.stringValue = "Not Playing"
-        expandedTrackMarquee.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        expandedTrackMarquee.heightAnchor.constraint(equalToConstant: 20).isActive = true
         expandedTrackMarquee.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        expandedFavButton = createCircleButton(icon: "heart", size: 15, action: #selector(toggleFav))
-        expandedFavButton.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
-        let titleRow = NSStackView(views: [expandedTrackMarquee, expandedFavButton])
-        titleRow.alignment = .centerY
-        titleRow.spacing = 8
-        titleRow.distribution = .fill
-        titleRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let prev = createCircleButton(icon: "backward.fill", size: 15, action: #selector(doPrev))
-        expandedPlayButton = createCircleButton(icon: "play.fill", size: 18, action: #selector(togglePlay), diameter: 46)
-        let next = createCircleButton(icon: "forward.fill", size: 15, action: #selector(doNext))
-        
-        let transportRow = NSStackView(views: [prev, expandedPlayButton, next])
-        transportRow.alignment = .centerY
-        transportRow.spacing = 10
-        transportRow.translatesAutoresizingMaskIntoConstraints = false
-        transportRow.setContentHuggingPriority(.required, for: .horizontal)
+        expandedTrackSubtitle = NSTextField.liquidLabel("Not Playing", size: 12, weight: .regular, color: .white.withAlphaComponent(0.65))
+        expandedTrackSubtitle.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        expandedTrackSubtitle.lineBreakMode = .byTruncatingTail
+        expandedTrackSubtitle.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
+        let infoStack = NSStackView(views: [expandedTrackMarquee, expandedTrackSubtitle])
+        infoStack.orientation = .vertical
+        infoStack.alignment = .leading
+        infoStack.spacing = 2
+        infoStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // 3. Top Right Actions (Favorite heart if active, and '•••' more options)
+        expandedFavButton = NSButton.liquidSymbol(symbol: "heart.fill", pointSize: 14, weight: .semibold, target: self, action: #selector(toggleFav))
+        expandedFavButton.contentTintColor = .systemRed
+        expandedFavButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        expandedFavButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        expandedFavButton.toolTip = "Remove from Favorites"
+        expandedFavButton.isHidden = true
+
+        expandedMoreButton = NSButton.liquidSymbol(symbol: "ellipsis", pointSize: 15, weight: .bold, target: self, action: #selector(showPlayerMoreMenu))
+        expandedMoreButton.contentTintColor = .white.withAlphaComponent(0.85)
+        expandedMoreButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        expandedMoreButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        expandedMoreButton.toolTip = "More Options"
+
+        let actionsStack = NSStackView(views: [expandedFavButton, expandedMoreButton])
+        actionsStack.orientation = .horizontal
+        actionsStack.alignment = .centerY
+        actionsStack.spacing = 6
+        actionsStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // 4. Scrubber / Progress row
         progressSlider = NSSlider(value: 0, minValue: 0, maxValue: 1, target: self, action: #selector(seekVideo))
         progressSlider.controlSize = .small
-        progressSlider.widthAnchor.constraint(greaterThanOrEqualToConstant: 150).isActive = true
+        progressSlider.translatesAutoresizingMaskIntoConstraints = false
         
-        playerElapsedLabel = NSTextField.liquidLabel("00:00", size: 10, weight: .medium, color: .white.withAlphaComponent(0.7))
-        playerRemainingLabel = NSTextField.liquidLabel("-00:00", size: 10, weight: .medium, color: .white.withAlphaComponent(0.7))
+        playerElapsedLabel = NSTextField.liquidLabel("0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
+        playerRemainingLabel = NSTextField.liquidLabel("-0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
         playerElapsedLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         playerRemainingLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        playerElapsedLabel.alignment = .right
-        playerRemainingLabel.alignment = .left
-        playerElapsedLabel.widthAnchor.constraint(equalToConstant: 34).isActive = true
-        playerRemainingLabel.widthAnchor.constraint(equalToConstant: 42).isActive = true
-        
+        playerElapsedLabel.alignment = .left
+        playerRemainingLabel.alignment = .right
+        playerElapsedLabel.widthAnchor.constraint(equalToConstant: 38).isActive = true
+        playerRemainingLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
         let progressRow = NSStackView(views: [playerElapsedLabel, progressSlider, playerRemainingLabel])
         progressRow.alignment = .centerY
-        progressRow.spacing = 6
+        progressRow.spacing = 8
         progressRow.distribution = .fill
         progressRow.translatesAutoresizingMaskIntoConstraints = false
-        addToPlaylistButton = createPillButton("Add to Playlist", icon: "music.note.list", action: #selector(showAddToPlaylistMenu))
-        addToPlaylistButton.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+
+        // 5. Bottom Row: Playlist button (bottom-left) and Transport Controls (centered)
+        addToPlaylistButton = NSButton.liquidSymbol(symbol: "list.bullet.rectangle", pointSize: 16, weight: .regular, target: self, action: #selector(showAddToPlaylistMenu))
+        addToPlaylistButton.contentTintColor = .white.withAlphaComponent(0.85)
+        addToPlaylistButton.toolTip = "Playlists"
+        addToPlaylistButton.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        addToPlaylistButton.heightAnchor.constraint(equalToConstant: 28).isActive = true
+
+        let prev = NSButton.liquidSymbol(symbol: "backward.fill", pointSize: 16, weight: .semibold, target: self, action: #selector(doPrev))
+        prev.contentTintColor = .white
+        prev.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        prev.heightAnchor.constraint(equalToConstant: 32).isActive = true
+
+        let playConfig = NSImage.SymbolConfiguration(pointSize: 22, weight: .bold)
+        let playImg = NSImage(systemSymbolName: "play.fill", accessibilityDescription: nil)?.withSymbolConfiguration(playConfig)
+        expandedPlayButton = NSButton.liquidSymbol(symbol: "play.fill", pointSize: 22, weight: .bold, target: self, action: #selector(togglePlay))
+        expandedPlayButton.image = playImg
+        expandedPlayButton.contentTintColor = .white
+        expandedPlayButton.widthAnchor.constraint(equalToConstant: 38).isActive = true
+        expandedPlayButton.heightAnchor.constraint(equalToConstant: 38).isActive = true
+
+        let next = NSButton.liquidSymbol(symbol: "forward.fill", pointSize: 16, weight: .semibold, target: self, action: #selector(doNext))
+        next.contentTintColor = .white
+        next.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        next.heightAnchor.constraint(equalToConstant: 32).isActive = true
+
+        let transportRow = NSStackView(views: [prev, expandedPlayButton, next])
+        transportRow.alignment = .centerY
+        transportRow.spacing = 24
+        transportRow.translatesAutoresizingMaskIntoConstraints = false
+
         playerDetailView.addSubview(expandedArtworkView)
-        playerDetailView.addSubview(titleRow)
-        playerDetailView.addSubview(transportRow)
+        playerDetailView.addSubview(infoStack)
+        playerDetailView.addSubview(actionsStack)
         playerDetailView.addSubview(progressRow)
         playerDetailView.addSubview(addToPlaylistButton)
+        playerDetailView.addSubview(transportRow)
 
         NSLayoutConstraint.activate([
+            // Top Row
             expandedArtworkView.topAnchor.constraint(equalTo: playerDetailView.topAnchor, constant: 14),
-            expandedArtworkView.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 14),
+            expandedArtworkView.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
 
-            titleRow.topAnchor.constraint(equalTo: expandedArtworkView.topAnchor),
-            titleRow.leadingAnchor.constraint(equalTo: expandedArtworkView.trailingAnchor, constant: 14),
-            titleRow.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -14),
+            infoStack.leadingAnchor.constraint(equalTo: expandedArtworkView.trailingAnchor, constant: 12),
+            infoStack.centerYAnchor.constraint(equalTo: expandedArtworkView.centerYAnchor),
+            infoStack.trailingAnchor.constraint(lessThanOrEqualTo: actionsStack.leadingAnchor, constant: -8),
 
-            transportRow.topAnchor.constraint(equalTo: titleRow.bottomAnchor, constant: 12),
-            transportRow.leadingAnchor.constraint(equalTo: titleRow.leadingAnchor),
+            actionsStack.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -16),
+            actionsStack.centerYAnchor.constraint(equalTo: expandedArtworkView.centerYAnchor),
 
-            progressRow.topAnchor.constraint(equalTo: expandedArtworkView.bottomAnchor, constant: 16),
-            progressRow.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 14),
-            progressRow.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -14),
-            addToPlaylistButton.topAnchor.constraint(equalTo: progressRow.bottomAnchor, constant: 10),
-            addToPlaylistButton.centerXAnchor.constraint(equalTo: playerDetailView.centerXAnchor),
-            addToPlaylistButton.widthAnchor.constraint(equalToConstant: 136),
-            addToPlaylistButton.bottomAnchor.constraint(lessThanOrEqualTo: playerDetailView.bottomAnchor, constant: -14)
+            // Middle Row (Scrubber)
+            progressRow.topAnchor.constraint(equalTo: expandedArtworkView.bottomAnchor, constant: 14),
+            progressRow.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
+            progressRow.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -16),
+
+            // Bottom Row
+            transportRow.topAnchor.constraint(equalTo: progressRow.bottomAnchor, constant: 12),
+            transportRow.centerXAnchor.constraint(equalTo: playerDetailView.centerXAnchor),
+            transportRow.bottomAnchor.constraint(equalTo: playerDetailView.bottomAnchor, constant: -14),
+
+            addToPlaylistButton.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
+            addToPlaylistButton.centerYAnchor.constraint(equalTo: transportRow.centerYAnchor)
         ])
     }
 
@@ -1736,7 +1792,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         updateProBadgeVisibility(isHidden: app.proManager.tier == .pro)
 
         playlistToggleButton?.alphaValue = isPlaylistPro ? 1.0 : 0.7
-        addToPlaylistButton?.title = isPlaylistPro ? "Add to Playlist" : "Add to Playlist · PRO"
+        addToPlaylistButton?.toolTip = isPlaylistPro ? "Playlists" : "Playlists · PRO"
+        addToPlaylistButton?.alphaValue = isPlaylistPro ? 1.0 : 0.7
         lockScreenEnabledToggle?.alphaValue = isLockScreenPro ? 1.0 : 0.6
         autoIdleSyncToggle?.alphaValue = isLockScreenEnabled ? 1.0 : 0.6
         idleSyncModeControl?.alphaValue = isLockScreenEnabled ? 1.0 : 0.45
@@ -2031,7 +2088,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if section == .player {
             let displayImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
             expandedArtworkView?.thumbnailImage = displayImg
-            expandedTrackMarquee?.stringValue = compactTrackMarquee?.stringValue ?? trackTitle.stringValue
+            let title = compactTrackMarquee?.stringValue ?? trackTitle.stringValue
+            expandedTrackMarquee?.stringValue = title.isEmpty ? "Not Playing" : title
+            updateSubtitle()
+            let isFav = appDelegate?.currentQueue.isEmpty == false && appDelegate?.containsVideo(path: appDelegate!.currentQueue[appDelegate!.queueIndex].path, inPlaylist: "Favorites") == true
+            expandedFavButton?.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
+            expandedFavButton?.contentTintColor = isFav ? .systemRed : .white
+            expandedFavButton?.isHidden = !isFav
+            
+            let isPaused = appDelegate?.isManualPaused ?? false
+            let playConfig = NSImage.SymbolConfiguration(pointSize: 22, weight: .bold)
+            expandedPlayButton?.image = NSImage(systemSymbolName: isPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)?.withSymbolConfiguration(playConfig)
         }
         if section == .playlist {
             playlistTableView.reloadData()
@@ -2051,7 +2118,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             minimumHeight = 328
         case .player:
             bodyView = playerDetailView
-            minimumHeight = 190
+            minimumHeight = 166
         case .playlist:
             bodyView = playlistDetailView
             minimumHeight = 294
@@ -2313,29 +2380,45 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         compactTrackMarquee?.stringValue = title
         let displayImg = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         thumbnailView.thumbnailImage = displayImg
-        expandedTrackMarquee?.stringValue = title
+        expandedTrackMarquee?.stringValue = title.isEmpty ? "Not Playing" : title
         expandedArtworkView?.thumbnailImage = displayImg
+        updateSubtitle()
         updateFavIcon(isFav)
-        expandedFavButton?.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
-        expandedFavButton?.contentTintColor = isFav ? .systemRed : .white
         updateSummaryLabels()
+    }
+
+    func updateSubtitle() {
+        guard let app = appDelegate else {
+            expandedTrackSubtitle?.stringValue = "Not Playing"
+            return
+        }
+        if app.currentQueue.isEmpty {
+            expandedTrackSubtitle?.stringValue = "Not Playing"
+        } else if app.isPlaylistFilterEnabled {
+            expandedTrackSubtitle?.stringValue = app.selectedPlaylistName
+        } else {
+            expandedTrackSubtitle?.stringValue = "CineWall"
+        }
     }
     
     func updateTimeLabels(elapsed: Double, duration: Double) {
         if elapsed.isNaN || duration.isNaN { return }
         let eMin = Int(elapsed) / 60
         let eSec = Int(elapsed) % 60
-        let rem = duration - elapsed
-        let rMin = max(0, Int(rem) / 60)
-        let rSec = max(0, Int(rem) % 60)
+        let rem = max(0, duration - elapsed)
+        let rMin = Int(rem) / 60
+        let rSec = Int(rem) % 60
         
-        playerElapsedLabel?.stringValue = String(format: "%02d:%02d", eMin, eSec)
-        playerRemainingLabel?.stringValue = String(format: "-%02d:%02d", rMin, rSec)
+        playerElapsedLabel?.stringValue = String(format: "%d:%02d", eMin, eSec)
+        playerRemainingLabel?.stringValue = String(format: "-%d:%02d", rMin, rSec)
     }
 
     func updateFavIcon(_ isFav: Bool) {
         favButton.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
         favButton.contentTintColor = isFav ? .systemRed : .white
+        expandedFavButton?.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
+        expandedFavButton?.contentTintColor = isFav ? .systemRed : .white
+        expandedFavButton?.isHidden = !isFav
     }
 
     func refreshUI() {
@@ -2346,8 +2429,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             expandedArtworkView?.thumbnailImage = current
         }
 
-        playButton.image = NSImage(systemSymbolName: app.isManualPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)
-        expandedPlayButton?.image = NSImage(systemSymbolName: app.isManualPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)
+        let isPaused = app.isManualPaused
+        playButton.image = NSImage(systemSymbolName: isPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)
+        let playConfig = NSImage.SymbolConfiguration(pointSize: 22, weight: .bold)
+        expandedPlayButton?.image = NSImage(systemSymbolName: isPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)?.withSymbolConfiguration(playConfig)
+        updateSubtitle()
 
         let vol = app.volumeLevel
         let iconName: String
@@ -2631,6 +2717,68 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
               !app.currentQueue.isEmpty else { return }
         let currentPath = app.currentQueue[app.queueIndex].path
         app.toggleVideo(path: currentPath, inPlaylist: name)
+    }
+
+    @objc func showPlayerMoreMenu(_ sender: NSButton) {
+        guard let app = appDelegate else { return }
+        let menu = NSMenu()
+        
+        let hasVideo = !app.currentQueue.isEmpty
+        let currentPath = hasVideo ? app.currentQueue[app.queueIndex].path : nil
+        let isFav = currentPath != nil && app.containsVideo(path: currentPath!, inPlaylist: "Favorites")
+        
+        let favItem = NSMenuItem(
+            title: isFav ? "Remove from Favorites" : "Add to Favorites",
+            action: #selector(toggleFav),
+            keyEquivalent: ""
+        )
+        favItem.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
+        favItem.target = self
+        menu.addItem(favItem)
+        
+        let playlistItem = NSMenuItem(
+            title: "Add to Playlist...",
+            action: #selector(showAddToPlaylistFromMore),
+            keyEquivalent: ""
+        )
+        playlistItem.image = NSImage(systemSymbolName: "music.note.list", accessibilityDescription: nil)
+        playlistItem.target = self
+        menu.addItem(playlistItem)
+        
+        menu.addItem(NSMenuItem.separator())
+        
+        let revealItem = NSMenuItem(
+            title: "Reveal in Finder",
+            action: #selector(revealFile),
+            keyEquivalent: ""
+        )
+        revealItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        revealItem.target = self
+        revealItem.isEnabled = hasVideo
+        menu.addItem(revealItem)
+        
+        let copyItem = NSMenuItem(
+            title: "Copy Video Path",
+            action: #selector(copyCurrentVideoPath),
+            keyEquivalent: ""
+        )
+        copyItem.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
+        copyItem.target = self
+        copyItem.isEnabled = hasVideo
+        menu.addItem(copyItem)
+        
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
+    }
+
+    @objc func showAddToPlaylistFromMore() {
+        showAddToPlaylistMenu(expandedMoreButton ?? addToPlaylistButton)
+    }
+
+    @objc func copyCurrentVideoPath() {
+        guard let app = appDelegate, !app.currentQueue.isEmpty else { return }
+        let path = app.currentQueue[app.queueIndex].path
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
     }
 
     @objc func showAbout() {
