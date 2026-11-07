@@ -7,11 +7,77 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		17B06CDDE54B19F24C4617BF /* CineWallWallpaperSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29EF7728E780EF4BBEC3FA7B /* CineWallWallpaperSurface.swift */; };
+		1B2E78518C2B1B6EFB8F3515 /* LockScreenConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7412EBF6BB33207303F0C97B /* LockScreenConfiguration.swift */; };
+		2E557AD43664AF94EFF9FEBD /* ExtensionFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1B6025F4FB34EED7630F22CC /* ExtensionFoundation.framework */; };
+		3D3168CB193D193CE539C7AE /* LockScreenPresentationAuthority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342F22E228563795C9A5FC1A /* LockScreenPresentationAuthority.swift */; };
+		53F512653E0BEAE856D147A4 /* CineWallExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6769567147BB8C5785ED57BA /* CineWallExtension.swift */; };
+		545AF4D93D2DBD896C2E1E25 /* NativeVideoLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0786501CB3D88CC91B83ACDB /* NativeVideoLayout.swift */; };
+		716D3BD2DEC865E39D1A529A /* LockScreenSurfaceRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40A6955F5DE7DE4B6010C4B /* LockScreenSurfaceRegistry.swift */; };
+		80A6F16EB4B91A4374DD0D4C /* CineWallExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BBB4A7D2FBA95CE31CA2D712 /* CineWallExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		855DE4CD8FCA6D52C4F1DC79 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09B2A3853F59BFB6F55BDF59 /* AVFoundation.framework */; };
+		93024506AD811C8053BBFECB /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E02BCE3C9E3BD8CFB46978DF /* CoreMedia.framework */; };
+		938210B9E9CE0CDF48FA8A89 /* CineWallWallpaperController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B8FE81F17DF068122BDEF3D /* CineWallWallpaperController.swift */; };
+		98E9585A99A13AE53708CCA0 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86975496789CBA1F48552CB2 /* IOSurface.framework */; };
+		9D5F3C08523BA803376E04E7 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0D154BC9C37A022F1BDEB3F /* Security.framework */; };
+		A5849ABE14C91F1823A0900C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1699915FB91333905276A0B9 /* AppKit.framework */; };
+		EA85D1E6B462DF80CAA7E697 /* CineWallWallpaperRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5C75673AC541F789BAC30C /* CineWallWallpaperRuntime.swift */; };
+		F04EC583C523CBC968387228 /* LockScreenVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471D9189FD21CEC5DA80D9E7 /* LockScreenVideoPlayer.swift */; };
+		FE5B3787F514D5CB91ED1C71 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84ECD12656F07C13DA53AE92 /* QuartzCore.framework */; };
 		FF0AB3662F07DB96008C008A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0AB3652F07DB92008C008A /* main.swift */; };
 		FFD2A1014F9F100000C1A001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FFD2A1024F9F100000C1A001 /* Sparkle */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A4BE7D9150222D949A923AE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FFB105B12EE2F9FD00A68055 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C6D9FE0B1877AA8FDA2D14E2;
+			remoteInfo = CineWallExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		58E1AE63528D1A8AA5D9D4EB /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				80A6F16EB4B91A4374DD0D4C /* CineWallExtension.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0786501CB3D88CC91B83ACDB /* NativeVideoLayout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NativeVideoLayout.swift; path = CineWall/NativeVideoLayout.swift; sourceTree = "<group>"; };
+		09B2A3853F59BFB6F55BDF59 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		1699915FB91333905276A0B9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/AppKit.framework; sourceTree = DEVELOPER_DIR; };
+		1B6025F4FB34EED7630F22CC /* ExtensionFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExtensionFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/ExtensionFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		1E367A176593AB95680A306C /* AppKit.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/AppKit.framework.framework; sourceTree = DEVELOPER_DIR; };
+		29EF7728E780EF4BBEC3FA7B /* CineWallWallpaperSurface.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CineWallWallpaperSurface.swift; path = CineWallExtension/CineWallWallpaperSurface.swift; sourceTree = "<group>"; };
+		342F22E228563795C9A5FC1A /* LockScreenPresentationAuthority.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LockScreenPresentationAuthority.swift; path = CineWall/LockScreenPresentationAuthority.swift; sourceTree = "<group>"; };
+		471D9189FD21CEC5DA80D9E7 /* LockScreenVideoPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LockScreenVideoPlayer.swift; path = CineWallExtension/LockScreenVideoPlayer.swift; sourceTree = "<group>"; };
+		58DD1F84381B131A0AF0D5FD /* ExtensionFoundation.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExtensionFoundation.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/ExtensionFoundation.framework.framework; sourceTree = DEVELOPER_DIR; };
+		6769567147BB8C5785ED57BA /* CineWallExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CineWallExtension.swift; path = CineWallExtension/CineWallExtension.swift; sourceTree = "<group>"; };
+		68EF1F67D771CBAAF246D64F /* AVFoundation.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/AVFoundation.framework.framework; sourceTree = DEVELOPER_DIR; };
+		7412EBF6BB33207303F0C97B /* LockScreenConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LockScreenConfiguration.swift; path = CineWall/LockScreenConfiguration.swift; sourceTree = "<group>"; };
+		84ECD12656F07C13DA53AE92 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
+		86975496789CBA1F48552CB2 /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/IOSurface.framework; sourceTree = DEVELOPER_DIR; };
+		96D5ACB4DBB20851A46AA024 /* IOSurface.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/IOSurface.framework.framework; sourceTree = DEVELOPER_DIR; };
+		9B8FE81F17DF068122BDEF3D /* CineWallWallpaperController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CineWallWallpaperController.swift; path = CineWallExtension/CineWallWallpaperController.swift; sourceTree = "<group>"; };
+		A0D154BC9C37A022F1BDEB3F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
+		BBB4A7D2FBA95CE31CA2D712 /* CineWallExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = CineWallExtension.appex; path = CineWallExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE84E40E691E7DF6D4EA4D97 /* QuartzCore.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/QuartzCore.framework.framework; sourceTree = DEVELOPER_DIR; };
+		CCA6841EBCE053CB8643A7F9 /* Security.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Security.framework.framework; sourceTree = DEVELOPER_DIR; };
+		D40A6955F5DE7DE4B6010C4B /* LockScreenSurfaceRegistry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LockScreenSurfaceRegistry.swift; path = CineWallExtension/LockScreenSurfaceRegistry.swift; sourceTree = "<group>"; };
+		DF6A5CD861234733F46C2416 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		E02BCE3C9E3BD8CFB46978DF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/CoreMedia.framework; sourceTree = DEVELOPER_DIR; };
+		EF5C75673AC541F789BAC30C /* CineWallWallpaperRuntime.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CineWallWallpaperRuntime.swift; path = CineWallExtension/CineWallWallpaperRuntime.swift; sourceTree = "<group>"; };
+		F32DA9BC1E7BCF109A7FF390 /* CoreMedia.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/CoreMedia.framework.framework; sourceTree = DEVELOPER_DIR; };
 		FF0AB3652F07DB92008C008A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FFB105B92EE2F9FD00A68055 /* CineWall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CineWall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -19,12 +85,28 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FFB105BB2EE2F9FD00A68055 /* CineWall */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = CineWall;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		01BF86ABE37E2AEB825D2283 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5849ABE14C91F1823A0900C /* AppKit.framework in Frameworks */,
+				2E557AD43664AF94EFF9FEBD /* ExtensionFoundation.framework in Frameworks */,
+				855DE4CD8FCA6D52C4F1DC79 /* AVFoundation.framework in Frameworks */,
+				93024506AD811C8053BBFECB /* CoreMedia.framework in Frameworks */,
+				FE5B3787F514D5CB91ED1C71 /* QuartzCore.framework in Frameworks */,
+				98E9585A99A13AE53708CCA0 /* IOSurface.framework in Frameworks */,
+				9D5F3C08523BA803376E04E7 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FFB105B62EE2F9FD00A68055 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -36,12 +118,61 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3C947F94E93642EE34CFEA41 /* CineWallExtension */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = CineWallExtension;
+			path = CineWallExtension;
+			sourceTree = "<group>";
+		};
+		723E9DC1B4A45F8F68288D11 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				DF6A5CD861234733F46C2416 /* Cocoa.framework */,
+				1E367A176593AB95680A306C /* AppKit.framework.framework */,
+				58DD1F84381B131A0AF0D5FD /* ExtensionFoundation.framework.framework */,
+				68EF1F67D771CBAAF246D64F /* AVFoundation.framework.framework */,
+				F32DA9BC1E7BCF109A7FF390 /* CoreMedia.framework.framework */,
+				BE84E40E691E7DF6D4EA4D97 /* QuartzCore.framework.framework */,
+				96D5ACB4DBB20851A46AA024 /* IOSurface.framework.framework */,
+				CCA6841EBCE053CB8643A7F9 /* Security.framework.framework */,
+				1699915FB91333905276A0B9 /* AppKit.framework */,
+				1B6025F4FB34EED7630F22CC /* ExtensionFoundation.framework */,
+				09B2A3853F59BFB6F55BDF59 /* AVFoundation.framework */,
+				E02BCE3C9E3BD8CFB46978DF /* CoreMedia.framework */,
+				84ECD12656F07C13DA53AE92 /* QuartzCore.framework */,
+				86975496789CBA1F48552CB2 /* IOSurface.framework */,
+				A0D154BC9C37A022F1BDEB3F /* Security.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		A0D952A331325A0368930C7E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				723E9DC1B4A45F8F68288D11 /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FFB105B02EE2F9FD00A68055 = {
 			isa = PBXGroup;
 			children = (
 				FF0AB3652F07DB92008C008A /* main.swift */,
 				FFB105BB2EE2F9FD00A68055 /* CineWall */,
 				FFB105BA2EE2F9FD00A68055 /* Products */,
+				A0D952A331325A0368930C7E /* Frameworks */,
+				3C947F94E93642EE34CFEA41 /* CineWallExtension */,
+				6769567147BB8C5785ED57BA /* CineWallExtension.swift */,
+				EF5C75673AC541F789BAC30C /* CineWallWallpaperRuntime.swift */,
+				9B8FE81F17DF068122BDEF3D /* CineWallWallpaperController.swift */,
+				29EF7728E780EF4BBEC3FA7B /* CineWallWallpaperSurface.swift */,
+				471D9189FD21CEC5DA80D9E7 /* LockScreenVideoPlayer.swift */,
+				D40A6955F5DE7DE4B6010C4B /* LockScreenSurfaceRegistry.swift */,
+				7412EBF6BB33207303F0C97B /* LockScreenConfiguration.swift */,
+				0786501CB3D88CC91B83ACDB /* NativeVideoLayout.swift */,
+				342F22E228563795C9A5FC1A /* LockScreenPresentationAuthority.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -49,6 +180,7 @@
 			isa = PBXGroup;
 			children = (
 				FFB105B92EE2F9FD00A68055 /* CineWall.app */,
+				BBB4A7D2FBA95CE31CA2D712 /* CineWallExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -56,6 +188,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C6D9FE0B1877AA8FDA2D14E2 /* CineWallExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C31F30772D3F2CB61DF1683B /* Build configuration list for PBXNativeTarget "CineWallExtension" */;
+			buildPhases = (
+				53B8F97D529E0A29C790CAFE /* Sources */,
+				01BF86ABE37E2AEB825D2283 /* Frameworks */,
+				2A4CD5E046C599E8EDD29EB9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CineWallExtension;
+			productName = CineWallExtension;
+			productReference = BBB4A7D2FBA95CE31CA2D712 /* CineWallExtension.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 		FFB105B82EE2F9FD00A68055 /* CineWall */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FFB105C72EE2F9FF00A68055 /* Build configuration list for PBXNativeTarget "CineWall" */;
@@ -63,10 +212,12 @@
 				FFB105B52EE2F9FD00A68055 /* Sources */,
 				FFB105B62EE2F9FD00A68055 /* Frameworks */,
 				FFB105B72EE2F9FD00A68055 /* Resources */,
+				58E1AE63528D1A8AA5D9D4EB /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5625F16FB4B8E1AFA4071B14 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				FFB105BB2EE2F9FD00A68055 /* CineWall */,
@@ -112,11 +263,19 @@
 			projectRoot = "";
 			targets = (
 				FFB105B82EE2F9FD00A68055 /* CineWall */,
+				C6D9FE0B1877AA8FDA2D14E2 /* CineWallExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2A4CD5E046C599E8EDD29EB9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FFB105B72EE2F9FD00A68055 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +286,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		53B8F97D529E0A29C790CAFE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53F512653E0BEAE856D147A4 /* CineWallExtension.swift in Sources */,
+				EA85D1E6B462DF80CAA7E697 /* CineWallWallpaperRuntime.swift in Sources */,
+				938210B9E9CE0CDF48FA8A89 /* CineWallWallpaperController.swift in Sources */,
+				17B06CDDE54B19F24C4617BF /* CineWallWallpaperSurface.swift in Sources */,
+				F04EC583C523CBC968387228 /* LockScreenVideoPlayer.swift in Sources */,
+				716D3BD2DEC865E39D1A529A /* LockScreenSurfaceRegistry.swift in Sources */,
+				1B2E78518C2B1B6EFB8F3515 /* LockScreenConfiguration.swift in Sources */,
+				545AF4D93D2DBD896C2E1E25 /* NativeVideoLayout.swift in Sources */,
+				3D3168CB193D193CE539C7AE /* LockScreenPresentationAuthority.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FFB105B52EE2F9FD00A68055 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -137,7 +312,54 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		5625F16FB4B8E1AFA4071B14 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CineWallExtension;
+			target = C6D9FE0B1877AA8FDA2D14E2 /* CineWallExtension */;
+			targetProxy = A4BE7D9150222D949A923AE3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		77C4733DD425CFE22AA7D3D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = CineWallExtension/CineWallExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4WD9WKBAK4;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CineWallExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "svkr.CineWall.wallpaper-extension";
+				PRODUCT_NAME = CineWallExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = CineWallExtension/CineWallExtensionBridge.h;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		DC65311E5AB4FA48018F084E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = CineWallExtension/CineWallExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4WD9WKBAK4;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CineWallExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "svkr.CineWall.wallpaper-extension";
+				PRODUCT_NAME = CineWallExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = CineWallExtension/CineWallExtensionBridge.h;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		FFB105C52EE2F9FF00A68055 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -359,6 +581,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		C31F30772D3F2CB61DF1683B /* Build configuration list for PBXNativeTarget "CineWallExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC65311E5AB4FA48018F084E /* Release */,
+				77C4733DD425CFE22AA7D3D0 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FFB105B42EE2F9FD00A68055 /* Build configuration list for PBXProject "CineWall" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

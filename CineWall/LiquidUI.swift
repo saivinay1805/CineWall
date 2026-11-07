@@ -2568,10 +2568,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         idleSyncModeControl.selectedSegment = app.idleWallpaperSyncMode == .fast ? 0 : 1
         let syncModeName = app.idleWallpaperSyncMode == .fast ? "Fast" : "Compatible"
         let isSyncing = app.idleWallpaperSyncInProgress
-        idleSyncButton.title = isSyncing ? "Syncing \(syncModeName) Mode..." : "Sync Current to Lock Screen"
+        idleSyncButton.title = isSyncing ? "Syncing Lock Screen..." : "Sync Current to Lock Screen"
         idleSyncButton.isEnabled = !isSyncing
         idleSyncStatusLabel?.stringValue = app.lockScreenSyncEnabled
-            ? (isSyncing ? "Syncing lock screen wallpaper in \(syncModeName.lowercased()) mode." : "\(syncModeName) mode ready.")
+            ? (isSyncing ? "Syncing lock screen wallpaper across displays..." : "Native extension active and synced.")
             : "Lock screen sync is turned off."
         idleSyncWarningLabel?.alphaValue = 1.0
         menuTintSlider?.doubleValue = app.menuDarkTintStrength
