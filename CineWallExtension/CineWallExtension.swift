@@ -44,7 +44,12 @@ private final class CineWallWallpaperHandler: NSObject, WallpaperExtensionXPCPro
     }
 
     func provideSettingsViewModels(withContentTypes types: Any?, reply: @escaping (Any?, Error?) -> Void) {
-        reply(nil, nil)
+        do {
+            reply(try WallpaperSettingsProvider.response(), nil)
+        } catch {
+            reply(nil, error)
+            CineWallWallpaperRuntime.log("Settings unavailable: \(error.localizedDescription)")
+        }
     }
 
     func isChoiceDownloaded(with choiceID: Any?, reply: @escaping (Any?, Error?) -> Void) {

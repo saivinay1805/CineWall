@@ -102,6 +102,7 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
                     return
                 }
                 if let snapshot = try? Self.snapshot(firstFrame) {
+                    try? LockScreenFrameBacking.install(snapshot, on: self.root)
                     self.latestSnapshot = snapshot
                 }
                 self.contentFrameReady()
@@ -243,6 +244,31 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
     }
 
     public func snapshot(reply: @escaping (Any?, Error?) -> Void) {
+        if let video, !rendererPaused, !stopped {
+            Task { @MainActor [weak self] in
+                guard let self, !self.stopped else {
+                    reply(nil, CancellationError())
+                    return
+                }
+                if let frame = await self.video?.frame(),
+                   let snapshot = try? Self.snapshot(frame) {
+                    self.latestSnapshot = snapshot
+                    try? LockScreenFrameBacking.install(snapshot, on: self.root)
+                    do {
+                        reply(try CineWallWallpaperRuntime.snapshotReply(snapshot), nil)
+                        return
+                    } catch {}
+                }
+                if let latestSnapshot = self.latestSnapshot,
+                   let xpc = try? CineWallWallpaperRuntime.snapshotReply(latestSnapshot) {
+                    reply(xpc, nil)
+                } else {
+                    reply(nil, CineWallWallpaperRuntime.failure("Snapshot failed"))
+                }
+            }
+            return
+        }
+
         if let latestSnapshot, let xpc = try? CineWallWallpaperRuntime.snapshotReply(latestSnapshot) {
             reply(xpc, nil)
             return
@@ -294,6 +320,7 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
         video = nil
         heldNotice = nil
         latestSnapshot = nil
+        root.contents = nil
         finishWaiters(error: CancellationError())
         finishSnapshots(error: CancellationError())
     }
@@ -349,8 +376,23 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
         guard shouldPause != rendererPaused else { return }
         rendererPaused = shouldPause
         video?.setPaused(shouldPause)
+        if shouldPause && video != nil {
+            refreshVideoFrame()
+        }
         CineWallWallpaperRuntime.log(
             "Playback display=\(scene.displayID) mode=\(presentation) activity=\(activity) locked=\(request.sessionLocked) console=\(request.sessionOnConsole) paused=\(shouldPause) reasons=\(reasons.rawValue)"
         )
+    }
+
+    private func refreshVideoFrame() {
+        guard let video else { return }
+        Task { @MainActor [weak self, weak video] in
+            guard let self, let video, self.video === video, self.rendererPaused,
+                  let frame = await video.frame(), self.video === video, self.rendererPaused,
+                  let snapshot = try? Self.snapshot(frame)
+            else { return }
+            try? LockScreenFrameBacking.install(snapshot, on: self.root)
+            self.latestSnapshot = snapshot
+        }
     }
 }

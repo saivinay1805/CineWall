@@ -219,20 +219,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
 
     @objc func openPlayerSubmenuForTest() {
-        if !isPopoverOpen {
-            openPopover()
+        if isPopoverOpen {
+            closePopover(force: true)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.liquidController?.showPlayerDetailTest()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showPlayerDetailTest()
+            }
         }
     }
 
     @objc func openSettingsSubmenuForTest() {
-        if !isPopoverOpen {
-            openPopover()
+        if isPopoverOpen {
+            closePopover(force: true)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.liquidController?.showSettingsDetailTest()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showSettingsDetailTest()
+            }
         }
     }
     

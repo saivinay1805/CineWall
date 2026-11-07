@@ -26,6 +26,9 @@
 		FE5B3787F514D5CB91ED1C71 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84ECD12656F07C13DA53AE92 /* QuartzCore.framework */; };
 		FF0AB3662F07DB96008C008A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0AB3652F07DB92008C008A /* main.swift */; };
 		FFD2A1014F9F100000C1A001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FFD2A1024F9F100000C1A001 /* Sparkle */; };
+		B10000012EE2F9FD00A68055 /* LockScreenFrameBacking.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012EE2F9FD00A68055 /* LockScreenFrameBacking.swift */; };
+		B20000012EE2F9FD00A68055 /* WallpaperSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000012EE2F9FD00A68055 /* WallpaperSettingsProvider.swift */; };
+		B30000012EE2F9FD00A68055 /* preview.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A30000012EE2F9FD00A68055 /* preview.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +83,9 @@
 		F32DA9BC1E7BCF109A7FF390 /* CoreMedia.framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/CoreMedia.framework.framework; sourceTree = DEVELOPER_DIR; };
 		FF0AB3652F07DB92008C008A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FFB105B92EE2F9FD00A68055 /* CineWall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CineWall.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000012EE2F9FD00A68055 /* LockScreenFrameBacking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LockScreenFrameBacking.swift; path = CineWallExtension/LockScreenFrameBacking.swift; sourceTree = "<group>"; };
+		A20000012EE2F9FD00A68055 /* WallpaperSettingsProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WallpaperSettingsProvider.swift; path = CineWallExtension/WallpaperSettingsProvider.swift; sourceTree = "<group>"; };
+		A30000012EE2F9FD00A68055 /* preview.jpg */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.jpeg; name = preview.jpg; path = CineWallExtension/preview.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -173,6 +179,9 @@
 				7412EBF6BB33207303F0C97B /* LockScreenConfiguration.swift */,
 				0786501CB3D88CC91B83ACDB /* NativeVideoLayout.swift */,
 				342F22E228563795C9A5FC1A /* LockScreenPresentationAuthority.swift */,
+				A10000012EE2F9FD00A68055 /* LockScreenFrameBacking.swift */,
+				A20000012EE2F9FD00A68055 /* WallpaperSettingsProvider.swift */,
+				A30000012EE2F9FD00A68055 /* preview.jpg */,
 			);
 			sourceTree = "<group>";
 		};
@@ -273,6 +282,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B30000012EE2F9FD00A68055 /* preview.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -299,6 +309,8 @@
 				1B2E78518C2B1B6EFB8F3515 /* LockScreenConfiguration.swift in Sources */,
 				545AF4D93D2DBD896C2E1E25 /* NativeVideoLayout.swift in Sources */,
 				3D3168CB193D193CE539C7AE /* LockScreenPresentationAuthority.swift in Sources */,
+				B10000012EE2F9FD00A68055 /* LockScreenFrameBacking.swift in Sources */,
+				B20000012EE2F9FD00A68055 /* WallpaperSettingsProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

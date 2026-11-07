@@ -58,7 +58,10 @@ extension AppDelegate {
             return
         }
 
-        let selectedURL = sourceURL ?? ((currentQueue.indices.contains(queueIndex)) ? currentQueue[queueIndex] : nil)
+        let selectedURL = sourceURL
+            ?? ((currentQueue.indices.contains(queueIndex)) ? currentQueue[queueIndex] : nil)
+            ?? (lastPlayedFile.flatMap { FileManager.default.fileExists(atPath: $0) ? URL(fileURLWithPath: $0) : nil })
+            ?? allFiles.first(where: { ["mp4", "mov", "m4v"].contains($0.pathExtension.lowercased()) })
         guard let validURL = selectedURL else {
             if showAlerts {
                 showAlert(title: "No Media Selected", message: "Play a video first, then sync it to the Lock Screen.")
