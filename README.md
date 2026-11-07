@@ -58,7 +58,7 @@ It features a stunning **"Liquid Glass" UI** (inspired by macOS Tahoe concepts) 
 
 **CineWall is an unsigned open-source application.** To run it, you must bypass the Gatekeeper warning once.
 
-1.  **[Download the latest ZIP](https://github.com/saivinay1805/CineWall-App/releases/latest)** from the Releases page.
+1.  **[Download the latest ZIP](https://github.com/saivinay1805/CineWall/releases/latest)** from the Releases page.
 2.  Unzip and move `CineWall.app` to your **Applications** folder.
 3.  **Right-Click** the app and select **Open**.
 4.  Click **Open** in the dialog box.
