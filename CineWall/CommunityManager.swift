@@ -64,6 +64,8 @@ final class CommunityManager {
     var isTrialActive: Bool { false }
     var hasUsedTrial: Bool { false }
     var remainingTrialDaysText: String { "Open Source" }
+    var isDeveloperUnlocked: Bool { true }
+    var licenseKey: String? { nil }
 
     func canUse(_ feature: ProFeature) -> Bool {
         return true

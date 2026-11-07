@@ -1,4 +1,5 @@
 import Cocoa
+import AVFoundation
 import QuartzCore
 import IOKit.ps
 

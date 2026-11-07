@@ -366,12 +366,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
     @discardableResult
     func requireProAccess(for feature: ProFeature) -> Bool {
-        if proManager.canUse(feature) {
-            return true
-        }
-        presentProUpgradePrompt(for: feature)
-        liquidController?.refreshUI()
-        return false
+        return true
     }
 
     func checkForUpdates() {
@@ -399,4 +394,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         alert.runModal()
     }
 
+    // Open source compatibility stubs
+    func startProTrial(completion: ((Bool, String) -> Void)? = nil) { completion?(true, "CineWall is 100% Free & Open Source.") }
+    func activateLicenseKey(_ key: String) {}
+    func toggleDeveloperProUnlock() {}
+    func resetDebugProTrialState(completion: ((Bool, String) -> Void)? = nil) { completion?(true, "Reset complete.") }
 }
