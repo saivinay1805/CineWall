@@ -2,8 +2,8 @@ import Cocoa
 import AVFoundation
 import ServiceManagement
 
-let liquidMenuWidth: CGFloat = 370
-let liquidMenuHeight: CGFloat = 610
+let liquidMenuWidth: CGFloat = 320
+let liquidMenuHeight: CGFloat = 560
 let cineWallAerialCategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A001"
 let cineWallAerialSubcategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A002"
 let cineWallWallpaperStoreBackupFileName = "Index.pre-cinewall.plist"
@@ -32,8 +32,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     var statusItem: NSStatusItem!
     var liquidWindow: LiquidPanel?
     var liquidController: LiquidMenuController?
-    var popoverTransiency: Any?
+    var isPopoverOpen: Bool = false
     var isPinned: Bool = false
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    private var localKeyMonitor: Any?
     let proManager = ProManager.shared
     let sparkleUpdater = SparkleUpdater.shared
 
@@ -145,18 +148,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         if let button = statusItem.button {
             if let img = NSImage(named: "menubar_icon") {
                 img.isTemplate = true
-                img.size = NSSize(width: 35, height: 35)
-                let newImg = NSImage(size: NSSize(width: 35, height: 35))
-                newImg.lockFocus()
-                img.draw(in: NSRect(x: 0, y: -3, width: 35, height: 35), from: .zero, operation: .sourceOver, fraction: 1.0)
-                newImg.unlockFocus()
-                newImg.isTemplate = true
-                button.image = newImg
+                img.size = NSSize(width: 18, height: 18)
+                button.image = img
             } else {
                 button.image = NSImage(systemSymbolName: "film.stack", accessibilityDescription: "CineWall")
             }
+            button.imagePosition = .imageOnly
             button.action = #selector(toggleLiquidPopover)
             button.target = self
+            button.sendAction(on: [.leftMouseDown, .rightMouseDown])
         }
         
         targetScreen = NSScreen.main
@@ -269,45 +269,188 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         syncAccessControlledState()
     }
     
-    // ... UI Handling (same as before) ...
-    func createLiquidPopover() { let win = LiquidPanel(contentRect: NSRect(x: 0, y: 0, width: liquidMenuWidth, height: liquidMenuHeight), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false); win.level = .floating; win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]; win.backgroundColor = .clear; win.isOpaque = false; win.hasShadow = false; win.titlebarAppearsTransparent = true; win.titleVisibility = .hidden; win.registerForDraggedTypes([.fileURL]); win.minSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight); win.maxSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight); let vc = LiquidMenuController(); vc.appDelegate = self; win.contentView = vc.view; self.liquidWindow = win; self.liquidController = vc }
+    // MARK: - Liquid Glass Popover Lifecycle (ThemeEngine Alignment & Positioning)
+    func createLiquidPopover() {
+        let win = LiquidPanel(
+            contentRect: NSRect(x: 0, y: 0, width: liquidMenuWidth, height: liquidMenuHeight),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        win.level = .floating
+        win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        win.backgroundColor = .clear
+        win.isOpaque = false
+        win.hasShadow = false
+        win.titlebarAppearsTransparent = true
+        win.titleVisibility = .hidden
+        win.registerForDraggedTypes([.fileURL])
+        win.minSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight)
+        win.maxSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight)
+        
+        let vc = LiquidMenuController()
+        vc.appDelegate = self
+        win.contentView = vc.view
+        
+        self.liquidWindow = win
+        self.liquidController = vc
+    }
+
     @objc func toggleLiquidPopover() {
-        guard let window = liquidWindow, let button = statusItem.button else { return }
-        if window.isVisible {
-            closePopover()
+        if isPopoverOpen {
+            closePopover(force: true)
         } else {
-            syncAccessControlledState()
-            liquidController?.refreshUI()
-            liquidController?.updateStats()
-            liquidController?.resetToMainMenu()
-            liquidController?.setMenuVisible(true)
-            window.isMovableByWindowBackground = isPinned
-            
-            let buttonRect = button.window?.convertToScreen(button.frame) ?? .zero
-            let x = buttonRect.origin.x - (liquidMenuWidth / 2) + (buttonRect.width / 2)
-            let y = buttonRect.origin.y - liquidMenuHeight - 8
-            window.setFrameOrigin(NSPoint(x: x, y: y))
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            if !isPinned { setupTransiencyMonitor() }
+            openPopover()
         }
     }
-    func setupTransiencyMonitor() { if popoverTransiency != nil { return }; popoverTransiency = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in self?.closePopover() } }
-    func removeTransiencyMonitor() { if let m = popoverTransiency { NSEvent.removeMonitor(m); popoverTransiency = nil } }
+
+    func openPopover() {
+        guard let window = liquidWindow, let button = statusItem.button else { return }
+        guard let screen = button.window?.screen ?? NSScreen.main ?? NSScreen.screens.first else { return }
+
+        isPopoverOpen = true
+        button.isHighlighted = true
+
+        syncAccessControlledState()
+        liquidController?.refreshUI()
+        liquidController?.updateStats()
+        liquidController?.resetToMainMenu()
+        liquidController?.setMenuVisible(true)
+        window.isMovableByWindowBackground = isPinned
+
+        // Calculate clamped screen position relative to status item button (from ThemeEngine)
+        let visible = screen.visibleFrame
+        let buttonScreenRect = button.window?.convertToScreen(button.frame) ?? .zero
+
+        var x = buttonScreenRect.origin.x - (liquidMenuWidth / 2) + (buttonScreenRect.width / 2)
+        let y = buttonScreenRect.minY - liquidMenuHeight - 6
+
+        let minX = visible.minX + 8
+        let maxX = visible.maxX - liquidMenuWidth - 8
+
+        if x < minX {
+            x = minX
+        } else if x > maxX {
+            x = maxX
+        }
+
+        window.setFrameOrigin(NSPoint(x: x, y: y))
+
+        // Fluid fade-in presentation (from ThemeEngine)
+        window.alphaValue = 0
+        window.makeKeyAndOrderFront(nil)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.12
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().alphaValue = 1.0
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        if !isPinned {
+            setupTransiencyMonitors()
+        }
+    }
+
+    func closePopover(force: Bool = false) {
+        if isPinned && !force { return }
+
+        isPopoverOpen = false
+        statusItem?.button?.isHighlighted = false
+        liquidController?.setMenuVisible(false)
+        removeTransiencyMonitors()
+
+        guard let window = liquidWindow, window.isVisible else { return }
+
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = 0.10
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            window.animator().alphaValue = 0.0
+        }) {
+            if !self.isPopoverOpen {
+                window.orderOut(nil)
+                window.alphaValue = 1.0
+            }
+        }
+    }
+
+    func setupTransiencyMonitors() {
+        removeTransiencyMonitors()
+
+        // 1. Global mouse monitor for clicks in other apps
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.handleOutsideClick()
+        }
+
+        // 2. Local mouse monitor for clicks within CineWall windows
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            self?.handleOutsideClick()
+            return event
+        }
+
+        // 3. Local key monitor for Escape key
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, self.isPopoverOpen, !self.isPinned else {
+                return event
+            }
+            if event.keyCode == 53 { // ESC key
+                self.closePopover()
+                return nil
+            }
+            return event
+        }
+    }
+
+    func removeTransiencyMonitors() {
+        if let m = globalMouseMonitor {
+            NSEvent.removeMonitor(m)
+            globalMouseMonitor = nil
+        }
+        if let m = localMouseMonitor {
+            NSEvent.removeMonitor(m)
+            localMouseMonitor = nil
+        }
+        if let m = localKeyMonitor {
+            NSEvent.removeMonitor(m)
+            localKeyMonitor = nil
+        }
+    }
+
+    @discardableResult
+    private func handleOutsideClick() -> Bool {
+        guard isPopoverOpen, let window = liquidWindow, window.isVisible, !isPinned else { return false }
+
+        let mouseLoc = NSEvent.mouseLocation
+
+        // Check if click was on the status bar button (with a slight padding for hit-test margin)
+        if let button = statusItem?.button, let btnWin = button.window {
+            let buttonScreenRect = btnWin.convertToScreen(button.frame).insetBy(dx: -4, dy: -4)
+            if buttonScreenRect.contains(mouseLoc) {
+                // Click is on the status bar button itself; let button action handle the toggle
+                return false
+            }
+        }
+
+        // Check if click was inside the popover window itself
+        if window.frame.contains(mouseLoc) {
+            return false
+        }
+
+        // Click was truly outside both; close cleanly
+        closePopover()
+        return true
+    }
+
     func togglePin() {
         isPinned.toggle()
         liquidWindow?.isMovableByWindowBackground = isPinned
         if isPinned {
-            removeTransiencyMonitor()
+            removeTransiencyMonitors()
         } else {
-            setupTransiencyMonitor()
+            if isPopoverOpen {
+                setupTransiencyMonitors()
+            }
         }
-    }
-    func closePopover() {
-        if isPinned { return }
-        liquidController?.setMenuVisible(false)
-        liquidWindow?.orderOut(nil)
-        removeTransiencyMonitor()
     }
     func currentAccessDescription() -> String {
         proManager.statusLine

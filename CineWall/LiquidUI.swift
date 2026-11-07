@@ -165,15 +165,15 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         mainStack = NSStackView()
         mainStack.orientation = .vertical
         mainStack.alignment = .leading
-        mainStack.spacing = 12
+        mainStack.spacing = 14
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(mainStack)
 
-        mainStackLeadingConstraint = mainStack.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16)
+        mainStackLeadingConstraint = mainStack.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 19)
         NSLayoutConstraint.activate([
             mainStack.topAnchor.constraint(equalTo: root.topAnchor, constant: 16),
             mainStackLeadingConstraint!,
-            mainStack.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -16),
+            mainStack.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -19),
             mainStack.bottomAnchor.constraint(lessThanOrEqualTo: root.bottomAnchor, constant: -16)
         ])
 
@@ -190,13 +190,16 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let header = NSStackView()
         header.orientation = .horizontal
         header.alignment = .centerY
-        header.spacing = 24
+        header.spacing = 14
         header.translatesAutoresizingMaskIntoConstraints = false
+        header.widthAnchor.constraint(equalToConstant: 282).isActive = true
+        header.heightAnchor.constraint(equalToConstant: 60).isActive = true
 
-        let appChip = LiquidGlassCardView(cornerRadius: 22, tintAlpha: 0.025)
+        let appChip = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.025)
         appChip.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
         appChip.translatesAutoresizingMaskIntoConstraints = false
-        appChip.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        appChip.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        appChip.widthAnchor.constraint(equalToConstant: 134).isActive = true
         appHeaderCard = appChip
 
         let iconView = NSImageView()
@@ -204,29 +207,22 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         iconView.contentTintColor = .white
         iconView.imageScaling = .scaleProportionallyUpOrDown
         iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        iconView.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         let iconCircle = NSView()
         iconCircle.wantsLayer = true
-        iconCircle.layer?.cornerRadius = 22
+        iconCircle.layer?.cornerRadius = 19
         iconCircle.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.12).cgColor
         iconCircle.translatesAutoresizingMaskIntoConstraints = false
-        iconCircle.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        iconCircle.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        iconCircle.widthAnchor.constraint(equalToConstant: 38).isActive = true
+        iconCircle.heightAnchor.constraint(equalToConstant: 38).isActive = true
         iconCircle.addSubview(iconView)
 
-        NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor)
-        ])
-
-        let logo = NSTextField.liquidLabel("CineWall", size: 17, weight: .bold)
+        let logo = NSTextField.liquidLabel("CineWall", size: 14.5, weight: .bold)
         logo.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         logo.setContentHuggingPriority(.defaultLow, for: .horizontal)
         logo.lineBreakMode = .byTruncatingTail
 
-        appHeaderSubtitleLabel = NSTextField.liquidLabel("Version 2.0", size: 9, weight: .medium, color: .white.withAlphaComponent(0.68))
+        appHeaderSubtitleLabel = NSTextField.liquidLabel("v3.0 Open", size: 9, weight: .medium, color: .white.withAlphaComponent(0.68))
         appHeaderSubtitleLabel.lineBreakMode = .byTruncatingTail
         appHeaderSubtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         appHeaderSubtitleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -241,83 +237,90 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let textRow = NSStackView(views: [iconCircle, textStack])
         textRow.orientation = .horizontal
         textRow.alignment = .centerY
-        textRow.spacing = 9
+        textRow.spacing = 8
         textRow.translatesAutoresizingMaskIntoConstraints = false
-        textRow.edgeInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
 
         appChip.contentView.addSubview(textRow)
 
         let appChipButton = NSButton(title: "", target: self, action: #selector(showAppDetail(_:)))
         appChipButton.isBordered = false
         appChipButton.title = ""
-        appChipButton.bezelStyle = .regularSquare
-        appChipButton.setButtonType(.momentaryChange)
+        appChipButton.isTransparent = true
         appChipButton.translatesAutoresizingMaskIntoConstraints = false
+        appChipButton.toolTip = "About CineWall"
         appChip.contentView.addSubview(appChipButton)
 
-        let statsCard = LiquidGlassCardView(cornerRadius: 16, tintAlpha: 0.025)
+        let statsCard = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.025)
         statsCard.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
-        cpuLabel = NSTextField.liquidLabel("-", size: 9, weight: .bold, color: .white.withAlphaComponent(0.8))
-        cpuLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .bold)
-        ramLabel = NSTextField.liquidLabel("-", size: 9, weight: .medium, color: .white.withAlphaComponent(0.6))
-        ramLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium)
-        
+        statsCard.translatesAutoresizingMaskIntoConstraints = false
+        statsCard.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        statsCard.widthAnchor.constraint(equalToConstant: 60).isActive = true
+
+        cpuLabel = NSTextField.liquidLabel("-", size: 8.5, weight: .bold, color: .white.withAlphaComponent(0.85))
+        cpuLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 8.5, weight: .bold)
+        cpuLabel.alignment = .center
+        ramLabel = NSTextField.liquidLabel("-", size: 8.0, weight: .medium, color: .white.withAlphaComponent(0.65))
+        ramLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 8.0, weight: .medium)
+        ramLabel.alignment = .center
+
         let statsCol = NSStackView(views: [cpuLabel, ramLabel])
         statsCol.orientation = .vertical
         statsCol.alignment = .centerX
         statsCol.spacing = 2
         statsCol.translatesAutoresizingMaskIntoConstraints = false
         statsCard.contentView.addSubview(statsCol)
-        
-        let pinCard = LiquidGlassCardView(cornerRadius: 20, tintAlpha: 0.025)
+
+        let pinCard = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.025)
         pinCard.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
+        pinCard.translatesAutoresizingMaskIntoConstraints = false
+        pinCard.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        pinCard.widthAnchor.constraint(equalToConstant: 60).isActive = true
+
         pinButton = NSButton.liquidSymbol(symbol: "pin", pointSize: 16, target: self, action: #selector(togglePin))
         pinButton.contentTintColor = .white.withAlphaComponent(0.75)
         pinButton.toolTip = "Pin Menu"
         pinCard.contentView.addSubview(pinButton)
 
-        let rightStack = NSStackView(views: [statsCard, pinCard])
-        rightStack.alignment = .centerY
-        rightStack.spacing = 10
-
         header.addArrangedSubview(appChip)
-        header.addArrangedSubview(rightStack)
+        header.addArrangedSubview(statsCard)
+        header.addArrangedSubview(pinCard)
 
         NSLayoutConstraint.activate([
-            textRow.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor, constant: 12),
-            textRow.trailingAnchor.constraint(lessThanOrEqualTo: appChip.contentView.trailingAnchor, constant: -12),
+            iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 20),
+            iconView.heightAnchor.constraint(equalToConstant: 20),
+
+            textRow.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor, constant: 10),
+            textRow.trailingAnchor.constraint(lessThanOrEqualTo: appChip.contentView.trailingAnchor, constant: -8),
             textRow.centerYAnchor.constraint(equalTo: appChip.contentView.centerYAnchor),
-            appChip.widthAnchor.constraint(equalToConstant: 160),
+
             appChipButton.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor),
             appChipButton.trailingAnchor.constraint(equalTo: appChip.contentView.trailingAnchor),
             appChipButton.topAnchor.constraint(equalTo: appChip.contentView.topAnchor),
             appChipButton.bottomAnchor.constraint(equalTo: appChip.contentView.bottomAnchor),
-            
-            statsCol.leadingAnchor.constraint(equalTo: statsCard.contentView.leadingAnchor, constant: 10),
-            statsCol.trailingAnchor.constraint(equalTo: statsCard.contentView.trailingAnchor, constant: -10),
+
+            statsCol.centerXAnchor.constraint(equalTo: statsCard.contentView.centerXAnchor),
             statsCol.centerYAnchor.constraint(equalTo: statsCard.contentView.centerYAnchor),
-            statsCard.heightAnchor.constraint(equalToConstant: 36),
-            statsCard.widthAnchor.constraint(equalToConstant: 86),
-            
+
             pinButton.centerXAnchor.constraint(equalTo: pinCard.contentView.centerXAnchor),
-            pinButton.centerYAnchor.constraint(equalTo: pinCard.contentView.centerYAnchor),
-            pinCard.widthAnchor.constraint(equalToConstant: 40),
-            pinCard.heightAnchor.constraint(equalToConstant: 40)
+            pinButton.centerYAnchor.constraint(equalTo: pinCard.contentView.centerYAnchor)
         ])
 
         mainStack.addArrangedSubview(header)
     }
 
     private func buildPlayerCard() {
-        let playerCard = LiquidGlassCardView(cornerRadius: 34, tintAlpha: 0.025)
+        let playerCard = LiquidGlassCardView(cornerRadius: 24, tintAlpha: 0.025)
         playerCard.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
         playerCardView = playerCard
-        playerCard.widthAnchor.constraint(equalToConstant: 170).isActive = true
-        playerCard.heightAnchor.constraint(equalToConstant: 170).isActive = true
+        playerCard.translatesAutoresizingMaskIntoConstraints = false
+        playerCard.widthAnchor.constraint(equalToConstant: 134).isActive = true
+        playerCard.heightAnchor.constraint(equalToConstant: 134).isActive = true
 
         thumbnailView = NSImageView()
         thumbnailView.wantsLayer = true
-        thumbnailView.layer?.cornerRadius = 28
+        thumbnailView.layer?.cornerRadius = 18
         thumbnailView.layer?.masksToBounds = true
         thumbnailView.layer?.contentsGravity = .resizeAspectFill
         thumbnailView.image = nil
@@ -328,28 +331,25 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         thumbMenu.addItem(NSMenuItem(title: "Reveal in Finder", action: #selector(revealFile), keyEquivalent: ""))
         thumbnailView.menu = thumbMenu
 
-        trackTitle = NSTextField.liquidLabel("Not Playing", size: 13, weight: .semibold)
+        trackTitle = NSTextField.liquidLabel("Not Playing", size: 12, weight: .semibold)
         trackTitle.isHidden = true
-        compactTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+        compactTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 12, weight: .semibold),
                                                color: .white.withAlphaComponent(0.96))
         compactTrackMarquee.stringValue = "Not Playing"
 
-        favButton = createCircleButton(icon: "heart", size: 15, action: #selector(toggleFav))
+        favButton = createCircleButton(icon: "heart", size: 12, action: #selector(toggleFav), diameter: 24)
         favButton.toolTip = "Add to Favorites"
-        favButton.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        favButton.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let transportRow = NSStackView()
         transportRow.alignment = .centerY
-        transportRow.distribution = .fillEqually
-        transportRow.spacing = 8
+        transportRow.spacing = 6
         transportRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let prev = createCircleButton(icon: "backward.fill", size: 13, action: #selector(doPrev), diameter: 30)
+        let prev = createCircleButton(icon: "backward.fill", size: 11, action: #selector(doPrev), diameter: 26)
         prev.toolTip = "Previous"
-        playButton = createCircleButton(icon: "play.fill", size: 16, action: #selector(togglePlay), diameter: 34)
+        playButton = createCircleButton(icon: "play.fill", size: 14, action: #selector(togglePlay), diameter: 32)
         playButton.toolTip = "Play/Pause"
-        let next = createCircleButton(icon: "forward.fill", size: 13, action: #selector(doNext), diameter: 30)
+        let next = createCircleButton(icon: "forward.fill", size: 11, action: #selector(doNext), diameter: 26)
         next.toolTip = "Next"
 
         transportRow.addArrangedSubview(prev)
@@ -361,63 +361,72 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerCard.contentView.addSubview(favButton)
         let openButton = NSButton(title: "", target: self, action: #selector(showPlayerDetail))
         openButton.isBordered = false
+        openButton.isTransparent = true
         openButton.translatesAutoresizingMaskIntoConstraints = false
         playerCard.contentView.addSubview(openButton, positioned: .below, relativeTo: thumbnailView)
         playerCard.contentView.addSubview(transportRow)
 
         NSLayoutConstraint.activate([
-            thumbnailView.centerXAnchor.constraint(equalTo: playerCard.contentView.centerXAnchor),
-            thumbnailView.centerYAnchor.constraint(equalTo: playerCard.contentView.centerYAnchor),
-            thumbnailView.widthAnchor.constraint(equalToConstant: 136),
-            thumbnailView.heightAnchor.constraint(equalTo: thumbnailView.widthAnchor),
-            compactTrackMarquee.topAnchor.constraint(equalTo: thumbnailView.topAnchor, constant: 12),
-            compactTrackMarquee.leadingAnchor.constraint(equalTo: thumbnailView.leadingAnchor, constant: 14),
-            compactTrackMarquee.trailingAnchor.constraint(equalTo: favButton.leadingAnchor, constant: -10),
+            thumbnailView.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor, constant: 4),
+            thumbnailView.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor, constant: -4),
+            thumbnailView.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 4),
+            thumbnailView.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor, constant: -4),
+
+            compactTrackMarquee.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 8),
+            compactTrackMarquee.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor, constant: 10),
+            compactTrackMarquee.trailingAnchor.constraint(equalTo: favButton.leadingAnchor, constant: -4),
             compactTrackMarquee.heightAnchor.constraint(equalToConstant: 18),
-            favButton.topAnchor.constraint(equalTo: thumbnailView.topAnchor, constant: 10),
-            favButton.trailingAnchor.constraint(equalTo: thumbnailView.trailingAnchor, constant: -10),
+
+            favButton.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 6),
+            favButton.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor, constant: -8),
+
             openButton.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor),
             openButton.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor),
             openButton.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor),
             openButton.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor),
-            transportRow.leadingAnchor.constraint(equalTo: thumbnailView.leadingAnchor, constant: 12),
-            transportRow.trailingAnchor.constraint(equalTo: thumbnailView.trailingAnchor, constant: -12),
-            transportRow.bottomAnchor.constraint(equalTo: thumbnailView.bottomAnchor, constant: -12)
+
+            transportRow.centerXAnchor.constraint(equalTo: playerCard.contentView.centerXAnchor),
+            transportRow.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor, constant: -8)
         ])
 
         var dummyVar: NSButton? = nil
         var dummyVar2: NSButton? = nil
-        
+
         let shufView = createGlassAction(symbol: "shuffle", size: 18, baseRadius: 30, action: #selector(toggleShuffle), storeTo: &shuffleBtn)
+        shufView.toolTip = "Toggle Shuffle"
         let loopView = createGlassAction(symbol: "repeat", size: 18, baseRadius: 30, action: #selector(toggleLoop), storeTo: &loopBtn)
+        loopView.toolTip = "Toggle Loop"
         let topGrid = NSStackView(views: [shufView, loopView])
-        topGrid.spacing = 16
-        
-        let folView = createGlassAction(symbol: "folder.fill", size: 18, baseRadius: 30, action: #selector(pickFolder), storeTo: &dummyVar)
+        topGrid.spacing = 14
+
         let filView = createGlassAction(symbol: "doc.fill", size: 18, baseRadius: 30, action: #selector(pickFile), storeTo: &dummyVar2)
-        let botGrid = NSStackView(views: [folView, filView])
-        botGrid.spacing = 16
-        
+        filView.toolTip = "Pick Video File"
+        let folView = createGlassAction(symbol: "folder.fill", size: 18, baseRadius: 30, action: #selector(pickFolder), storeTo: &dummyVar)
+        folView.toolTip = "Pick Video Folder"
+        let botGrid = NSStackView(views: [filView, folView])
+        botGrid.spacing = 14
+
         let actionsGrid = NSStackView(views: [topGrid, botGrid])
         actionsGrid.orientation = .vertical
-        actionsGrid.spacing = 16
-        
-        let row = NSStackView()
+        actionsGrid.spacing = 14
+        actionsGrid.translatesAutoresizingMaskIntoConstraints = false
+        actionsGrid.widthAnchor.constraint(equalToConstant: 134).isActive = true
+        actionsGrid.heightAnchor.constraint(equalToConstant: 134).isActive = true
+
+        let row = NSStackView(views: [playerCard, actionsGrid])
         row.orientation = .horizontal
         row.alignment = .centerY
-        row.spacing = 24
+        row.spacing = 14
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.addArrangedSubview(playerCard)
-        row.addArrangedSubview(actionsGrid)
+        row.widthAnchor.constraint(equalToConstant: 282).isActive = true
+        row.heightAnchor.constraint(equalToConstant: 134).isActive = true
         mainStack.addArrangedSubview(row)
-        
-        playerCard.widthAnchor.constraint(equalToConstant: 160).isActive = true
-        row.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
     }
 
     private func createGlassAction(symbol: String, size: CGFloat, baseRadius: CGFloat, action: Selector, storeTo: inout NSButton?) -> NSView {
         let card = LiquidGlassCardView(cornerRadius: baseRadius, tintAlpha: 0.025)
         card.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
+        card.translatesAutoresizingMaskIntoConstraints = false
         card.widthAnchor.constraint(equalToConstant: baseRadius * 2).isActive = true
         card.heightAnchor.constraint(equalToConstant: baseRadius * 2).isActive = true
         
@@ -432,12 +441,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     }
 
     private func buildSoundCard() {
-        let soundCard = LiquidGlassCardView(cornerRadius: 24, tintAlpha: 0.025)
+        let soundCard = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.025)
         soundCard.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
-        soundCard.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        soundCard.translatesAutoresizingMaskIntoConstraints = false
+        soundCard.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        soundCard.widthAnchor.constraint(equalToConstant: 282).isActive = true
 
         let soundLabel = NSTextField.liquidLabel("Sound", size: 13, weight: .semibold)
-        volButton = createCircleButton(icon: "speaker.wave.2.fill", size: 13, action: #selector(toggleMute), diameter: 30)
+        volButton = createCircleButton(icon: "speaker.wave.2.fill", size: 13, action: #selector(toggleMute), diameter: 32)
         volButton.toolTip = "Mute"
         volSlider = NSSlider(value: 0.5, minValue: 0, maxValue: 1, target: self, action: #selector(volumeChanged))
         volSlider.controlSize = .small
@@ -450,60 +461,62 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         soundCard.contentView.addSubview(row)
 
         NSLayoutConstraint.activate([
-            row.topAnchor.constraint(equalTo: soundCard.contentView.topAnchor, constant: 10),
-            row.bottomAnchor.constraint(equalTo: soundCard.contentView.bottomAnchor, constant: -10),
-            row.leadingAnchor.constraint(equalTo: soundCard.contentView.leadingAnchor, constant: 12),
-            row.trailingAnchor.constraint(equalTo: soundCard.contentView.trailingAnchor, constant: -12)
+            row.centerYAnchor.constraint(equalTo: soundCard.contentView.centerYAnchor),
+            row.leadingAnchor.constraint(equalTo: soundCard.contentView.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: soundCard.contentView.trailingAnchor, constant: -14)
         ])
 
         mainStack.addArrangedSubview(soundCard)
-        soundCard.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
     }
 
     private func buildSummaryCards() {
-        let displaySummary = createSummaryCard(title: "Display", action: #selector(showDisplayDetail(_:)), showsProBadge: true)
-        displayCard = displaySummary.card
-        displaySummaryLabel = displaySummary.subtitleLabel
+        let (dispCard, dispSub) = buildSideBySideCard(title: "Display", subtitle: "Fit, Timer", icon: "display", iconColor: .white.withAlphaComponent(0.12), action: #selector(showDisplayDetail(_:)))
+        displayCard = dispCard
+        displaySummaryLabel = dispSub
 
         let playlistSummary = buildPlaylistCard()
         playlistCard = playlistSummary.card
         playlistSummaryLabel = playlistSummary.subtitleLabel
         playlistToggleButton = playlistSummary.toggleButton
-        
-        let (libCard, libSub) = buildSideBySideCard(title: "Library", subtitle: "0 items", icon: "folder.fill", iconColor: .white.withAlphaComponent(0.12), action: #selector(showList(_:)), showsProBadge: true)
+
+        let row1 = NSStackView(views: [displayCard, playlistCard])
+        row1.orientation = .horizontal
+        row1.spacing = 14
+        row1.translatesAutoresizingMaskIntoConstraints = false
+        row1.widthAnchor.constraint(equalToConstant: 282).isActive = true
+        row1.heightAnchor.constraint(equalToConstant: 60).isActive = true
+
+        let (libCard, libSub) = buildSideBySideCard(title: "Library", subtitle: "0 items", icon: "folder.fill", iconColor: .white.withAlphaComponent(0.12), action: #selector(showList(_:)))
         libraryCard = libCard
         librarySummaryLabel = libSub
-        
-        let playlistRow = NSStackView(views: [playlistCard, libCard])
-        playlistRow.orientation = .horizontal
-        playlistRow.distribution = .fillEqually
-        playlistRow.spacing = 14
-        playlistRow.translatesAutoresizingMaskIntoConstraints = false
-        
-        let settingsSummary = createSummaryCard(title: "Settings", action: #selector(showSettingsDetail(_:)))
-        settingsCard = settingsSummary.card
-        settingsSummaryLabel = settingsSummary.subtitleLabel
 
-        mainStack.addArrangedSubview(displayCard)
-        mainStack.addArrangedSubview(playlistRow)
-        mainStack.addArrangedSubview(settingsCard)
-        playlistRow.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
-        
-        displayCard.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
-        playlistRow.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
-        settingsCard.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
+        let (setCard, setSub) = buildSideBySideCard(title: "Settings", subtitle: "Smart, Lock", icon: "gearshape.fill", iconColor: .white.withAlphaComponent(0.12), action: #selector(showSettingsDetail(_:)))
+        settingsCard = setCard
+        settingsSummaryLabel = setSub
+
+        let row2 = NSStackView(views: [libraryCard, settingsCard])
+        row2.orientation = .horizontal
+        row2.spacing = 14
+        row2.translatesAutoresizingMaskIntoConstraints = false
+        row2.widthAnchor.constraint(equalToConstant: 282).isActive = true
+        row2.heightAnchor.constraint(equalToConstant: 60).isActive = true
+
+        mainStack.addArrangedSubview(row1)
+        mainStack.addArrangedSubview(row2)
     }
 
     private func buildPlaylistCard() -> (card: LiquidGlassCardView, subtitleLabel: NSTextField, toggleButton: NSButton) {
-        let card = LiquidGlassCardView(cornerRadius: 24, tintAlpha: 0.02)
+        let card = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.02)
         card.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
-        card.heightAnchor.constraint(equalToConstant: 66).isActive = true
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        card.widthAnchor.constraint(equalToConstant: 134).isActive = true
 
         let toggleButton = NSButton(title: "", target: self, action: #selector(togglePlaylistMode))
         toggleButton.isBordered = false
         toggleButton.translatesAutoresizingMaskIntoConstraints = false
         toggleButton.wantsLayer = true
-        toggleButton.layer?.cornerRadius = 20
+        toggleButton.layer?.cornerRadius = 19
         toggleButton.layer?.backgroundColor = NSColor.systemBlue.cgColor
         toggleButton.toolTip = "Toggle playlist mode"
 
@@ -518,13 +531,15 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         overlayBtn.translatesAutoresizingMaskIntoConstraints = false
         overlayBtn.toolTip = "Open playlists"
 
-        let titleRow = createSectionTitleRow(title: "Playlists", showsProBadge: true)
-        let sLabel = NSTextField.liquidLabel("Off", size: 11, weight: .regular, color: .white.withAlphaComponent(0.6))
+        let titleRow = createSectionTitleRow(title: "Playlists", showsProBadge: false)
+        let sLabel = NSTextField.liquidLabel("Off", size: 10, weight: .regular, color: .white.withAlphaComponent(0.6))
+        sLabel.lineBreakMode = .byTruncatingTail
+        sLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         let stack = NSStackView(views: [titleRow, sLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 2
+        stack.spacing = 1
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         card.contentView.addSubview(toggleButton)
@@ -532,16 +547,16 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         card.contentView.addSubview(overlayBtn, positioned: .below, relativeTo: toggleButton)
 
         NSLayoutConstraint.activate([
-            toggleButton.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 12),
+            toggleButton.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 10),
             toggleButton.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
-            toggleButton.widthAnchor.constraint(equalToConstant: 40),
-            toggleButton.heightAnchor.constraint(equalToConstant: 40),
+            toggleButton.widthAnchor.constraint(equalToConstant: 38),
+            toggleButton.heightAnchor.constraint(equalToConstant: 38),
             toggleIcon.centerXAnchor.constraint(equalTo: toggleButton.centerXAnchor),
             toggleIcon.centerYAnchor.constraint(equalTo: toggleButton.centerYAnchor),
-            toggleIcon.widthAnchor.constraint(equalToConstant: 20),
-            toggleIcon.heightAnchor.constraint(equalToConstant: 20),
-            stack.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 10),
-            stack.trailingAnchor.constraint(equalTo: card.contentView.trailingAnchor, constant: -12),
+            toggleIcon.widthAnchor.constraint(equalToConstant: 18),
+            toggleIcon.heightAnchor.constraint(equalToConstant: 18),
+            stack.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 8),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -8),
             stack.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
             overlayBtn.topAnchor.constraint(equalTo: card.contentView.topAnchor),
             overlayBtn.bottomAnchor.constraint(equalTo: card.contentView.bottomAnchor),
@@ -553,9 +568,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     }
 
     private func buildSideBySideCard(title: String, subtitle: String, icon: String, iconColor: NSColor, action: Selector, showsProBadge: Bool = false) -> (LiquidGlassCardView, NSTextField) {
-        let card = LiquidGlassCardView(cornerRadius: 24, tintAlpha: 0.02)
+        let card = LiquidGlassCardView(cornerRadius: 30, tintAlpha: 0.02)
         card.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
-        card.heightAnchor.constraint(equalToConstant: 66).isActive = true
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        card.widthAnchor.constraint(equalToConstant: 134).isActive = true
         
         let overlayBtn = NSButton(title: "", target: self, action: action)
         overlayBtn.isBordered = false
@@ -565,80 +582,78 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         
         let iconView = NSImageView(image: NSImage(systemSymbolName: icon, accessibilityDescription: nil)!)
         iconView.contentTintColor = .white
+        iconView.translatesAutoresizingMaskIntoConstraints = false
         
         let iconCircle = NSView()
         iconCircle.wantsLayer = true
-        iconCircle.layer?.cornerRadius = 20
+        iconCircle.layer?.cornerRadius = 19
         iconCircle.layer?.backgroundColor = iconColor.cgColor
-        iconCircle.widthAnchor.constraint(equalToConstant: 40).isActive = true
-        iconCircle.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        iconCircle.translatesAutoresizingMaskIntoConstraints = false
+        iconCircle.widthAnchor.constraint(equalToConstant: 38).isActive = true
+        iconCircle.heightAnchor.constraint(equalToConstant: 38).isActive = true
         
         iconCircle.addSubview(iconView)
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconCircle.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
             iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 20),
-            iconView.heightAnchor.constraint(equalToConstant: 20)
+            iconView.widthAnchor.constraint(equalToConstant: 18),
+            iconView.heightAnchor.constraint(equalToConstant: 18)
         ])
         
         let titleRow = createSectionTitleRow(title: title, showsProBadge: showsProBadge)
-        titleRow.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        titleRow.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        let sLabel = NSTextField.liquidLabel(subtitle, size: 11, weight: .regular, color: .white.withAlphaComponent(0.6))
+        let sLabel = NSTextField.liquidLabel(subtitle, size: 10, weight: .regular, color: .white.withAlphaComponent(0.6))
+        sLabel.lineBreakMode = .byTruncatingTail
         sLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        sLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         let stack = NSStackView(views: [titleRow, sLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 2
-        stack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        stack.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        stack.spacing = 1
+        stack.translatesAutoresizingMaskIntoConstraints = false
         
         let textRow = NSStackView(views: [iconCircle, stack])
         textRow.orientation = .horizontal
         textRow.alignment = .centerY
-        textRow.spacing = 10
+        textRow.spacing = 8
         textRow.translatesAutoresizingMaskIntoConstraints = false
-        textRow.edgeInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
         
         card.contentView.addSubview(textRow)
+        card.contentView.addSubview(overlayBtn, positioned: .above, relativeTo: nil)
+
         NSLayoutConstraint.activate([
-            textRow.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 12),
-            textRow.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -12),
+            textRow.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 10),
+            textRow.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -8),
             textRow.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor)
         ])
-        
-        card.contentView.addSubview(overlayBtn, positioned: .above, relativeTo: nil)
         constrainEdges(of: overlayBtn, to: card.contentView)
         return (card, sLabel)
     }
 
     private func buildFooter() {
         let bringCard = buildFooterActionCard(title: "Bring Here", icon: "macwindow", action: #selector(doBring))
-        let proCard = buildFooterActionCard(title: "Pro", icon: "sparkles", action: #selector(showProSettingsAction))
+        let proCard = buildFooterActionCard(title: "Community", icon: "sparkles", action: #selector(showProSettingsAction))
         let quitCard = buildFooterActionCard(title: "Quit", icon: "power", action: #selector(doQuit))
 
         proFooterButton = proCard.button
         proFooterCardView = proCard.card
-        proFooterButton.toolTip = "Open Pro settings"
+        proFooterButton?.toolTip = "About & Community"
 
         let footerRow = NSStackView(views: [bringCard.card, proCard.card, quitCard.card])
         footerRow.orientation = .horizontal
         footerRow.distribution = .fillEqually
         footerRow.spacing = 10
         footerRow.translatesAutoresizingMaskIntoConstraints = false
+        footerRow.widthAnchor.constraint(equalToConstant: 282).isActive = true
+        footerRow.heightAnchor.constraint(equalToConstant: 54).isActive = true
 
         mainStack.addArrangedSubview(footerRow)
-        footerRow.widthAnchor.constraint(equalTo: mainStack.widthAnchor).isActive = true
     }
 
     private func buildFooterActionCard(title: String, icon: String, action: Selector) -> (card: LiquidGlassCardView, button: NSButton) {
-        let card = LiquidGlassCardView(cornerRadius: 24, tintAlpha: 0.025)
+        let card = LiquidGlassCardView(cornerRadius: 27, tintAlpha: 0.025)
         card.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
-        card.heightAnchor.constraint(equalToConstant: 58).isActive = true
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.heightAnchor.constraint(equalToConstant: 54).isActive = true
 
         let overlayButton = NSButton(title: "", target: self, action: action)
         overlayButton.isBordered = false
@@ -650,7 +665,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         iconView.contentTintColor = .white
         iconView.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = NSTextField.liquidLabel(title, size: 13, weight: .semibold, color: .white.withAlphaComponent(0.94))
+        let titleLabel = NSTextField.liquidLabel(title, size: 12, weight: .semibold, color: .white.withAlphaComponent(0.94))
         titleLabel.lineBreakMode = .byTruncatingTail
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -658,7 +673,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let textRow = NSStackView(views: [iconView, titleLabel])
         textRow.orientation = .horizontal
         textRow.alignment = .centerY
-        textRow.spacing = 8
+        textRow.spacing = 6
         textRow.translatesAutoresizingMaskIntoConstraints = false
 
         card.contentView.addSubview(textRow)
@@ -667,8 +682,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         NSLayoutConstraint.activate([
             iconView.widthAnchor.constraint(equalToConstant: 14),
             iconView.heightAnchor.constraint(equalToConstant: 14),
-            textRow.leadingAnchor.constraint(greaterThanOrEqualTo: card.contentView.leadingAnchor, constant: 10),
-            textRow.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -10),
+            textRow.leadingAnchor.constraint(greaterThanOrEqualTo: card.contentView.leadingAnchor, constant: 4),
+            textRow.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -4),
             textRow.centerXAnchor.constraint(equalTo: card.contentView.centerXAnchor),
             textRow.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor)
         ])
@@ -2042,12 +2057,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }, completionHandler: {
             if self.mainStack.superview == nil {
                 self.view.addSubview(self.mainStack, positioned: .below, relativeTo: self.detailOverlay)
-                let leading = self.mainStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 16)
+                let leading = self.mainStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 19)
                 self.mainStackLeadingConstraint = leading
                 NSLayoutConstraint.activate([
                     self.mainStack.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 16),
                     leading,
-                    self.mainStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -16),
+                    self.mainStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -19),
                     self.mainStack.bottomAnchor.constraint(lessThanOrEqualTo: self.view.bottomAnchor, constant: -16)
                 ])
             }
