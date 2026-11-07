@@ -148,7 +148,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         if let button = statusItem.button {
             if let img = NSImage(named: "menubar_icon") {
                 img.isTemplate = true
-                img.size = NSSize(width: 18, height: 18)
+                let aspect: CGFloat = img.size.width / max(1, img.size.height)
+                let height: CGFloat = 16.0
+                let width = round(height * aspect)
+                img.size = NSSize(width: width, height: height)
                 button.image = img
             } else {
                 button.image = NSImage(systemSymbolName: "film.stack", accessibilityDescription: "CineWall")

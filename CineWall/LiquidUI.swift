@@ -345,7 +345,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         logo.setContentHuggingPriority(.defaultLow, for: .horizontal)
         logo.lineBreakMode = .byTruncatingTail
 
-        appHeaderSubtitleLabel = NSTextField.liquidLabel("v3.0 • CPU 0.0% • 55 MB", size: 9.5, weight: .medium, color: .white.withAlphaComponent(0.70))
+        appHeaderSubtitleLabel = NSTextField.liquidLabel("CPU 0.0% • 55 MB", size: 9.5, weight: .medium, color: .white.withAlphaComponent(0.70))
         appHeaderSubtitleLabel.lineBreakMode = .byTruncatingTail
         appHeaderSubtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         appHeaderSubtitleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -391,8 +391,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         NSLayoutConstraint.activate([
             iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
             iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 20),
-            iconView.heightAnchor.constraint(equalToConstant: 20),
+            iconView.widthAnchor.constraint(equalToConstant: 24),
+            iconView.heightAnchor.constraint(equalToConstant: 12),
 
             textRow.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor, constant: 11),
             textRow.trailingAnchor.constraint(lessThanOrEqualTo: appChip.contentView.trailingAnchor, constant: -8),
@@ -1964,7 +1964,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         let cpuText = String(format: "%.1f", app.getAppCPU())
         let ramText = app.getAppRAM()
-        appHeaderSubtitleLabel?.stringValue = "v\(version) • CPU \(cpuText)% • \(ramText)"
+        appHeaderSubtitleLabel?.stringValue = "CPU \(cpuText)% • \(ramText)"
         appVersionLabel?.stringValue = "Version \(version) (\(build))"
         appStatusLabel?.stringValue = app.currentAccessDescription()
     }
@@ -2383,7 +2383,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.0"
         let cpuText = String(format: "%.1f", app.getAppCPU())
         let ramText = app.getAppRAM()
-        appHeaderSubtitleLabel?.stringValue = "v\(version) • CPU \(cpuText)% • \(ramText)"
+        appHeaderSubtitleLabel?.stringValue = "CPU \(cpuText)% • \(ramText)"
         cpuLabel?.stringValue = "CPU \(cpuText)%"
         ramLabel?.stringValue = "RAM \(ramText)"
     }
