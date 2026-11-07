@@ -212,7 +212,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(nextFile), name: NSNotification.Name("com.cinewall.nextTrack"), object: nil)
     }
 
     @objc func triggerLockScreenSyncForTest() {
