@@ -285,8 +285,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         win.titlebarAppearsTransparent = true
         win.titleVisibility = .hidden
         win.registerForDraggedTypes([.fileURL])
-        win.minSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight)
-        win.maxSize = NSSize(width: liquidMenuWidth, height: liquidMenuHeight)
+        win.minSize = NSSize(width: 40, height: 30)
+        win.maxSize = NSSize(width: 1000, height: 1000)
         
         let vc = LiquidMenuController()
         vc.appDelegate = self
@@ -295,6 +295,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         self.liquidWindow = win
         self.liquidController = vc
     }
+
+    private var menuAnimationTimer: Timer?
 
     @objc func toggleLiquidPopover() {
         if isPopoverOpen {
@@ -323,7 +325,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         let buttonScreenRect = button.window?.convertToScreen(button.frame) ?? .zero
 
         var x = buttonScreenRect.origin.x - (liquidMenuWidth / 2) + (buttonScreenRect.width / 2)
-        let y = buttonScreenRect.minY - liquidMenuHeight - 6
+        let topY = buttonScreenRect.minY - 6
+        let y = topY - liquidMenuHeight
 
         let minX = visible.minX + 8
         let maxX = visible.maxX - liquidMenuWidth - 8
@@ -334,22 +337,57 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
             x = maxX
         }
 
-        window.setFrameOrigin(NSPoint(x: x, y: y))
+        let targetFrame = NSRect(x: x, y: y, width: liquidMenuWidth, height: liquidMenuHeight)
 
-        // Fluid fade-in presentation (from ThemeEngine)
-        window.alphaValue = 0
-        window.makeKeyAndOrderFront(nil)
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.12
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            window.animator().alphaValue = 1.0
-        }
+        // Start frame: compact pill positioned at the menubar button
+        let startW: CGFloat = 80
+        let startH: CGFloat = 36
+        let startX = min(max(buttonScreenRect.midX - startW / 2, visible.minX + 8), visible.maxX - startW - 8)
+        let startY = topY - startH
+        let startFrame = NSRect(x: startX, y: startY, width: startW, height: startH)
+
+        animateMenuOpening(from: startFrame, to: targetFrame)
 
         NSApp.activate(ignoringOtherApps: true)
 
         if !isPinned {
             setupTransiencyMonitors()
         }
+    }
+
+    private func animateMenuOpening(from startFrame: NSRect, to targetFrame: NSRect) {
+        menuAnimationTimer?.invalidate()
+        menuAnimationTimer = nil
+
+        guard let window = liquidWindow else { return }
+        let startTime = CACurrentMediaTime()
+        let duration = VorssaintMotion.settlingTime(from: startFrame, to: targetFrame)
+
+        window.setFrame(startFrame, display: true)
+        window.alphaValue = 1.0
+        liquidController?.mainStack.alphaValue = 0
+        window.makeKeyAndOrderFront(nil)
+
+        let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
+            guard let self = self, let win = self.liquidWindow else {
+                t.invalidate()
+                return
+            }
+            let elapsed = CACurrentMediaTime() - startTime
+            if elapsed >= duration {
+                t.invalidate()
+                self.menuAnimationTimer = nil
+                win.setFrame(targetFrame, display: true)
+                self.liquidController?.mainStack.alphaValue = 1.0
+            } else {
+                let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
+                win.setFrame(currentFrame, display: true)
+                let contentAlpha = CGFloat(max(0.0, min(1.0, (elapsed - 0.06) / 0.22)))
+                self.liquidController?.mainStack.alphaValue = contentAlpha
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        menuAnimationTimer = timer
     }
 
     func closePopover(force: Bool = false) {
@@ -362,16 +400,48 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
 
         guard let window = liquidWindow, window.isVisible else { return }
 
-        NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = 0.10
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            window.animator().alphaValue = 0.0
-        }) {
-            if !self.isPopoverOpen {
-                window.orderOut(nil)
-                window.alphaValue = 1.0
+        menuAnimationTimer?.invalidate()
+        menuAnimationTimer = nil
+
+        guard let button = statusItem.button,
+              let screen = button.window?.screen ?? NSScreen.main ?? NSScreen.screens.first else {
+            window.orderOut(nil)
+            return
+        }
+
+        let buttonScreenRect = button.window?.convertToScreen(button.frame) ?? .zero
+        let visible = screen.visibleFrame
+        let topY = buttonScreenRect.minY - 6
+        let startW: CGFloat = 80
+        let startH: CGFloat = 36
+        let startX = min(max(buttonScreenRect.midX - startW / 2, visible.minX + 8), visible.maxX - startW - 8)
+        let targetCollapseFrame = NSRect(x: startX, y: topY - startH, width: startW, height: startH)
+
+        let currentFrame = window.frame
+        let startTime = CACurrentMediaTime()
+        let duration = max(VorssaintMotion.shrinkingWidth.duration, VorssaintMotion.shrinkingHeight.duration) * 1.05
+
+        let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
+            guard let self = self, let win = self.liquidWindow else {
+                t.invalidate()
+                return
+            }
+            let elapsed = CACurrentMediaTime() - startTime
+            if elapsed >= duration {
+                t.invalidate()
+                self.menuAnimationTimer = nil
+                win.orderOut(nil)
+                win.setFrame(currentFrame, display: false)
+                win.alphaValue = 1.0
+            } else {
+                let frame = VorssaintMotion.interpolateRect(from: currentFrame, to: targetCollapseFrame, time: elapsed)
+                win.setFrame(frame, display: true)
+                let alpha = CGFloat(max(0.0, 1.0 - (elapsed / (duration * 0.75))))
+                win.alphaValue = alpha
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        menuAnimationTimer = timer
     }
 
     func setupTransiencyMonitors() {

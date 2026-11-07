@@ -79,6 +79,50 @@ public enum VorssaintMotion {
     }
 }
 
+// MARK: - Player Thumbnail View
+final class PlayerThumbnailView: NSView {
+    var thumbnailImage: NSImage? {
+        didSet {
+            layer?.contents = thumbnailImage
+            needsDisplay = true
+        }
+    }
+
+    private let gradientOverlay = CAGradientLayer()
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
+        layer?.cornerRadius = 16
+        layer?.masksToBounds = true
+        layer?.borderWidth = 1.0
+        layer?.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
+        layer?.contentsGravity = .resizeAspectFill
+
+        gradientOverlay.colors = [
+            NSColor.black.withAlphaComponent(0.40).cgColor,
+            NSColor.clear.cgColor,
+            NSColor.black.withAlphaComponent(0.45).cgColor
+        ]
+        gradientOverlay.locations = [0.0, 0.45, 1.0]
+        layer?.addSublayer(gradientOverlay)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        super.layout()
+        gradientOverlay.frame = bounds
+        layer?.contents = thumbnailImage
+    }
+
+    override func updateLayer() {
+        super.updateLayer()
+        layer?.contents = thumbnailImage
+    }
+}
+
 // MARK: - MAIN CONTROLLER
 final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     enum DetailSection {
@@ -117,7 +161,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     weak var appDelegate: AppDelegate?
 
-    var thumbnailView: NSImageView!
+    var thumbnailView: PlayerThumbnailView!
+    private var currentTrackThumbnail: NSImage?
     var trackTitle: NSTextField!
     var compactTrackMarquee: MarqueeLabelView!
     var favButton: NSButton!
@@ -159,7 +204,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private var appStatusLabel: NSTextField!
     private var appHeaderSubtitleLabel: NSTextField!
 
-    private var mainStack: NSStackView!
+    var mainStack: NSStackView!
     private var playerCardView: LiquidGlassCardView!
     private var playlistCard: LiquidGlassCardView!
     private var displayCard: LiquidGlassCardView!
@@ -247,11 +292,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(mainStack)
 
-        mainStackLeadingConstraint = mainStack.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 19)
         NSLayoutConstraint.activate([
             mainStack.topAnchor.constraint(equalTo: root.topAnchor, constant: 16),
-            mainStackLeadingConstraint!,
-            mainStack.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -19),
+            mainStack.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            mainStack.widthAnchor.constraint(equalToConstant: 282),
             mainStack.bottomAnchor.constraint(lessThanOrEqualTo: root.bottomAnchor, constant: -16)
         ])
 
@@ -374,15 +418,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerCard.widthAnchor.constraint(equalToConstant: 134).isActive = true
         playerCard.heightAnchor.constraint(equalToConstant: 134).isActive = true
 
-        thumbnailView = NSImageView()
-        thumbnailView.wantsLayer = true
-        thumbnailView.layer?.cornerRadius = 12
-        thumbnailView.layer?.masksToBounds = true
-        thumbnailView.layer?.borderWidth = 1.0
-        thumbnailView.layer?.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
-        thumbnailView.layer?.contentsGravity = .resizeAspectFill
-        thumbnailView.image = nil
-        thumbnailView.layer?.contents = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        thumbnailView = PlayerThumbnailView()
         thumbnailView.translatesAutoresizingMaskIntoConstraints = false
 
         let thumbMenu = NSMenu()
@@ -395,19 +431,19 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                                                color: .white.withAlphaComponent(0.96))
         compactTrackMarquee.stringValue = "Not Playing"
 
-        favButton = createCircleButton(icon: "heart", size: 11, action: #selector(toggleFav), diameter: 22)
+        favButton = createCircleButton(icon: "heart", size: 12, action: #selector(toggleFav), diameter: 24)
         favButton.toolTip = "Add to Favorites"
 
         let transportRow = NSStackView()
         transportRow.alignment = .centerY
-        transportRow.spacing = 8
+        transportRow.spacing = 6
         transportRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let prev = createCircleButton(icon: "backward.fill", size: 10, action: #selector(doPrev), diameter: 24)
+        let prev = createCircleButton(icon: "backward.fill", size: 11, action: #selector(doPrev), diameter: 26)
         prev.toolTip = "Previous"
-        playButton = createCircleButton(icon: "play.fill", size: 13, action: #selector(togglePlay), diameter: 30)
+        playButton = createCircleButton(icon: "play.fill", size: 14, action: #selector(togglePlay), diameter: 32)
         playButton.toolTip = "Play/Pause"
-        let next = createCircleButton(icon: "forward.fill", size: 10, action: #selector(doNext), diameter: 24)
+        let next = createCircleButton(icon: "forward.fill", size: 11, action: #selector(doNext), diameter: 26)
         next.toolTip = "Next"
 
         transportRow.addArrangedSubview(prev)
@@ -425,18 +461,18 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerCard.contentView.addSubview(transportRow)
 
         NSLayoutConstraint.activate([
-            compactTrackMarquee.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 8),
-            compactTrackMarquee.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor, constant: 10),
+            thumbnailView.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor, constant: 10),
+            thumbnailView.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor, constant: -10),
+            thumbnailView.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 10),
+            thumbnailView.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor, constant: -10),
+
+            compactTrackMarquee.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 14),
+            compactTrackMarquee.leadingAnchor.constraint(equalTo: playerCard.contentView.leadingAnchor, constant: 16),
             compactTrackMarquee.trailingAnchor.constraint(equalTo: favButton.leadingAnchor, constant: -4),
             compactTrackMarquee.heightAnchor.constraint(equalToConstant: 18),
 
-            favButton.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 6),
-            favButton.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor, constant: -8),
-
-            thumbnailView.centerXAnchor.constraint(equalTo: playerCard.contentView.centerXAnchor),
-            thumbnailView.topAnchor.constraint(equalTo: compactTrackMarquee.bottomAnchor, constant: 5),
-            thumbnailView.widthAnchor.constraint(equalToConstant: 58),
-            thumbnailView.heightAnchor.constraint(equalToConstant: 58),
+            favButton.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor, constant: 12),
+            favButton.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor, constant: -14),
 
             openButton.topAnchor.constraint(equalTo: playerCard.contentView.topAnchor),
             openButton.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor),
@@ -444,7 +480,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             openButton.trailingAnchor.constraint(equalTo: playerCard.contentView.trailingAnchor),
 
             transportRow.centerXAnchor.constraint(equalTo: playerCard.contentView.centerXAnchor),
-            transportRow.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor, constant: -8)
+            transportRow.bottomAnchor.constraint(equalTo: playerCard.contentView.bottomAnchor, constant: -12)
         ])
 
         var dummyVar: NSButton? = nil
@@ -2173,7 +2209,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             self.mainStack.animator().alphaValue = 0
         }, completionHandler: {
             self.mainStack.isHidden = true
-            self.mainStack.removeFromSuperview()
         })
 
         animateCardExpansion(from: detailSourceFrame, to: targetFrame)
@@ -2193,18 +2228,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
         
         self.setDetailContentVisible(false)
-        if self.mainStack.superview == nil {
-            self.view.addSubview(self.mainStack, positioned: .below, relativeTo: self.detailOverlay)
-            let leading = self.mainStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 19)
-            self.mainStackLeadingConstraint = leading
-            NSLayoutConstraint.activate([
-                self.mainStack.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 16),
-                leading,
-                self.mainStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -19),
-                self.mainStack.bottomAnchor.constraint(lessThanOrEqualTo: self.view.bottomAnchor, constant: -16)
-            ])
-        }
-        self.view.layoutSubtreeIfNeeded()
         self.mainStack.alphaValue = 0
         self.mainStack.isHidden = false
 
@@ -2228,6 +2251,9 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         self.activeDetail = nil
         self.detailSourceFrame = .zero
         self.setDetailContentVisible(true)
+        if let current = currentTrackThumbnail {
+            self.thumbnailView.thumbnailImage = current
+        }
     }
     
     func resetToMainMenu() {
@@ -2239,29 +2265,20 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             activeDetail = nil
             detailSourceFrame = .zero
             setDetailContentVisible(true)
-            
-            if mainStack.superview == nil {
-                view.addSubview(mainStack, positioned: .below, relativeTo: detailOverlay)
-                let leading = mainStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 19)
-                mainStackLeadingConstraint = leading
-                NSLayoutConstraint.activate([
-                    mainStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 16),
-                    leading,
-                    mainStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -19),
-                    mainStack.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -16)
-                ])
-            }
             mainStack.isHidden = false
             mainStack.alphaValue = 1
             if let root = view as? LiquidView { root.setGlassOpacity(1.0) }
+            if let current = currentTrackThumbnail {
+                thumbnailView.thumbnailImage = current
+            }
         }
     }
 
     func updateTrackInfo(title: String, image: NSImage?, isFav: Bool) {
+        currentTrackThumbnail = image
         trackTitle.stringValue = title
         compactTrackMarquee?.stringValue = title
-        thumbnailView.image = nil
-        thumbnailView.layer?.contents = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        thumbnailView.thumbnailImage = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         expandedTrackMarquee?.stringValue = title
         expandedArtworkView?.image = nil
         expandedArtworkView?.layer?.contents = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
