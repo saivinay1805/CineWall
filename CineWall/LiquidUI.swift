@@ -21,7 +21,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             case .display: return "Display"
             case .library: return "Library"
             case .settings: return "Settings"
-            case .pro: return "Pro"
+            case .pro: return "About CineWall"
             }
         }
 
@@ -33,7 +33,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             case .display: return "Wallpaper fit, timer, and screen behavior"
             case .library: return "Manage playlists and add media in bulk."
             case .settings: return "Playback rules, power behavior, and lock screen."
-            case .pro: return "Trial, activation, and one-time unlock."
+            case .pro: return "v3.0 Tahoe Edition • Free & Open Source"
             }
         }
     }
@@ -1391,62 +1391,53 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         rootStack.spacing = 12
         rootStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let headerRow = createInlineDetailHeader(title: "Pro", subtitle: "Trial, activation, and one-time unlock.")
+        let headerRow = createInlineDetailHeader(title: "About CineWall", subtitle: "v3.0 Tahoe Edition • Free & Open Source")
 
-        proFeatureFocusLabel = NSTextField.liquidLabel("Unlock playlists, timers, lock screen sync, and smart rules.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
-        proFeatureFocusLabel.maximumNumberOfLines = 2
-        proFeatureFocusLabel.lineBreakMode = .byWordWrapping
-
+        // Overview Card
         let overviewCard = nestedGroupCard()
-        overviewCard.heightAnchor.constraint(equalToConstant: 84).isActive = true
-        let overviewTitle = NSTextField.liquidLabel("What Pro Unlocks", size: 14, weight: .semibold)
-        let overviewStack = NSStackView(views: [overviewTitle, proFeatureFocusLabel])
+        overviewCard.heightAnchor.constraint(greaterThanOrEqualToConstant: 86).isActive = true
+        let overviewTitle = NSTextField.liquidLabel("CineWall v3.0 (Tahoe Edition)", size: 14, weight: .semibold)
+        let overviewDesc = NSTextField.liquidLabel("The native video wallpaper engine for macOS with Liquid Glass UI, lock screen sync, playlist support, and zero-space favorites.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
+        overviewDesc.maximumNumberOfLines = 3
+        overviewDesc.lineBreakMode = .byWordWrapping
+        let licenseBadge = NSTextField.liquidLabel("MIT License • All Features Unlocked", size: 11, weight: .semibold, color: NSColor(calibratedRed: 0.35, green: 0.85, blue: 0.55, alpha: 1.0))
+        
+        let overviewStack = NSStackView(views: [overviewTitle, overviewDesc, licenseBadge])
         overviewStack.orientation = .vertical
         overviewStack.alignment = .leading
         overviewStack.spacing = 6
         overviewStack.translatesAutoresizingMaskIntoConstraints = false
         overviewCard.contentView.addSubview(overviewStack)
 
-        proStatusLabel = NSTextField.liquidLabel("Free plan", size: 12, weight: .semibold)
-        proDescriptionLabel = NSTextField.liquidLabel("Use your 7-day trial or activate with your Pro license key.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.66))
-        proDescriptionLabel.maximumNumberOfLines = 2
-        proDescriptionLabel.lineBreakMode = .byWordWrapping
+        // Community & GitHub Card
+        let communityCard = nestedGroupCard()
+        communityCard.heightAnchor.constraint(greaterThanOrEqualToConstant: 160).isActive = true
+        let communityTitle = NSTextField.liquidLabel("Community & Links", size: 14, weight: .semibold)
+        
+        let gitHubButton = createPillButton("Star on GitHub (24★)", icon: "star.fill", action: #selector(openGitHubAction))
+        let issuesButton = createPillButton("Report Issue / Request", icon: "bubble.left.and.exclamationmark.bubble.right.fill", action: #selector(openIssuesAction))
+        let releasesButton = createPillButton("Releases & Updates", icon: "sparkles", action: #selector(openReleasesAction))
+        let updatesButton = createPillButton("Check for Updates…", icon: "arrow.triangle.2.circlepath", action: #selector(checkForUpdatesAction))
 
-        let licenseInput = createWideTextInputControl(placeholder: "Paste your Pro license key")
-        proLicenseField = licenseInput.field
+        let row1 = NSStackView(views: [gitHubButton, issuesButton])
+        row1.distribution = .fillEqually
+        row1.spacing = 8
+        row1.translatesAutoresizingMaskIntoConstraints = false
 
-        let activationCard = nestedGroupCard()
-        activationCard.heightAnchor.constraint(greaterThanOrEqualToConstant: 178).isActive = true
-        let activationTitle = NSTextField.liquidLabel("Activation", size: 14, weight: .semibold)
-        proTrialButton = createPillButton("Start 7-Day Trial", icon: "clock.arrow.circlepath", action: #selector(startTrialAction))
-        proPasteButton = createPillButton("Paste Key", icon: "doc.on.clipboard", action: #selector(pasteLicenseFromClipboard))
-        proActivateButton = createPillButton("Activate Key", icon: "key.fill", action: #selector(activateLicenseFromField))
-        let proButtonsRow = NSStackView(views: [proTrialButton, proPasteButton, proActivateButton])
-        proButtonsRow.alignment = .centerY
-        proButtonsRow.spacing = 8
-        proButtonsRow.distribution = .fillEqually
-        proButtonsRow.translatesAutoresizingMaskIntoConstraints = false
-        let openWebsiteButton = createPillButton("Get License Key", icon: "cart", action: #selector(openWebsiteAction))
+        let row2 = NSStackView(views: [releasesButton, updatesButton])
+        row2.distribution = .fillEqually
+        row2.spacing = 8
+        row2.translatesAutoresizingMaskIntoConstraints = false
 
-        var activationViews: [NSView] = [activationTitle, proStatusLabel, proDescriptionLabel, licenseInput.container, proButtonsRow, openWebsiteButton]
-        #if DEBUG
-        let developerButton = createPillButton("Enable Dev Pro", icon: "hammer.fill", action: #selector(toggleDeveloperProAction))
-        let resetDebugButton = createPillButton("Reset Pro/Trial State", icon: "arrow.counterclockwise", action: #selector(resetDebugProTrialAction))
-        proDeveloperButton = developerButton
-        proResetDebugButton = resetDebugButton
-        activationViews.append(developerButton)
-        activationViews.append(resetDebugButton)
-        #endif
-
-        let activationStack = NSStackView(views: activationViews)
-        activationStack.orientation = .vertical
-        activationStack.alignment = .leading
-        activationStack.spacing = 8
-        activationStack.translatesAutoresizingMaskIntoConstraints = false
-        activationCard.contentView.addSubview(activationStack)
+        let communityStack = NSStackView(views: [communityTitle, row1, row2])
+        communityStack.orientation = .vertical
+        communityStack.alignment = .leading
+        communityStack.spacing = 10
+        communityStack.translatesAutoresizingMaskIntoConstraints = false
+        communityCard.contentView.addSubview(communityStack)
 
         rootStack.addArrangedSubview(headerRow)
-        [overviewCard, activationCard].forEach {
+        [overviewCard, communityCard].forEach {
             rootStack.addArrangedSubview($0)
             $0.widthAnchor.constraint(equalToConstant: detailWidth - 36).isActive = true
         }
@@ -1461,7 +1452,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             rootStack.bottomAnchor.constraint(lessThanOrEqualTo: proDetailView.bottomAnchor, constant: -6)
         ])
         constrainEdges(of: overviewStack, to: overviewCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
-        constrainEdges(of: activationStack, to: activationCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
+        constrainEdges(of: communityStack, to: communityCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
     }
 
     private func createSummaryCard(title: String, action: Selector, showsProBadge: Bool = false) -> (card: LiquidGlassCardView, subtitleLabel: NSTextField) {
@@ -1562,27 +1553,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private func updateProVisibility() {
         guard let app = appDelegate else { return }
         let title: String
-        switch app.proManager.tier {
-        case .free:
-            title = app.proManager.hasUsedTrial ? "Unlock Pro" : "Start Trial"
-        case .trial:
-            title = app.proManager.remainingTrialDaysText
-        case .pro:
-            title = "Pro"
-        }
-        proFooterButton?.title = title
+        proFooterButton?.title = "★ CineWall v3.0"
         proFooterButton?.contentTintColor = .white
-        proStatusLabel?.stringValue = app.currentAccessDescription()
-        switch app.proManager.tier {
-        case .free:
-            proDescriptionLabel?.stringValue = app.proManager.hasUsedTrial
-                ? "Your trial has ended. Enter your license key to unlock Pro again."
-                : "Start a 7-day Pro trial or paste your license key below."
-        case .trial:
-            proDescriptionLabel?.stringValue = "Pro is active right now. You can keep testing everything until the trial ends."
-        case .pro:
-            proDescriptionLabel?.stringValue = "Open source version. All features are permanently unlocked."
-        }
+        proStatusLabel?.stringValue = "Open Source Edition"
+        proDescriptionLabel?.stringValue = "All features are permanently unlocked under the MIT License."
         proTrialButton?.isHidden = app.proManager.hasActivatedLicense
         proTrialButton?.isEnabled = !app.proManager.hasUsedTrial && !app.proManager.isTrialActive
         proTrialButton?.alphaValue = proTrialButton.isEnabled ? 1.0 : 0.55
@@ -2385,6 +2359,21 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     @objc func showDisplayDetail(_ sender: Any?) { showDetail(.display, from: resolveDetailSourceView(sender: sender, fallback: displayCard)) }
     @objc func showSettingsDetail(_ sender: Any?) { showDetail(.settings, from: resolveDetailSourceView(sender: sender, fallback: settingsCard)) }
     @objc func showProSettingsAction() { showProSettings() }
+    @objc func openGitHubAction() {
+        if let url = URL(string: "https://github.com/saivinay1805/CineWall") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    @objc func openIssuesAction() {
+        if let url = URL(string: "https://github.com/saivinay1805/CineWall/issues") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    @objc func openReleasesAction() {
+        if let url = URL(string: "https://github.com/saivinay1805/CineWall/releases") {
+            NSWorkspace.shared.open(url)
+        }
+    }
     @objc func checkForUpdatesAction() { appDelegate?.checkForUpdates() }
     @objc func openWebsiteAction() { appDelegate?.openProCheckout() }
     @objc func doBring() { appDelegate?.bringToCurrentDesktop() }
@@ -2429,14 +2418,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     @objc func showAbout() {
         let alert = NSAlert()
-        alert.messageText = "CineWall"
-        let status = appDelegate?.currentAccessDescription() ?? "Free plan."
-        alert.informativeText = "Version 2.0\n\n\(status)\n\nThe ultimate local video wallpaper utility for macOS.\n\n© 2026"
+        alert.messageText = "CineWall v3.0 (Tahoe Edition)"
+        alert.informativeText = "Version 3.0 • Open Source\n\nThe native video wallpaper engine for macOS.\n\nFree and open source under the MIT License.\n\nhttps://github.com/saivinay1805/CineWall"
         alert.icon = NSImage(named: "AppIcon")
         alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Unlock Pro")
+        alert.addButton(withTitle: "Star on GitHub (24★)")
         if alert.runModal() == .alertSecondButtonReturn {
-            appDelegate?.presentProUpgradePrompt(for: .playlists)
+            openGitHubAction()
         }
     }
     @objc func startTrialAction() {

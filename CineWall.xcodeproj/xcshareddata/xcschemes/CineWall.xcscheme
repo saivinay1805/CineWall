@@ -17,8 +17,8 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FFB105B82EE2F9FD00A68055"
                BuildableName = "CineWall.app"
-               BlueprintName = "SimpleVideoWallpaper"
-               ReferencedContainer = "container:SimpleVideoWallpaper.xcodeproj">
+               BlueprintName = "CineWall"
+               ReferencedContainer = "container:CineWall.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,8 +46,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FFB105B82EE2F9FD00A68055"
             BuildableName = "CineWall.app"
-            BlueprintName = "SimpleVideoWallpaper"
-            ReferencedContainer = "container:SimpleVideoWallpaper.xcodeproj">
+            BlueprintName = "CineWall"
+            ReferencedContainer = "container:CineWall.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -63,8 +63,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FFB105B82EE2F9FD00A68055"
             BuildableName = "CineWall.app"
-            BlueprintName = "SimpleVideoWallpaper"
-            ReferencedContainer = "container:SimpleVideoWallpaper.xcodeproj">
+            BlueprintName = "CineWall"
+            ReferencedContainer = "container:CineWall.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

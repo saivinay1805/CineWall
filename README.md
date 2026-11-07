@@ -78,10 +78,10 @@ git clone https://github.com/saivinay1805/CineWall.git
 cd CineWall
 
 # Open the project in Xcode
-open SimpleVideoWallpaper.xcodeproj
+open CineWall.xcodeproj
 ```
 
-Select the `SimpleVideoWallpaper` target and click **Run** (or `Cmd + R`).
+Select the `CineWall` target and click **Run** (or `Cmd + R`).
 
 ---
 

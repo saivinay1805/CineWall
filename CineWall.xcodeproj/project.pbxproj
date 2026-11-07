@@ -17,9 +17,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		FFB105BB2EE2F9FD00A68055 /* SimpleVideoWallpaper */ = {
+		FFB105BB2EE2F9FD00A68055 /* CineWall */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SimpleVideoWallpaper;
+			path = CineWall;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -40,7 +40,7 @@
 			isa = PBXGroup;
 			children = (
 				FF0AB3652F07DB92008C008A /* main.swift */,
-				FFB105BB2EE2F9FD00A68055 /* SimpleVideoWallpaper */,
+				FFB105BB2EE2F9FD00A68055 /* CineWall */,
 				FFB105BA2EE2F9FD00A68055 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,9 +56,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FFB105B82EE2F9FD00A68055 /* SimpleVideoWallpaper */ = {
+		FFB105B82EE2F9FD00A68055 /* CineWall */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FFB105C72EE2F9FF00A68055 /* Build configuration list for PBXNativeTarget "SimpleVideoWallpaper" */;
+			buildConfigurationList = FFB105C72EE2F9FF00A68055 /* Build configuration list for PBXNativeTarget "CineWall" */;
 			buildPhases = (
 				FFB105B52EE2F9FD00A68055 /* Sources */,
 				FFB105B62EE2F9FD00A68055 /* Frameworks */,
@@ -69,13 +69,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				FFB105BB2EE2F9FD00A68055 /* SimpleVideoWallpaper */,
+				FFB105BB2EE2F9FD00A68055 /* CineWall */,
 			);
-			name = SimpleVideoWallpaper;
+			name = CineWall;
 			packageProductDependencies = (
 				FFD2A1024F9F100000C1A001 /* Sparkle */,
 			);
-			productName = SimpleVideoWallpaper;
+			productName = CineWall;
 			productReference = FFB105B92EE2F9FD00A68055 /* CineWall.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -94,7 +94,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FFB105B42EE2F9FD00A68055 /* Build configuration list for PBXProject "SimpleVideoWallpaper" */;
+			buildConfigurationList = FFB105B42EE2F9FD00A68055 /* Build configuration list for PBXProject "CineWall" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -111,7 +111,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FFB105B82EE2F9FD00A68055 /* SimpleVideoWallpaper */,
+				FFB105B82EE2F9FD00A68055 /* CineWall */,
 			);
 		};
 /* End PBXProject section */
@@ -276,7 +276,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SimpleVideoWallpaper/Info.plist;
+				INFOPLIST_FILE = CineWall/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CineWall;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -326,7 +326,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SimpleVideoWallpaper/Info.plist;
+				INFOPLIST_FILE = CineWall/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CineWall;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -359,7 +359,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FFB105B42EE2F9FD00A68055 /* Build configuration list for PBXProject "SimpleVideoWallpaper" */ = {
+		FFB105B42EE2F9FD00A68055 /* Build configuration list for PBXProject "CineWall" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FFB105C52EE2F9FF00A68055 /* Debug */,
@@ -368,7 +368,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FFB105C72EE2F9FF00A68055 /* Build configuration list for PBXNativeTarget "SimpleVideoWallpaper" */ = {
+		FFB105C72EE2F9FF00A68055 /* Build configuration list for PBXNativeTarget "CineWall" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FFB105C82EE2F9FF00A68055 /* Debug */,

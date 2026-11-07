@@ -61,8 +61,8 @@ We added a real Free / Trial / Pro system to the app.
 
 Main implementation lives in:
 
-- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
-- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
+- [AppDelegate.swift](./CineWall/AppDelegate.swift)
+- [LiquidUI.swift](./CineWall/LiquidUI.swift)
 
 ### 4.1 Access Model
 
@@ -139,7 +139,7 @@ We added and refined a dedicated Pro flow inside the Liquid UI menu.
 
 Main UI file:
 
-- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
+- [LiquidUI.swift](./CineWall/LiquidUI.swift)
 
 ### 5.1 Footer Navigation
 
@@ -166,7 +166,7 @@ The `Get License Key` button now opens your hosted checkout directly instead of 
 
 Current checkout URL is stored in:
 
-- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
+- [AppDelegate.swift](./CineWall/AppDelegate.swift)
 
 ### 5.3 PRO Badges
 
@@ -332,7 +332,7 @@ After discussing local trial abuse and system clock rollbacks, we moved the tria
 
 Files:
 
-- [SimpleVideoWallpaper/AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
+- [SimpleVideoWallpaper/AppDelegate.swift](./CineWall/AppDelegate.swift)
 - [website/api/trial-status.js](./website/api/trial-status.js)
 
 ### 11.1 How It Works
@@ -441,9 +441,9 @@ We added Sparkle integration to prepare for updates.
 
 Main pieces:
 
-- [SparkleUpdater.swift](./SimpleVideoWallpaper/SparkleUpdater.swift)
-- [Info.plist](./SimpleVideoWallpaper/Info.plist)
-- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
+- [SparkleUpdater.swift](./CineWall/SparkleUpdater.swift)
+- [Info.plist](./CineWall/Info.plist)
+- [LiquidUI.swift](./CineWall/LiquidUI.swift)
 
 ### 13.1 What Was Added
 
@@ -559,8 +559,8 @@ We also did a long series of UI polish changes along the way:
 
 These changes mostly live in:
 
-- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
-- [LiquidUIComponents.swift](./SimpleVideoWallpaper/LiquidUIComponents.swift)
+- [LiquidUI.swift](./CineWall/LiquidUI.swift)
+- [LiquidUIComponents.swift](./CineWall/LiquidUIComponents.swift)
 
 ## 19. Website / Store / Pricing State
 
@@ -653,12 +653,12 @@ The system now looks like this:
 
 ### App
 
-- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
-- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
-- [LiquidUIComponents.swift](./SimpleVideoWallpaper/LiquidUIComponents.swift)
-- [SparkleUpdater.swift](./SimpleVideoWallpaper/SparkleUpdater.swift)
-- [Info.plist](./SimpleVideoWallpaper/Info.plist)
-- [project.pbxproj](./SimpleVideoWallpaper.xcodeproj/project.pbxproj)
+- [AppDelegate.swift](./CineWall/AppDelegate.swift)
+- [LiquidUI.swift](./CineWall/LiquidUI.swift)
+- [LiquidUIComponents.swift](./CineWall/LiquidUIComponents.swift)
+- [SparkleUpdater.swift](./CineWall/SparkleUpdater.swift)
+- [Info.plist](./CineWall/Info.plist)
+- [project.pbxproj](./CineWall.xcodeproj/project.pbxproj)
 
 ### Website / backend / updates
 
