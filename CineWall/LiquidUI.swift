@@ -1071,7 +1071,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         scalingSeg.segmentStyle = .rounded
         scalingSeg.controlSize = .regular
 
-        let timerTitle = createSectionTitleRow(title: "Timer", showsProBadge: true)
+        let timerTitle = createSectionTitleRow(title: "Timer", showsProBadge: false)
         timerLabel = NSTextField.liquidLabel("Off", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         timerLabel.heightAnchor.constraint(equalToConstant: 14).isActive = true
         let hoursInput = createTimerInputControl(placeholder: "00", action: #selector(timerChanged))
@@ -1449,7 +1449,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         batterySaverToggle = createCheck("Pause on Battery Power", action: #selector(togBattery))
         focusPauseToggle = createCheck("Pause on App Focus", action: #selector(togFocusP))
         focusMuteToggle = createCheck("Mute on App Focus", action: #selector(togFocusM))
-        let smartTitle = createSectionTitleRow(title: "Smart Settings", showsProBadge: true)
+        let smartTitle = createSectionTitleRow(title: "Smart Settings", showsProBadge: false)
         [smartTitle, smartPauseToggle!, focusMuteToggle!, focusPauseToggle!, batterySaverToggle!]
             .forEach { smartStack.addArrangedSubview($0) }
         smartCard.contentView.addSubview(smartStack)
@@ -1467,7 +1467,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         idleSyncStatusLabel = NSTextField.liquidLabel("Lock screen ready.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         idleSyncStatusLabel.maximumNumberOfLines = 2
         idleSyncStatusLabel.lineBreakMode = .byWordWrapping
-        let lockScreenTitle = createSectionTitleRow(title: "Lock Screen Settings", showsProBadge: true)
+        let lockScreenTitle = createSectionTitleRow(title: "Lock Screen Settings", showsProBadge: false)
 
         [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, idleSyncButton!, idleSyncStatusLabel!].forEach {
             lockScreenStack.addArrangedSubview($0)
@@ -1709,13 +1709,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     private func createSectionTitleRow(title: String, showsProBadge: Bool = false) -> NSStackView {
         let titleLabel = NSTextField.liquidLabel(title, size: 14, weight: .semibold, color: .white)
-        let rowViews: [NSView]
-        if showsProBadge {
-            rowViews = [titleLabel, createProBadge()]
-        } else {
-            rowViews = [titleLabel]
-        }
-        let row = NSStackView(views: rowViews)
+        let row = NSStackView(views: [titleLabel])
         row.alignment = .centerY
         row.spacing = 6
         row.translatesAutoresizingMaskIntoConstraints = false
@@ -1723,19 +1717,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     }
 
     private func createProBadge() -> NSTextField {
-        let badge = NSTextField(labelWithString: "PRO")
+        let badge = NSTextField(labelWithString: "")
         badge.identifier = NSUserInterfaceItemIdentifier("proBadge")
-        badge.font = NSFont.systemFont(ofSize: 9, weight: .bold)
-        badge.textColor = NSColor.white.withAlphaComponent(0.92)
-        badge.alignment = .center
-        badge.wantsLayer = true
-        badge.layer?.cornerRadius = 7
-        badge.layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.38).cgColor
-        badge.layer?.borderWidth = 1
-        badge.layer?.borderColor = NSColor.white.withAlphaComponent(0.12).cgColor
+        badge.isHidden = true
         badge.translatesAutoresizingMaskIntoConstraints = false
-        badge.widthAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
-        badge.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        badge.widthAnchor.constraint(equalToConstant: 0).isActive = true
+        badge.heightAnchor.constraint(equalToConstant: 0).isActive = true
         return badge
     }
 
@@ -1775,11 +1762,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let isLockScreenPro = app.proManager.canUse(.lockScreenSync)
         let isSmartPro = app.proManager.canUse(.smartSettings)
         let isLockScreenEnabled = app.lockScreenSyncEnabled && isLockScreenPro
-        updateProBadgeVisibility(isHidden: app.proManager.tier == .pro)
+        updateProBadgeVisibility(isHidden: true)
 
-        playlistToggleButton?.alphaValue = isPlaylistPro ? 1.0 : 0.7
-        addToPlaylistButton?.toolTip = isPlaylistPro ? "Playlists" : "Playlists · PRO"
-        addToPlaylistButton?.alphaValue = isPlaylistPro ? 1.0 : 0.7
+        playlistToggleButton?.alphaValue = 1.0
+        addToPlaylistButton?.toolTip = "Playlists"
+        addToPlaylistButton?.alphaValue = 1.0
         lockScreenEnabledToggle?.alphaValue = isLockScreenPro ? 1.0 : 0.6
         autoIdleSyncToggle?.alphaValue = isLockScreenEnabled ? 1.0 : 0.6
         autoIdleSyncToggle?.isEnabled = isLockScreenEnabled
