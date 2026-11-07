@@ -36,6 +36,8 @@ public final class CineWallWallpaperController {
             (NSWorkspace.screensDidWakeNotification, "display wake"),
             (NSWorkspace.willSleepNotification, "system sleep"),
             (NSWorkspace.didWakeNotification, "system wake"),
+            (NSWorkspace.sessionDidResignActiveNotification, "session switched away"),
+            (NSWorkspace.sessionDidBecomeActiveNotification, "session active"),
         ] {
             observers.append(
                 workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in

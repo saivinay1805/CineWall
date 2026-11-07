@@ -326,13 +326,31 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
         )
     }
 
+    private func schedulePreviewExpiry(for request: FastWallpaperPresentationAuthority.Request) {
+        previewExpiry?.cancel()
+        previewExpiry = nil
+        guard let remaining = FastWallpaperPresentationAuthority.nextReevaluation(for: request) else {
+            return
+        }
+        previewExpiry = Task { [weak self] in
+            do { try await Task.sleep(for: remaining) } catch { return }
+            guard let self, !Task.isCancelled else { return }
+            self.previewExpiry = nil
+            self.applyPolicy()
+        }
+    }
+
     public func applyPolicy() {
         guard firstFrameReply == nil, !stopped, video != nil else { return }
         let request = authorityRequest
         let reasons = FastWallpaperPresentationAuthority.suspensionReasons(for: request)
         let shouldPause = !reasons.isEmpty
+        schedulePreviewExpiry(for: request)
         guard shouldPause != rendererPaused else { return }
         rendererPaused = shouldPause
         video?.setPaused(shouldPause)
+        CineWallWallpaperRuntime.log(
+            "Playback display=\(scene.displayID) mode=\(presentation) activity=\(activity) locked=\(request.sessionLocked) console=\(request.sessionOnConsole) paused=\(shouldPause) reasons=\(reasons.rawValue)"
+        )
     }
 }

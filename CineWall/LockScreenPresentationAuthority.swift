@@ -93,7 +93,7 @@ public enum FastWallpaperPresentationAuthority {
     }
 
     public static let previewBudget: Duration = .seconds(30)
-    public static let desktopSettleBudget: Duration = .seconds(2)
+    public static let desktopSettleBudget: Duration = .seconds(15)
 
     public static func suspensionReasons(for request: Request) -> SuspensionReasons {
         var reasons: SuspensionReasons = []
@@ -109,12 +109,38 @@ public enum FastWallpaperPresentationAuthority {
             }
         case .lockScreen:
             let isIdleScreensaver = request.presentationMode == "idle"
-            let activeConsumer = request.sessionLocked || (isIdleScreensaver && request.screenSaverEnabled) || request.lockScreenEnabled
-            if !activeConsumer {
+            let isLocked = request.sessionLocked || request.presentationMode == "locked"
+            let showing: Bool
+            if isIdleScreensaver {
+                showing = request.screenSaverEnabled
+            } else {
+                showing = request.lockScreenEnabled && (isLocked || isSettlingAsDesktop(request))
+            }
+            if !showing && !isSettlingAsDesktop(request) {
                 reasons.insert(.noConsumer)
             }
         }
         return reasons
+    }
+
+    public static func isSettlingAsDesktop(_ request: Request) -> Bool {
+        guard request.role == .lockScreen, request.lockScreenEnabled, request.sessionOnConsole,
+              request.presentationMode != "idle", let presentedFor = request.presentedFor
+        else { return false }
+        return presentedFor < desktopSettleBudget
+    }
+
+    public static func nextReevaluation(for request: Request) -> Duration? {
+        guard let presentedFor = request.presentedFor else { return nil }
+        let budget: Duration
+        switch request.role {
+        case .preview:
+            budget = previewBudget
+        case .lockScreen:
+            guard isSettlingAsDesktop(request) else { return nil }
+            budget = desktopSettleBudget
+        }
+        return presentedFor < budget ? budget - presentedFor : nil
     }
 
     public struct SessionState: Equatable, Sendable {

@@ -187,7 +187,7 @@ public final class LockScreenWallpaperService: ObservableObject {
 
         // 6. Synchronize macOS wallpaper store (Index.plist)
         try selection.synchronize(
-            desktopDisplays: [],
+            desktopDisplays: displayUUIDs,
             screenSaverDisplays: displayUUIDs,
             revision: revision
         )

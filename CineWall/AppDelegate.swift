@@ -211,6 +211,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(toggleLiquidPopover), name: NSNotification.Name("com.cinewall.togglePopover"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil)
+    }
+
+    @objc func triggerLockScreenSyncForTest() {
+        syncCurrentVideoToIdleWallpaper(showAlerts: false)
     }
 
     @objc func openPlayerSubmenuForTest() {
