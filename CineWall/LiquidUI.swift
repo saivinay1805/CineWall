@@ -910,19 +910,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         buildLibraryDetail()
         buildSettingsDetail()
         buildProDetail()
-        
-        let allBodyViews = [playerDetailView, appDetailView, playlistDetailView, displayDetailView, libraryDetailView, settingsDetailView, proDetailView]
-        for v in allBodyViews {
-            guard let view = v else { continue }
-            detailBodyHost.addSubview(view)
-            NSLayoutConstraint.activate([
-                view.topAnchor.constraint(equalTo: detailBodyHost.topAnchor),
-                view.bottomAnchor.constraint(equalTo: detailBodyHost.bottomAnchor),
-                view.leadingAnchor.constraint(equalTo: detailBodyHost.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: detailBodyHost.trailingAnchor)
-            ])
-            view.isHidden = true
-        }
     }
 
     private func buildPlayerDetail() {
@@ -976,10 +963,20 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         actionsStack.spacing = 6
         actionsStack.translatesAutoresizingMaskIntoConstraints = false
 
+        // Header Row Stack
+        let headerRow = NSStackView(views: [expandedArtworkView, infoStack, actionsStack])
+        headerRow.orientation = .horizontal
+        headerRow.alignment = .centerY
+        headerRow.spacing = 12
+        headerRow.distribution = .fill
+        headerRow.translatesAutoresizingMaskIntoConstraints = false
+        headerRow.setCustomSpacing(12, after: expandedArtworkView)
+
         // 4. Scrubber / Progress row
         progressSlider = NSSlider(value: 0, minValue: 0, maxValue: 1, target: self, action: #selector(seekVideo))
         progressSlider.controlSize = .small
         progressSlider.translatesAutoresizingMaskIntoConstraints = false
+        progressSlider.setContentHuggingPriority(.defaultLow, for: .horizontal)
         
         playerElapsedLabel = NSTextField.liquidLabel("0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
         playerRemainingLabel = NSTextField.liquidLabel("-0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
@@ -1026,37 +1023,35 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         transportRow.spacing = 24
         transportRow.translatesAutoresizingMaskIntoConstraints = false
 
-        playerDetailView.addSubview(expandedArtworkView)
-        playerDetailView.addSubview(infoStack)
-        playerDetailView.addSubview(actionsStack)
-        playerDetailView.addSubview(progressRow)
-        playerDetailView.addSubview(addToPlaylistButton)
-        playerDetailView.addSubview(transportRow)
+        let rightSpacer = NSView()
+        rightSpacer.translatesAutoresizingMaskIntoConstraints = false
+        rightSpacer.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        rightSpacer.heightAnchor.constraint(equalToConstant: 28).isActive = true
+
+        let bottomRow = NSStackView(views: [addToPlaylistButton, transportRow, rightSpacer])
+        bottomRow.orientation = .horizontal
+        bottomRow.alignment = .centerY
+        bottomRow.distribution = .equalCentering
+        bottomRow.translatesAutoresizingMaskIntoConstraints = false
+
+        // Root Vertical Stack
+        let rootStack = DismissibleStackView(views: [headerRow, progressRow, bottomRow])
+        rootStack.onBackgroundClick = { [weak self] in self?.hideDetail() }
+        rootStack.orientation = .vertical
+        rootStack.spacing = 14
+        rootStack.translatesAutoresizingMaskIntoConstraints = false
+
+        playerDetailView.addSubview(rootStack)
 
         NSLayoutConstraint.activate([
-            // Top Row
-            expandedArtworkView.topAnchor.constraint(equalTo: playerDetailView.topAnchor, constant: 14),
-            expandedArtworkView.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
+            rootStack.topAnchor.constraint(equalTo: playerDetailView.topAnchor, constant: 0),
+            rootStack.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 0),
+            rootStack.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: 0),
+            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: playerDetailView.bottomAnchor, constant: 0),
 
-            infoStack.leadingAnchor.constraint(equalTo: expandedArtworkView.trailingAnchor, constant: 12),
-            infoStack.centerYAnchor.constraint(equalTo: expandedArtworkView.centerYAnchor),
-            infoStack.trailingAnchor.constraint(lessThanOrEqualTo: actionsStack.leadingAnchor, constant: -8),
-
-            actionsStack.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -16),
-            actionsStack.centerYAnchor.constraint(equalTo: expandedArtworkView.centerYAnchor),
-
-            // Middle Row (Scrubber)
-            progressRow.topAnchor.constraint(equalTo: expandedArtworkView.bottomAnchor, constant: 14),
-            progressRow.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
-            progressRow.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: -16),
-
-            // Bottom Row
-            transportRow.topAnchor.constraint(equalTo: progressRow.bottomAnchor, constant: 12),
-            transportRow.centerXAnchor.constraint(equalTo: playerDetailView.centerXAnchor),
-            transportRow.bottomAnchor.constraint(equalTo: playerDetailView.bottomAnchor, constant: -14),
-
-            addToPlaylistButton.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 16),
-            addToPlaylistButton.centerYAnchor.constraint(equalTo: transportRow.centerYAnchor)
+            headerRow.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            progressRow.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            bottomRow.widthAnchor.constraint(equalTo: rootStack.widthAnchor)
         ])
     }
 
@@ -2063,7 +2058,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if section == .app || section == .player || section == .playlist || section == .library || section == .pro {
             bodyTopToHeaderConstraint.isActive = false
             bodyTopToCardConstraint.isActive = true
-            bodyTopToCardConstraint.constant = section == .player ? 14 : 18
+            bodyTopToCardConstraint.constant = section == .player ? 16 : 18
         } else {
             bodyTopToCardConstraint.isActive = false
             bodyTopToHeaderConstraint.isActive = true
@@ -2077,13 +2072,28 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             }
         }
 
-        appDetailView.isHidden = (section != .app)
-        playerDetailView.isHidden = (section != .player)
-        playlistDetailView.isHidden = (section != .playlist)
-        displayDetailView.isHidden = (section != .display)
-        libraryDetailView.isHidden = (section != .library)
-        settingsDetailView.isHidden = (section != .settings)
-        proDetailView.isHidden = (section != .pro)
+        for sub in detailBodyHost.subviews {
+            sub.removeFromSuperview()
+        }
+        let activeBodyView: NSView
+        switch section {
+        case .player: activeBodyView = playerDetailView
+        case .app: activeBodyView = appDetailView
+        case .playlist: activeBodyView = playlistDetailView
+        case .display: activeBodyView = displayDetailView
+        case .library: activeBodyView = libraryDetailView
+        case .settings: activeBodyView = settingsDetailView
+        case .pro: activeBodyView = proDetailView
+        }
+        activeBodyView.translatesAutoresizingMaskIntoConstraints = false
+        activeBodyView.isHidden = false
+        detailBodyHost.addSubview(activeBodyView)
+        NSLayoutConstraint.activate([
+            activeBodyView.topAnchor.constraint(equalTo: detailBodyHost.topAnchor),
+            activeBodyView.bottomAnchor.constraint(equalTo: detailBodyHost.bottomAnchor),
+            activeBodyView.leadingAnchor.constraint(equalTo: detailBodyHost.leadingAnchor),
+            activeBodyView.trailingAnchor.constraint(equalTo: detailBodyHost.trailingAnchor)
+        ])
 
         if section == .player {
             let displayImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
@@ -2118,7 +2128,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             minimumHeight = 328
         case .player:
             bodyView = playerDetailView
-            minimumHeight = 166
+            minimumHeight = 144
         case .playlist:
             bodyView = playlistDetailView
             minimumHeight = 294
@@ -2137,9 +2147,9 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
 
         let bodyHeight = max(bodyView.fittingSize.height, minimumHeight)
-        // Player: body pins to card top, so chrome = top(14) + bottom(18) = 32
+        // Player: body pins to card top, so chrome = top(16) + bottom(18) = 34
         // Others: chrome = top(18) + header(~34) + gap(14) + bottom(18) = 84
-        let chromeHeight: CGFloat = (section == .player) ? 32 : 86
+        let chromeHeight: CGFloat = (section == .player) ? 34 : 86
         let paddedHeight = bodyHeight + chromeHeight
         return min(max(paddedHeight, 140), view.bounds.height - 16)
     }
@@ -2198,6 +2208,85 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     @objc private func showPlayerDetail(_ sender: Any?) {
         showDetail(.player, from: resolveDetailSourceView(sender: sender, fallback: playerCardView))
+    }
+
+    func showPlayerDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.player, from: playerCardView) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
+    func dumpAndCapturePlayerDetail() {
+        var log = "=== PLAYER DETAIL DUMP ===\n"
+        log += "detailCard frame: \(detailCard.frame), isHidden: \(detailCard.isHidden), alpha: \(detailCard.alphaValue)\n"
+        log += "detailBodyHost frame: \(detailBodyHost.frame), isHidden: \(detailBodyHost.isHidden), alpha: \(detailBodyHost.alphaValue)\n"
+        log += "playerDetailView frame: \(playerDetailView.frame), isHidden: \(playerDetailView.isHidden), alpha: \(playerDetailView.alphaValue)\n"
+        
+        for (idx, sub) in playerDetailView.subviews.enumerated() {
+            log += "  playerSub[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
+            if let stack = sub as? NSStackView {
+                for (rIdx, row) in stack.arrangedSubviews.enumerated() {
+                    log += "    row[\(rIdx)] (\(type(of: row))) frame: \(row.frame), isHidden: \(row.isHidden), alpha: \(row.alphaValue)\n"
+                    if let rowStack = row as? NSStackView {
+                        for (cIdx, child) in rowStack.arrangedSubviews.enumerated() {
+                            log += "      child[\(cIdx)] (\(type(of: child))) frame: \(child.frame), isHidden: \(child.isHidden), alpha: \(child.alphaValue)\n"
+                        }
+                    }
+                }
+            }
+        }
+        try? log.write(to: URL(fileURLWithPath: "/tmp/cinewall_debug.log"), atomically: true, encoding: .utf8)
+        NSLog("[CineWall] Debug log saved to /tmp/cinewall_debug.log")
+
+        detailCard.layoutSubtreeIfNeeded()
+        let cardBounds = detailCard.bounds
+        if cardBounds.width > 0 && cardBounds.height > 0 {
+            if let rep = detailCard.bitmapImageRepForCachingDisplay(in: cardBounds) {
+                detailCard.cacheDisplay(in: cardBounds, to: rep)
+                if let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_card.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_card.png via cacheDisplay (%dx%d)", Int(cardBounds.width), Int(cardBounds.height))
+                }
+            }
+            if !FileManager.default.fileExists(atPath: "/tmp/cinewall_card.png") {
+                let image = NSImage(size: cardBounds.size)
+                image.lockFocus()
+                if let ctx = NSGraphicsContext.current?.cgContext {
+                    detailCard.layer?.render(in: ctx)
+                }
+                image.unlockFocus()
+                if let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_card.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_card.png via layer render (%dx%d)", Int(cardBounds.width), Int(cardBounds.height))
+                }
+            }
+        }
+
+        let viewBounds = view.bounds
+        if viewBounds.width > 0 && viewBounds.height > 0 {
+            if let rep = view.bitmapImageRepForCachingDisplay(in: viewBounds) {
+                view.cacheDisplay(in: viewBounds, to: rep)
+                if let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_verify.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_verify.png via cacheDisplay (%dx%d)", Int(viewBounds.width), Int(viewBounds.height))
+                }
+            }
+            if !FileManager.default.fileExists(atPath: "/tmp/cinewall_verify.png") {
+                let image = NSImage(size: viewBounds.size)
+                image.lockFocus()
+                if let ctx = NSGraphicsContext.current?.cgContext {
+                    view.layer?.render(in: ctx)
+                }
+                image.unlockFocus()
+                if let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_verify.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_verify.png via layer render (%dx%d)", Int(viewBounds.width), Int(viewBounds.height))
+                }
+            }
+        }
     }
 
     private func animateCardExpansion(from startFrame: NSRect, to targetFrame: NSRect, completion: (() -> Void)? = nil) {
@@ -2266,7 +2355,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailAnimationTimer = timer
     }
 
-    private func showDetail(_ section: DetailSection, from sourceView: NSView) {
+    private func showDetail(_ section: DetailSection, from sourceView: NSView, completion: (() -> Void)? = nil) {
         updateDetailContent(for: section)
         activeDetail = section
         view.layoutSubtreeIfNeeded()
@@ -2311,7 +2400,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             self.mainStack.isHidden = true
         })
 
-        animateCardExpansion(from: detailSourceFrame, to: targetFrame)
+        animateCardExpansion(from: detailSourceFrame, to: targetFrame, completion: completion)
     }
 
     @objc private func hideDetailAction() {

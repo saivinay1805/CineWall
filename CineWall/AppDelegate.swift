@@ -212,6 +212,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         
         NotificationCenter.default.addObserver(self, selector: #selector(screenDidChange), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(sessionUnlocked), name: NSNotification.Name("com.apple.screenIsUnlocked"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(toggleLiquidPopover), name: NSNotification.Name("com.cinewall.togglePopover"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
+    }
+
+    @objc func openPlayerSubmenuForTest() {
+        if !isPopoverOpen {
+            openPopover()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.liquidController?.showPlayerDetailTest()
+        }
     }
     
     // (Standard Helpers - Minimized for brevity as they haven't changed)
