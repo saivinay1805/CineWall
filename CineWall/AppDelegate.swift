@@ -194,10 +194,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {
-        if idleWallpaperSyncMode == .fast {
-            try? setDesktopWallpaperSnapshotForCurrentMedia()
-            try? clearIdleWallpaperStateForFastModeQuit()
-        }
         saveSettings()
     }
 
@@ -214,6 +210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(sessionUnlocked), name: NSNotification.Name("com.apple.screenIsUnlocked"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(toggleLiquidPopover), name: NSNotification.Name("com.cinewall.togglePopover"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil)
     }
 
     @objc func openPlayerSubmenuForTest() {
@@ -222,6 +219,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             self?.liquidController?.showPlayerDetailTest()
+        }
+    }
+
+    @objc func openSettingsSubmenuForTest() {
+        if !isPopoverOpen {
+            openPopover()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.liquidController?.showSettingsDetailTest()
         }
     }
     

@@ -67,26 +67,24 @@ public final class LockScreenWallpaperSelection {
         persistJournal: (@MainActor (URL, Data?) throws -> Void)? = nil
     ) {
         self.extensionIdentifier = extensionIdentifier
-        let defaultStore = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+        let home = LockScreenConfiguration.realUserHomeDirectory()
+        let defaultStore = home.appendingPathComponent(
             "Library/Application Support/com.apple.wallpaper/Store/Index.plist"
         )
         let resolvedStore = storeURL ?? defaultStore
-        let defaultFolder = folder ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+        let defaultFolder = folder ?? home.appendingPathComponent(
             "Library/Application Support/CineWall"
         )
         let resolvedJournal = journalURL ?? defaultFolder.appendingPathComponent("native-selection.plist")
 
         self.storeURL = resolvedStore
         self.journalURL = resolvedJournal
-        self.reload = reload ?? { try Self.reloadWallpaperAgent() }
-        self.persistJournal = persistJournal ?? { url, data in
-            if let data {
-                try data.write(to: url, options: .atomic)
-            } else if FileManager.default.fileExists(atPath: url.path) {
-                try FileManager.default.removeItem(at: url)
+        self.reload = reload ?? {
+            if resolvedStore == defaultStore {
+                try LockScreenWallpaperSelection.reloadWallpaperAgent()
             }
         }
-        loadJournal()
+        self.persistJournal = persistJournal ?? LockScreenWallpaperSelection.persistJournalFile
     }
 
     public var isRestored: Bool {
@@ -94,8 +92,11 @@ public final class LockScreenWallpaperSelection {
     }
 
     public func recover() throws {
-        guard !entries.isEmpty || restartPending else { return }
-        settled = nil
+        guard FileManager.default.fileExists(atPath: journalURL.path) else { return }
+        let recovered = try PropertyListDecoder().decode([Entry].self, from: Data(contentsOf: journalURL))
+        entries = recovered
+        hasPersistedJournal = true
+        restartPending = true
         try synchronize(desktopDisplays: [], screenSaverDisplays: [])
     }
 
@@ -125,6 +126,7 @@ public final class LockScreenWallpaperSelection {
         settled = nil
 
         guard FileManager.default.fileExists(atPath: storeURL.path) else { return }
+        let priorEntries = entries
         let bytes = try Data(contentsOf: storeURL)
         guard var root = try PropertyListSerialization.propertyList(from: bytes, format: nil) as? [String: Any],
               root["Displays"] is [String: Any], root["Spaces"] is [String: Any] else {
@@ -224,6 +226,9 @@ public final class LockScreenWallpaperSelection {
             }
 
             var original = prior.flatMap { originals[$0.path] } ?? [:]
+            let removed = previous.subtracting(desired)
+            let allPreviouslyOwned = previous.allSatisfy { Self.owns(node[$0], extID: extensionIdentifier) }
+
             for key in previous.sorted() {
                 if desired.contains(key) {
                     if !observeOnly && !Self.owns(node[key], extID: extensionIdentifier) {
@@ -247,96 +252,135 @@ public final class LockScreenWallpaperSelection {
                 ?? (!observeOnly && existing == nil && linkedOriginal == nil && inheritedOriginal == nil)
             if prior == nil && typeOwned { original["Type"] = existing?["Type"] }
 
-            let fields = prior.map { $0.ownedFields.union(desired) } ?? desired
-            var entry = Entry(
-                path: path, original: try Self.encode(original), created: prior?.created ?? (existing == nil),
-                observeOnly: observeOnly ? true : nil, fields: fields.sorted(),
-                typeOwned: typeOwned ? true : nil,
-                linkedOriginal: try linkedOriginal.map(Self.encode),
-                inheritedOriginal: try inheritedOriginal.map(Self.encode)
-            )
-
             if !observeOnly {
-                if !desired.isEmpty { node["Type"] = "individual" }
-                for field in desired { node[field] = selection }
+                for key in desired.sorted() {
+                    let current = node[key] as? [String: Any]
+                    let content = current?["Content"] as? [String: Any]
+                    let choices = content?["Choices"] as? [[String: Any]]
+                    let expected = (selection["Content"] as? [String: Any])?["Choices"] as? [[String: Any]]
+                    if added.contains(key) || (revision != nil && choices?.first?["Configuration"] as? Data != expected?.first?["Configuration"] as? Data) {
+                        node[key] = selection
+                    }
+                }
+                if prior == nil && typeOwned { node["Type"] = "individual" }
             }
 
-            if desired.isEmpty {
-                if entry.created {
+            if desired.isEmpty && !removed.isEmpty && typeOwned && allPreviouslyOwned
+                && node["Type"] as? String == "individual"
+                && ["Desktop", "Idle"].allSatisfy({ (node[$0] as? NSDictionary) == (original[$0] as? NSDictionary) }) {
+                node["Type"] = original["Type"]
+            }
+
+            if desired.isEmpty, let linkedOriginal {
+                let baseline = Self.separatedLinked(linkedOriginal)
+                if prior?.created == true, (node as NSDictionary) == (baseline as NSDictionary) {
                     node = [:]
                 } else {
-                    node["Type"] = original["Type"] ?? node["Type"]
-                    if let linkedOriginal {
-                        node = linkedOriginal
-                    } else if (node["Desktop"] != nil || node["Idle"] != nil),
-                              let unlinked = Self.defaultLinkedChoice(node) {
-                        node = Self.unseparatedLinked(node, choice: unlinked)
-                    }
+                    node = Self.relinked(node, original: linkedOriginal)
                 }
             }
 
-            if prior == nil, !desired.isEmpty {
-                try record(entry, original: original)
+            if desired.isEmpty, let inheritedOriginal, prior?.created == true, (node as NSDictionary) == (inheritedOriginal as NSDictionary) {
+                node = [:]
             }
-            if !desired.isEmpty || !(entry.created && node.isEmpty) {
-                if desired.isEmpty { entry.fields = [] }
+
+            if !desired.isEmpty {
+                if !observeOnly, !(node["Desktop"] is [String: Any] && node["Idle"] is [String: Any]) {
+                    throw LockScreenFailure(message: "This macOS wallpaper store format is unsupported.")
+                }
+                original = original.filter { desired.contains($0.key) || ($0.key == "Type" && typeOwned) }
+                let originalData = (prior != nil && desired == previous) ? prior!.original : try Self.encode(original)
+                let entry = Entry(
+                    path: path, original: originalData, created: prior?.created ?? (existing == nil),
+                    observeOnly: observeOnly, fields: desired.sorted(), typeOwned: typeOwned,
+                    linkedOriginal: try prior.map(\.linkedOriginal) ?? linkedOriginal.map { try Self.encode($0) },
+                    inheritedOriginal: try prior.map(\.inheritedOriginal) ?? inheritedOriginal.map { try Self.encode($0) }
+                )
+                if !added.isEmpty { try record(entry, original: original) }
                 retained.append(entry)
             }
 
-            let updated: [String: Any]? = (entry.created && desired.isEmpty && node.isEmpty) ? nil : node
-            if !NSDictionary(dictionary: existing ?? [:]).isEqual(to: updated ?? [:]) {
+            let value: [String: Any]? = node.isEmpty && ((prior?.created ?? false) || existing == nil) ? nil : node
+            if (existing as NSDictionary?) != (value as NSDictionary?) {
+                Self.setNode(&root, path: path, value: value)
                 changed = true
-                Self.setNode(&root, path: path, value: updated)
             }
         }
 
-        for path in fallbackPaths {
-            try reconcile(entries.first(where: { $0.path == path }), path: path, observeOnly: true)
-        }
-        for path in paths {
-            try reconcile(entries.first(where: { $0.path == path }), path: path, observeOnly: false)
-        }
+        let globalEntry = entries.first { $0.path == Self.globalPath }
+        let global = Self.node(root, path: Self.globalPath)
+        if !activeFields.isEmpty || globalEntry != nil {
+            let previous = globalEntry?.ownedFields ?? []
+            var original = globalEntry.flatMap { originals[$0.path] } ?? global ?? [:]
+            let wasPresent = globalEntry?.globalWasPresent ?? (globalEntry == nil ? global != nil : !original.isEmpty)
+            var restored = Self.separatedLinked(global ?? [:])
+            let supported = restored.isEmpty || ["desktop", "idle", "individual"].contains(restored["Type"] as? String ?? "")
 
-        // Global AllSpacesAndDisplays synchronization for macOS 14+
-        let globalPrior = entries.first(where: { $0.path == Self.globalPath })
-        let globalExisting = Self.node(root, path: Self.globalPath)
-        let globalWasPresent = globalPrior?.globalWasPresent ?? (globalExisting != nil)
-
-        if displays.isEmpty {
-            if let prior = globalPrior {
-                let original = try PropertyListSerialization.propertyList(from: prior.original, format: nil) as? [String: Any]
-                let restored = globalWasPresent ? original : nil
-                if !NSDictionary(dictionary: globalExisting ?? [:]).isEqual(to: restored ?? [:]) {
-                    changed = true
-                    Self.setNode(&root, path: Self.globalPath, value: restored)
+            if !activeFields.isEmpty {
+                guard supported, previous.intersection(activeFields).allSatisfy({ restored[$0] == nil }) else {
+                    throw LockScreenFailure(message: "The system wallpaper was changed externally. External choices will be preserved.")
                 }
             }
-        } else {
-            var globalNode = globalExisting ?? [:]
-            let original = globalPrior.flatMap { originals[$0.path] } ?? globalExisting ?? [:]
-            if globalPrior == nil {
+
+            if supported && !(activeFields.isEmpty && global?["Type"] as? String == "linked") {
+                if globalEntry != nil {
+                    if let global {
+                        let choiceKeys: Set<String> = ["Desktop", "Idle", "Linked", "Type"]
+                        original = original.filter { choiceKeys.contains($0.key) }.merging(global.filter { !choiceKeys.contains($0.key) }) { _, new in new }
+                    }
+                    var expanded = Self.separatedLinked(original)
+                    for key in activeFields.subtracting(previous) { expanded[key] = restored[key] }
+                    if (expanded as NSDictionary) != (Self.separatedLinked(original) as NSDictionary) {
+                        original = Self.globalNode(expanded) ?? [:]
+                    }
+                }
+                if global == nil {
+                    restored = original.filter { !["Desktop", "Idle", "Linked", "Type"].contains($0.key) }
+                }
+                for key in previous.subtracting(activeFields) where restored[key] == nil {
+                    restored[key] = Self.separatedLinked(original)[key]
+                }
+                for key in activeFields { restored.removeValue(forKey: key) }
+                var replacement = Self.globalNode(restored)
+                if let node = replacement { replacement = Self.relinked(node, original: original) }
+                if activeFields.isEmpty, (replacement as NSDictionary?) == (Self.globalNode(Self.separatedLinked(original)) as NSDictionary?) {
+                    replacement = !original.isEmpty || wasPresent ? original : nil
+                }
+                if (global as NSDictionary?) != (replacement as NSDictionary?) {
+                    Self.setNode(&root, path: Self.globalPath, value: replacement)
+                    changed = true
+                }
+            }
+
+            if !activeFields.isEmpty {
+                let kept = globalEntry.flatMap { (originals[$0.path] as NSDictionary?) == (original as NSDictionary) ? $0.original : nil }
                 let entry = Entry(
-                    path: Self.globalPath, original: try Self.encode(original), created: globalExisting == nil,
-                    observeOnly: false, fields: ["Idle"], typeOwned: true, globalWasPresent: globalWasPresent
+                    path: Self.globalPath, original: try kept ?? Self.encode(original),
+                    created: globalEntry?.created ?? (global == nil), fields: activeFields.sorted(),
+                    typeOwned: false, globalWasPresent: wasPresent
                 )
                 try record(entry, original: original)
                 retained.append(entry)
-            } else if let prior = globalPrior {
-                retained.append(prior)
-            }
-
-            globalNode["Type"] = "individual"
-            globalNode["Idle"] = selection
-            if !NSDictionary(dictionary: globalExisting ?? [:]).isEqual(to: globalNode) {
-                changed = true
-                Self.setNode(&root, path: Self.globalPath, value: globalNode)
             }
         }
 
-        entries = recovery
-        try persistJournalIfNeeded()
+        for entry in entries where entry.path != Self.globalPath {
+            try reconcile(entry, path: entry.path, observeOnly: entry.observeOnly == true)
+        }
+
+        for path in fallbackPaths where !activeFields.isEmpty && !entries.contains(where: { $0.path == path }) {
+            try reconcile(nil, path: path, observeOnly: true)
+        }
+        for path in paths where !entries.contains(where: { $0.path == path }) {
+            try reconcile(nil, path: path, observeOnly: false)
+        }
 
         if changed {
+            try persistEntries(recovery)
+            guard try Data(contentsOf: storeURL) == bytes else {
+                entries = priorEntries
+                throw LockScreenFailure(message: "The system wallpaper changed during selection. Please retry.", reason: .transient)
+            }
             try Self.encode(root).write(to: storeURL, options: .atomic)
             restartPending = true
         }
@@ -346,30 +390,121 @@ public final class LockScreenWallpaperSelection {
             restartPending = false
         }
 
-        entries = retained
-        try persistJournalIfNeeded()
-        settled = request
+        let unchanged = !changed && retained == entries
+        try persistEntries(retained)
+        if unchanged { settled = request }
     }
 
-    private func loadJournal() {
-        guard FileManager.default.fileExists(atPath: journalURL.path),
-              let data = try? Data(contentsOf: journalURL),
-              let decoded = try? PropertyListDecoder().decode([Entry].self, from: data) else { return }
-        entries = decoded
-        hasPersistedJournal = true
+    private func persistEntries(_ next: [Entry]) throws {
+        guard next != entries || hasPersistedJournal != !next.isEmpty else { return }
+        let data = try (next.isEmpty ? nil : PropertyListEncoder().encode(next))
+        try persistJournal(journalURL, data)
+        entries = next
+        hasPersistedJournal = !next.isEmpty
     }
 
-    private func persistJournalIfNeeded() throws {
-        if entries.isEmpty {
-            if hasPersistedJournal {
-                try persistJournal(journalURL, nil)
-                hasPersistedJournal = false
-            }
-        } else {
-            let data = try PropertyListEncoder().encode(entries)
-            try persistJournal(journalURL, data)
-            hasPersistedJournal = true
+    public static func persistJournalFile(_ url: URL, _ data: Data?) throws {
+        if let data {
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: url, options: .atomic)
+        } else if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
         }
+    }
+
+    private static func restorationOriginal(
+        _ node: [String: Any],
+        path: [String],
+        root: [String: Any],
+        fields: Set<String>,
+        journaled: ([String]) -> [String: Any]?,
+        extID: String
+    ) throws -> [String: Any] {
+        var original = node
+        let fallbackPaths = Self.fallbackPaths(for: path)
+
+        for field in fields.sorted() {
+            if let direct = node[field] as? [String: Any], !owns(direct, extID: extID) {
+                original[field] = direct
+                continue
+            }
+            var fallbackChoice: [String: Any]?
+            for fallback in fallbackPaths {
+                if let journaled = journaled(fallback),
+                   let choice = journaled[field] as? [String: Any], !owns(choice, extID: extID) {
+                    fallbackChoice = choice
+                    break
+                }
+                if let fallbackNode = Self.node(root, path: fallback) {
+                    let separated = Self.separatedLinked(fallbackNode)
+                    if let choice = separated[field] as? [String: Any], !owns(choice, extID: extID) {
+                        fallbackChoice = choice
+                        break
+                    }
+                }
+            }
+            if let fallbackChoice {
+                original[field] = fallbackChoice
+            } else {
+                throw LockScreenFailure(message: "Cannot resolve a fallback wallpaper choice for \(field) on display \(path.last ?? "unknown").")
+            }
+        }
+        original["Type"] = node["Type"] ?? "individual"
+        return original
+    }
+
+    private static func defaultLinkedChoice(_ node: [String: Any]) -> [String: Any]? {
+        guard node["Type"] as? String == "linked",
+              let linked = node["Linked"] as? [String: Any],
+              let content = linked["Content"] as? [String: Any],
+              let choices = content["Choices"] as? [[String: Any]], !choices.isEmpty,
+              choices.allSatisfy({ choice in
+                  guard let provider = choice["Provider"] as? String, !provider.isEmpty else { return false }
+                  return provider != LockScreenConfiguration.extensionIdentifier
+              }) else { return nil }
+        return linked
+    }
+
+    private static func separatedLinked(_ node: [String: Any]) -> [String: Any] {
+        guard let linked = defaultLinkedChoice(node) else { return node }
+        var result = node
+        result.removeValue(forKey: "Linked")
+        result["Type"] = "individual"
+        result["Desktop"] = linked
+        result["Idle"] = linked
+        return result
+    }
+
+    private static func relinked(_ node: [String: Any], original: [String: Any]) -> [String: Any] {
+        guard let linked = defaultLinkedChoice(original),
+              node["Type"] as? String == "individual",
+              ["Desktop", "Idle"].allSatisfy({ (node[$0] as? NSDictionary) == (linked as NSDictionary) }) else { return node }
+        var result = node
+        result.removeValue(forKey: "Desktop")
+        result.removeValue(forKey: "Idle")
+        result["Type"] = "linked"
+        result["Linked"] = linked
+        return result
+    }
+
+    private static func globalNode(_ node: [String: Any]) -> [String: Any]? {
+        var result = node
+        switch (node["Desktop"] != nil, node["Idle"] != nil) {
+        case (true, true): result["Type"] = "individual"
+        case (true, false): result["Type"] = "desktop"
+        case (false, true): result["Type"] = "idle"
+        case (false, false): return nil
+        }
+        return result
+    }
+
+    private static func fallbackPaths(for path: [String]) -> [[String]] {
+        var paths: [[String]] = []
+        if path.count == 4, path[0] == "Spaces" {
+            paths.append(["Displays", path[3]])
+            paths.append(["Spaces", path[1], "Default"])
+        }
+        return paths + [["SystemDefault"], ["AllSpacesAndDisplays"]]
     }
 
     private static func makeSelectionDict(extensionIdentifier: String, revision: String?) throws -> [String: Any] {
@@ -431,72 +566,6 @@ public final class LockScreenWallpaperSelection {
         var child = root[key] as? [String: Any] ?? [:]
         setNode(&child, path: Array(path.dropFirst()), value: value)
         root[key] = child
-    }
-
-    private static func defaultLinkedChoice(_ node: [String: Any]) -> [String: Any]? {
-        guard node["Type"] as? String == "linked",
-              let linked = node["Linked"] as? [String: Any] else { return nil }
-        return linked
-    }
-
-    private static func separatedLinked(_ node: [String: Any]) -> [String: Any] {
-        guard let linked = defaultLinkedChoice(node) else { return node }
-        var result = node
-        result["Type"] = "individual"
-        result["Desktop"] = linked
-        result["Idle"] = linked
-        result.removeValue(forKey: "Linked")
-        return result
-    }
-
-    private static func unseparatedLinked(_ node: [String: Any], choice: [String: Any]) -> [String: Any] {
-        var result = node
-        result["Type"] = "linked"
-        result["Linked"] = choice
-        result.removeValue(forKey: "Desktop")
-        result.removeValue(forKey: "Idle")
-        return result
-    }
-
-    private static func restorationOriginal(
-        _ node: [String: Any], path: [String], root: [String: Any], fields: Set<String>,
-        journaled: ([String]) -> [String: Any]?, extID: String
-    ) throws -> [String: Any] {
-        var result: [String: Any] = [:]
-        for field in fields {
-            if let direct = node[field] as? [String: Any], !owns(direct, extID: extID) {
-                result[field] = direct
-                continue
-            }
-            var found: [String: Any]?
-            for fallback in fallbackPaths(for: path) {
-                if let original = journaled(fallback), let item = original[field] as? [String: Any], !owns(item, extID: extID) {
-                    found = item
-                    break
-                }
-                if let fallbackNode = Self.node(root, path: fallback) {
-                    let separated = Self.separatedLinked(fallbackNode)
-                    if let item = separated[field] as? [String: Any], !owns(item, extID: extID) {
-                        found = item
-                        break
-                    }
-                }
-            }
-            if let found {
-                result[field] = found
-            }
-        }
-        result["Type"] = node["Type"] ?? "individual"
-        return result
-    }
-
-    private static func fallbackPaths(for path: [String]) -> [[String]] {
-        var paths: [[String]] = []
-        if path.count == 4, path[0] == "Spaces" {
-            paths.append(["Displays", path[3]])
-            paths.append(["Spaces", path[1], "Default"])
-        }
-        return paths + [["SystemDefault"], ["AllSpacesAndDisplays"]]
     }
 
     public static func reloadWallpaperAgent() throws {

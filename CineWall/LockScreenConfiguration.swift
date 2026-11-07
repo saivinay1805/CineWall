@@ -85,9 +85,17 @@ public struct LockScreenConfiguration: Codable, Equatable, Sendable {
     public static let changedNotification = "svkr.CineWall.lock-screen.changed"
     public static let extensionIdentifier = "svkr.CineWall.wallpaper-extension"
 
+    public static let exchangeRelativePath = "Library/Application Support/CineWall/LockScreenExchange"
+
+    public static func realUserHomeDirectory() -> URL {
+        if let entry = getpwuid(getuid()), let directory = entry.pointee.pw_dir {
+            return URL(fileURLWithPath: String(cString: directory), isDirectory: true)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+    }
+
     public static var exchangeDirectory: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/CineWall/LockScreenExchange", isDirectory: true)
+        realUserHomeDirectory().appendingPathComponent(exchangeRelativePath, isDirectory: true)
     }
 
     public var version: Int

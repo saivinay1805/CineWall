@@ -220,11 +220,9 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     var hideIconsToggle: NSButton!
     var allSpacesToggle: NSButton!
     var loginToggle: NSButton!
-    var idleSyncModeControl: NSSegmentedControl!
     var autoIdleSyncToggle: NSButton!
     var idleSyncButton: NSButton!
     var idleSyncStatusLabel: NSTextField!
-    var idleSyncWarningLabel: NSTextField!
     var menuTintSlider: NSSlider!
     var menuTintValueLabel: NSTextField!
     private var updatesStatusLabel: NSTextField!
@@ -1464,21 +1462,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         lockScreenStack.translatesAutoresizingMaskIntoConstraints = false
 
         lockScreenEnabledToggle = createCheck("Enable Lock Screen Sync", action: #selector(togLockScreenSyncEnabled))
-        let syncModeLabel = NSTextField.liquidLabel("Lock Screen Sync Mode", size: 13, weight: .semibold)
-        idleSyncModeControl = NSSegmentedControl(labels: ["Fast", "Compatible"], trackingMode: .selectOne, target: self, action: #selector(changeIdleSyncMode))
-        idleSyncModeControl.segmentStyle = .rounded
         autoIdleSyncToggle = createCheck("Auto Sync Lock Screen Wallpaper", action: #selector(togAutoIdleSync))
         idleSyncButton = createPillButton("Sync Current to Lock Screen", icon: "arrow.triangle.2.circlepath", action: #selector(syncIdleWallpaper))
-        idleSyncStatusLabel = NSTextField.liquidLabel("Fast mode ready.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
+        idleSyncStatusLabel = NSTextField.liquidLabel("Lock screen ready.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         idleSyncStatusLabel.maximumNumberOfLines = 2
         idleSyncStatusLabel.lineBreakMode = .byWordWrapping
-        idleSyncWarningLabel = NSTextField.liquidLabel("Compatible mode may not transition smoothly. Fast mode is recommended for smoother changes.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.60))
-        idleSyncWarningLabel.maximumNumberOfLines = 3
-        idleSyncWarningLabel.lineBreakMode = .byWordWrapping
-        idleSyncWarningLabel.heightAnchor.constraint(equalToConstant: 34).isActive = true
         let lockScreenTitle = createSectionTitleRow(title: "Lock Screen Settings", showsProBadge: true)
 
-        [lockScreenTitle, lockScreenEnabledToggle!, syncModeLabel, idleSyncModeControl!, idleSyncWarningLabel!, autoIdleSyncToggle!, idleSyncButton!, idleSyncStatusLabel!].forEach {
+        [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, idleSyncButton!, idleSyncStatusLabel!].forEach {
             lockScreenStack.addArrangedSubview($0)
         }
         lockScreenCard.contentView.addSubview(lockScreenStack)
@@ -1791,8 +1782,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         addToPlaylistButton?.alphaValue = isPlaylistPro ? 1.0 : 0.7
         lockScreenEnabledToggle?.alphaValue = isLockScreenPro ? 1.0 : 0.6
         autoIdleSyncToggle?.alphaValue = isLockScreenEnabled ? 1.0 : 0.6
-        idleSyncModeControl?.alphaValue = isLockScreenEnabled ? 1.0 : 0.45
-        idleSyncModeControl?.isEnabled = isLockScreenEnabled
         autoIdleSyncToggle?.isEnabled = isLockScreenEnabled
         idleSyncButton?.alphaValue = isLockScreenEnabled ? 1.0 : 0.72
         idleSyncButton?.isEnabled = isLockScreenEnabled && !(app.idleWallpaperSyncInProgress)
@@ -2031,13 +2020,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if app.smartPauseEnabled { settingFlags.append("Smart Pause") }
         if !app.lockScreenSyncEnabled {
             settingFlags.append("Lock Sync Off")
+        } else if app.autoSyncIdleWallpaper {
+            settingFlags.append("Auto Lock Sync")
         } else {
-            let syncModeName = app.idleWallpaperSyncMode == .fast ? "Fast" : "Compatible"
-            if app.autoSyncIdleWallpaper {
-                settingFlags.append("Auto \(syncModeName) Sync")
-            } else {
-                settingFlags.append("\(syncModeName) Mode")
-            }
+            settingFlags.append("Lock Sync On")
         }
         settingsSummaryLabel.stringValue = settingFlags.isEmpty ? "Smart rules and lock screen" : settingFlags.joined(separator: " • ")
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.0"
@@ -2212,6 +2198,15 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     func showPlayerDetailTest(completion: (() -> Void)? = nil) {
         showDetail(.player, from: playerCardView) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
+    func showSettingsDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.settings, from: settingsCard) { [weak self] in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self?.dumpAndCapturePlayerDetail()
                 completion?()
@@ -2565,15 +2560,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         loginToggle.state = SMAppService.mainApp.status == .enabled ? .on : .off
         lockScreenEnabledToggle.state = app.lockScreenSyncEnabled ? .on : .off
         autoIdleSyncToggle.state = app.autoSyncIdleWallpaper ? .on : .off
-        idleSyncModeControl.selectedSegment = app.idleWallpaperSyncMode == .fast ? 0 : 1
-        let syncModeName = app.idleWallpaperSyncMode == .fast ? "Fast" : "Compatible"
         let isSyncing = app.idleWallpaperSyncInProgress
         idleSyncButton.title = isSyncing ? "Syncing Lock Screen..." : "Sync Current to Lock Screen"
         idleSyncButton.isEnabled = !isSyncing
         idleSyncStatusLabel?.stringValue = app.lockScreenSyncEnabled
-            ? (isSyncing ? "Syncing lock screen wallpaper across displays..." : "Native extension active and synced.")
+            ? (isSyncing ? "Syncing lock screen across all displays..." : "Lock screen synced across all displays.")
             : "Lock screen sync is turned off."
-        idleSyncWarningLabel?.alphaValue = 1.0
         menuTintSlider?.doubleValue = app.menuDarkTintStrength
         menuTintValueLabel?.stringValue = "\(Int((app.menuDarkTintStrength * 100).rounded()))%"
         updatesStatusLabel?.stringValue = app.currentUpdateDescription()
@@ -3022,10 +3014,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     @objc func togAutoIdleSync() {
         guard requireProAccess(.lockScreenSync) else { refreshUI(); return }
         appDelegate?.autoSyncIdleWallpaper.toggle(); appDelegate?.saveSettings(); appDelegate?.scheduleIdleWallpaperSyncIfNeeded(); refreshUI()
-    }
-    @objc func changeIdleSyncMode() {
-        guard requireProAccess(.lockScreenSync) else { refreshUI(); return }
-        appDelegate?.idleWallpaperSyncMode = idleSyncModeControl.selectedSegment == 0 ? .fast : .compatible; appDelegate?.lastAutoSyncedMediaPath = nil; appDelegate?.saveSettings(); appDelegate?.scheduleIdleWallpaperSyncIfNeeded(); refreshUI()
     }
     @objc func menuTintChanged() {
         let value = menuTintSlider.doubleValue

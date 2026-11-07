@@ -71,10 +71,7 @@ public enum CineWallWallpaperRuntime {
         guard cls.responds(to: sel) else {
             throw failure("CAContext does not respond to remoteContextWithOptions:")
         }
-        var options: [String: Any] = [:]
-        if let displayID {
-            options["displayId"] = displayID
-        }
+        let options: [String: Any] = [:]
         guard let ctx = cls.perform(sel, with: options)?.takeUnretainedValue() as? CAContext else {
             throw failure("Failed to create remote CAContext.")
         }
@@ -115,14 +112,11 @@ public enum CineWallWallpaperRuntime {
         return nil
     }
 
-    public static func identifier(_ value: Any?) -> UUID? {
-        guard let value else { return nil }
-        if let id = value as? UUID { return id }
-        if let direct = field("rawValue", in: value) as? UUID { return direct }
-        if let nested = field("box", in: value), let id = field("rawValue", in: nested) as? UUID { return id }
-        let mirror = Mirror(reflecting: value)
-        for child in mirror.children {
-            if let id = child.value as? UUID { return id }
+    public static func identifier(_ value: Any?, depth: Int = 0) -> UUID? {
+        guard let value, depth < 8 else { return nil }
+        if let uuid = value as? UUID { return uuid }
+        for child in Mirror(reflecting: value).children {
+            if let uuid = identifier(child.value, depth: depth + 1) { return uuid }
         }
         return nil
     }
@@ -135,7 +129,9 @@ public enum CineWallWallpaperRuntime {
 
     public static func logRequestShape(_ kind: String, _ request: Any?) {
         guard let request else { return }
-        log("\(kind) request type=\(type(of: request))")
+        let mirror = Mirror(reflecting: request)
+        let children = mirror.children.compactMap { $0.label }.joined(separator: ", ")
+        log("\(kind) request: \(type(of: request)) [\(children)]")
     }
 
     public static func recordHostRelease(_ released: Bool) {
@@ -152,5 +148,17 @@ public enum CineWallWallpaperRuntime {
     public static func log(_ message: String) {
         logger.info("\(message, privacy: .public)")
         NSLog("[CineWallExtension] %@", message)
+        let logURL = exchange.appendingPathComponent("extension.log")
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let line = "\(timestamp) [CineWallExtension] \(message)\n"
+        if let data = line.data(using: .utf8) {
+            if let handle = try? FileHandle(forWritingTo: logURL) {
+                defer { try? handle.close() }
+                _ = try? handle.seekToEnd()
+                _ = try? handle.write(contentsOf: data)
+            } else {
+                try? data.write(to: logURL, options: .atomic)
+            }
+        }
     }
 }

@@ -172,7 +172,7 @@ public final class CineWallWallpaperController {
     public func selectScene(displayID: UInt32?) -> LockScreenScene? {
         let selected: LockScreenScene?
         if let displayID {
-            selected = configuration?.scenes.first(where: { $0.displayID == displayID })
+            selected = configuration?.scenes.first(where: { $0.displayID == displayID }) ?? configuration?.scenes.first
         } else {
             selected = configuration?.scenes.first
         }
@@ -187,32 +187,50 @@ public final class CineWallWallpaperController {
         let started = ContinuousClock.now
         CineWallWallpaperRuntime.logRequestShape("acquire", request)
         do {
-            guard let id = CineWallWallpaperRuntime.identifier(value), let request,
-                  let destination = CineWallWallpaperRuntime.field("destination", in: request),
-                  let size = CineWallWallpaperRuntime.field("size", in: destination) as? CGSize,
-                  let scale = CineWallWallpaperRuntime.field("scaleFactor", in: destination) as? CGFloat
-            else {
-                throw CineWallWallpaperRuntime.failure("Unsupported native wallpaper creation request.")
+            guard let request else {
+                throw CineWallWallpaperRuntime.failure("Nil acquire request.")
             }
-            let displayID = CineWallWallpaperRuntime.field("directDisplayID", in: destination) as? UInt32
-            let preview = CineWallWallpaperRuntime.field("isPreview", in: request) as? Bool ?? false
+            let id = CineWallWallpaperRuntime.identifier(value) ?? UUID()
+            var destSize: CGSize = NSScreen.main?.frame.size ?? CGSize(width: 2560, height: 1440)
+            var scaleFactor: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0
+            var isPreview = false
+            var directDisplayID: UInt32?
+
+            if let destination = CineWallWallpaperRuntime.field("destination", in: request) {
+                if let size = (CineWallWallpaperRuntime.field("size", in: destination) as? CGSize) ??
+                              ((CineWallWallpaperRuntime.field("size", in: destination) as? NSValue)?.sizeValue) {
+                    destSize = size
+                }
+                if let scale = (CineWallWallpaperRuntime.field("scaleFactor", in: destination) as? CGFloat) ??
+                               ((CineWallWallpaperRuntime.field("scaleFactor", in: destination) as? NSNumber).map { CGFloat($0.doubleValue) }) {
+                    scaleFactor = scale
+                }
+                if let did = (CineWallWallpaperRuntime.field("directDisplayID", in: destination) as? UInt32) ??
+                             ((CineWallWallpaperRuntime.field("directDisplayID", in: destination) as? NSNumber)?.uint32Value) {
+                    directDisplayID = did
+                }
+            }
+            if let preview = CineWallWallpaperRuntime.field("isPreview", in: request) as? Bool {
+                isPreview = preview
+            }
+
             reload()
-            guard let scene = selectScene(displayID: displayID) else {
+            guard let scene = selectScene(displayID: directDisplayID) else {
                 CineWallWallpaperRuntime.log(
-                    "acquire rejected: no scene for displayID=\(displayID.map { String($0) } ?? "nil") (available scenes: \(configuration?.scenes.map { "\($0.displayID):\($0.projectPath)" }.joined(separator: ", ") ?? "none"))"
+                    "acquire rejected: no scene for displayID=\(directDisplayID.map { String($0) } ?? "nil") (available scenes: \(configuration?.scenes.map { "\($0.displayID):\($0.projectPath)" }.joined(separator: ", ") ?? "none"))"
                 )
                 throw CineWallWallpaperRuntime.failure(
                     "No applied wallpaper is available for this display. Enable Lock Screen Sync in CineWall."
                 )
             }
             CineWallWallpaperRuntime.log(
-                "acquire accepted: id=\(id) directDisplayID=\(displayID.map { String($0) } ?? "nil") sceneDisplayID=\(scene.displayID) scenePath=\(scene.projectPath) isPreview=\(preview) size=\(size) scale=\(scale)"
+                "acquire accepted: id=\(id) directDisplayID=\(directDisplayID.map { String($0) } ?? "nil") sceneDisplayID=\(scene.displayID) scenePath=\(scene.projectPath) isPreview=\(isPreview) size=\(destSize) scale=\(scaleFactor)"
             )
             let acquisition = try surfaces.acquire(
-                id: id, matches: { $0.displayID == displayID && $0.preview == preview }
+                id: id, matches: { $0.displayID == directDisplayID && $0.preview == isPreview }
             ) { generation in
                 try CineWallWallpaperSurface(
-                    scene: scene, displayID: displayID, size: size, scale: scale, preview: preview,
+                    scene: scene, displayID: directDisplayID, size: destSize, scale: scaleFactor, preview: isPreview,
                     generation: generation
                 )
             }
@@ -240,10 +258,10 @@ public final class CineWallWallpaperController {
                     )
                     reply(contextReply, nil)
                 } catch {
+                    let errStr = "Acquire failed display=\(scene.displayID): \(error) localized=\(error.localizedDescription)"
+                    try? errStr.write(to: CineWallWallpaperRuntime.exchange.appendingPathComponent("acquire-error.txt"), atomically: true, encoding: .utf8)
                     if !(error is CancellationError) {
-                        CineWallWallpaperRuntime.log(
-                            "Acquire failed display=\(scene.displayID) after \(ContinuousClock.now - started): \(error.localizedDescription)"
-                        )
+                        CineWallWallpaperRuntime.log(errStr)
                         self.acknowledge(surface: surface, error: error)
                     }
                     reply(nil, error)
@@ -255,13 +273,15 @@ public final class CineWallWallpaperController {
                 surface.whenReady(completion: ready)
             }
         } catch {
-            CineWallWallpaperRuntime.log("acquire error: \(error.localizedDescription)")
+            let errStr = "acquire top error: \(error) localized=\(error.localizedDescription)"
+            try? errStr.write(to: CineWallWallpaperRuntime.exchange.appendingPathComponent("acquire-error.txt"), atomically: true, encoding: .utf8)
+            CineWallWallpaperRuntime.log(errStr)
             reply(nil, error)
         }
     }
 
     public func update(id value: Any?, request: Any?) throws {
-        guard let id = CineWallWallpaperRuntime.identifier(value), let surface = surfaces[id] else {
+        guard let id = CineWallWallpaperRuntime.identifier(value), let surface = surfaces[id] ?? surfaces.values.first else {
             throw CineWallWallpaperRuntime.failure("Unknown native wallpaper surface.")
         }
         if let request {
@@ -282,7 +302,7 @@ public final class CineWallWallpaperController {
     }
 
     public func snapshot(id value: Any?, reply: @escaping (Any?, Error?) -> Void) {
-        guard let id = CineWallWallpaperRuntime.identifier(value), let surface = surfaces[id] else {
+        guard let surface = (CineWallWallpaperRuntime.identifier(value).flatMap { surfaces[$0] }) ?? surfaces.values.first else {
             reply(nil, CineWallWallpaperRuntime.failure("Unknown native wallpaper surface."))
             return
         }
