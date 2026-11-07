@@ -3,7 +3,7 @@ import AVFoundation
 import ServiceManagement
 
 let liquidMenuWidth: CGFloat = 320
-let liquidMenuHeight: CGFloat = 560
+let liquidMenuHeight: CGFloat = 520
 let cineWallAerialCategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A001"
 let cineWallAerialSubcategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A002"
 let cineWallWallpaperStoreBackupFileName = "Index.pre-cinewall.plist"
