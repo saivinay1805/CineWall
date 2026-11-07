@@ -149,7 +149,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
             if let img = NSImage(named: "menubar_icon") {
                 img.isTemplate = true
                 let aspect: CGFloat = img.size.width / max(1, img.size.height)
-                let height: CGFloat = 16.0
+                let height: CGFloat = 11.0
                 let width = round(height * aspect)
                 img.size = NSSize(width: width, height: height)
                 button.image = img
