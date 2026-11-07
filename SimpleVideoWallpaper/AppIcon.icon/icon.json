@@ -1,0 +1,132 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "extended-gray:1.00000,1.00000",
+          "extended-gray:0.50000,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 0
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 0.7
+          }
+        }
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "extended-gray:0.00000,1.00000",
+          "extended-gray:0.50000,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 0
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 0.7
+          }
+        }
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:0.00000,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:1.00000,1.00000",
+                  "extended-gray:1.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:1.00000,1.00000",
+                  "extended-gray:1.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            }
+          ],
+          "image-name" : "menubar_icon 3.png",
+          "name" : "menubar_icon 3",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -7.5,
+              60.84375
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.75
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

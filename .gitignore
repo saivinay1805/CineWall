@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode & Swift
+build/
+DerivedData/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserdatad
+
+# Secrets & Local environments
+.env
+.env.*
+!.env.example
+.vercel
+
+# Node
+node_modules/
