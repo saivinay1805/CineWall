@@ -854,6 +854,90 @@ extension AppDelegate {
         try updated.write(to: manifestURL, options: .atomic)
     }
 
+    struct DisplayInfo {
+        let displayID: UInt32
+        let name: String
+    }
+
+    func resolveDisplayMap() -> [String: DisplayInfo] {
+        var map: [String: DisplayInfo] = [:]
+        
+        if let configClass = NSClassFromString("NSCGSDisplayConfiguration") as? NSObject.Type,
+           let config = configClass.perform(NSSelectorFromString("currentConfiguration"))?.takeUnretainedValue() as? NSObject,
+           let displays = config.value(forKey: "uniqueDisplays") as? [NSObject] {
+            for display in displays {
+                guard let uuid = display.value(forKey: "UUID") as? NSUUID else { continue }
+                let uuidString = uuid.uuidString
+                let displayID = (display.value(forKey: "displayID") as? UInt32) ?? 0
+                let screenName = NSScreen.screens.first(where: {
+                    ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32) == displayID
+                })?.localizedName ?? "Display"
+                map[uuidString] = DisplayInfo(displayID: displayID, name: screenName)
+            }
+        }
+        
+        if map.isEmpty {
+            for screen in NSScreen.screens {
+                guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32 else { continue }
+                if let uuid = CGDisplayCreateUUIDFromDisplayID(screenNumber)?.takeRetainedValue() {
+                    let uuidStr = CFUUIDCreateString(nil, uuid) as String
+                    map[uuidStr] = DisplayInfo(displayID: screenNumber, name: screen.localizedName)
+                } else {
+                    map["fallback-\(screenNumber)"] = DisplayInfo(displayID: screenNumber, name: screen.localizedName)
+                }
+            }
+        }
+        return map
+    }
+
+    func makeAerialLinkedRecord(assetID: String, now: Date = Date()) throws -> [String: Any] {
+        let config = try PropertyListSerialization.data(fromPropertyList: ["assetID": assetID], format: .binary, options: 0)
+        let choice: [String: Any] = [
+            "Configuration": config,
+            "Files": [] as [Any],
+            "Provider": "com.apple.wallpaper.choice.aerials"
+        ]
+        let emptyOptionValues = (try? PropertyListSerialization.data(fromPropertyList: ["values": [String: Any]()], format: .binary, options: 0)) ?? Data()
+        let content: [String: Any] = [
+            "Choices": [choice],
+            "EncodedOptionValues": emptyOptionValues,
+            "Shuffle": "$null"
+        ]
+        return [
+            "Type": "linked",
+            "Linked": [
+                "Content": content,
+                "LastSet": now,
+                "LastUse": now
+            ]
+        ]
+    }
+
+    func makeAerialIndividualRecord(assetID: String, now: Date = Date()) throws -> [String: Any] {
+        let config = try PropertyListSerialization.data(fromPropertyList: ["assetID": assetID], format: .binary, options: 0)
+        let choice: [String: Any] = [
+            "Configuration": config,
+            "Files": [] as [Any],
+            "Provider": "com.apple.wallpaper.choice.aerials"
+        ]
+        let emptyOptionValues = (try? PropertyListSerialization.data(fromPropertyList: ["values": [String: Any]()], format: .binary, options: 0)) ?? Data()
+        let content: [String: Any] = [
+            "Choices": [choice],
+            "EncodedOptionValues": emptyOptionValues,
+            "Shuffle": "$null"
+        ]
+        let side: [String: Any] = [
+            "Content": content,
+            "LastSet": now,
+            "LastUse": now
+        ]
+        return [
+            "Type": "individual",
+            "Desktop": side,
+            "Idle": side
+        ]
+    }
+
     func updateWallpaperStore(storeURL: URL, assetID: String) throws {
         let data = try Data(contentsOf: storeURL)
         var format = PropertyListSerialization.PropertyListFormat.binary
@@ -862,33 +946,37 @@ extension AppDelegate {
         }
 
         let now = Date()
-        let configuration = try PropertyListSerialization.data(fromPropertyList: ["assetID": assetID], format: .binary, options: 0)
-        updateWallpaperNode(&root, key: "SystemDefault", configuration: configuration, date: now)
+        let defaultLinked = try makeAerialLinkedRecord(assetID: assetID, now: now)
+        let defaultIndividual = try makeAerialIndividualRecord(assetID: assetID, now: now)
 
-        if var displays = root["Displays"] as? [String: Any] {
-            for key in displays.keys {
-                if var display = displays[key] as? [String: Any] {
-                    updateLinkedChoice(in: &display, configuration: configuration, date: now)
-                    displays[key] = display
-                }
-            }
-            root["Displays"] = displays
+        // 1. AllSpacesAndDisplays: Critical on macOS 26/27 (Tahoe/Golden Gate) for global lock screen & screensaver
+        root["AllSpacesAndDisplays"] = defaultLinked
+        root["SystemDefault"] = defaultLinked
+
+        // 2. Displays: Resolve all connected display UUIDs and update per-display choices
+        var displays = (root["Displays"] as? [String: Any]) ?? [:]
+        let displayMap = resolveDisplayMap()
+        for (dispUUID, _) in displayMap {
+            if dispUUID.hasPrefix("fallback-") { continue }
+            displays[dispUUID] = defaultLinked
         }
+        for key in displays.keys {
+            displays[key] = defaultLinked
+        }
+        root["Displays"] = displays
 
+        // 3. Spaces: Update individual spaces so space overrides don't take precedence
         if var spaces = root["Spaces"] as? [String: Any] {
-            for key in spaces.keys {
-                guard var space = spaces[key] as? [String: Any] else { continue }
-                updateWallpaperNode(&space, key: "Default", configuration: configuration, date: now)
-                if var displays = space["Displays"] as? [String: Any] {
-                    for displayKey in displays.keys {
-                        if var display = displays[displayKey] as? [String: Any] {
-                            updateLinkedChoice(in: &display, configuration: configuration, date: now)
-                            displays[displayKey] = display
-                        }
+            for (sKey, sVal) in spaces {
+                if var spaceDict = sVal as? [String: Any] {
+                    var spaceDisplays = (spaceDict["Displays"] as? [String: Any]) ?? [:]
+                    for dKey in displays.keys {
+                        spaceDisplays[dKey] = defaultLinked
                     }
-                    space["Displays"] = displays
+                    spaceDict["Displays"] = spaceDisplays
+                    spaceDict["Default"] = defaultLinked
+                    spaces[sKey] = spaceDict
                 }
-                spaces[key] = space
             }
             root["Spaces"] = spaces
         }
@@ -897,35 +985,33 @@ extension AppDelegate {
         try updated.write(to: storeURL, options: .atomic)
     }
 
-    func updateWallpaperNode(_ root: inout [String: Any], key: String, configuration: Data, date: Date) {
-        var node = root[key] as? [String: Any] ?? [:]
-        updateLinkedChoice(in: &node, configuration: configuration, date: date)
-        root[key] = node
-    }
-
-    func updateLinkedChoice(in node: inout [String: Any], configuration: Data, date: Date) {
-        var linked = node["Linked"] as? [String: Any] ?? [:]
-        var content = linked["Content"] as? [String: Any] ?? [:]
-        content["Choices"] = [[
-            "Configuration": configuration,
-            "Files": [],
-            "Provider": "com.apple.wallpaper.choice.aerials"
-        ]]
-        linked["Content"] = content
-        linked["LastSet"] = date
-        linked["LastUse"] = date
-        node["Linked"] = linked
-        node["Type"] = "linked"
-    }
-
     func restartWallpaperAgent() {
+        // 1. Post Darwin notification so WallpaperAgent & Aerial extensions detect choice change
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName("com.apple.wallpaper.choice.changed" as CFString),
+            nil,
+            nil,
+            true
+        )
+
+        // 2. Signal WallpaperAgent to restart clean with -TERM
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
-        task.arguments = ["WallpaperAgent"]
+        task.arguments = ["-TERM", "WallpaperAgent"]
         task.standardOutput = Pipe()
         task.standardError = Pipe()
         try? task.run()
         task.waitUntilExit()
+
+        // 3. Signal WallpaperAerialsExtension to invalidate in-memory cache on modern macOS
+        let taskExt = Process()
+        taskExt.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
+        taskExt.arguments = ["-TERM", "WallpaperAerialsExtension"]
+        taskExt.standardOutput = Pipe()
+        taskExt.standardError = Pipe()
+        try? taskExt.run()
+        taskExt.waitUntilExit()
     }
 }
 

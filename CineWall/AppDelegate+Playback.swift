@@ -8,7 +8,9 @@ extension AppDelegate {
     func startPlayback() {
         cancelActiveIdleWallpaperSync()
         stopAllPlayers()
-        gifView?.isHidden = true; layerA?.isHidden = true; layerB?.isHidden = true
+        gifViews.forEach { $0.isHidden = true }
+        layersA.forEach { $0.isHidden = true }
+        layersB.forEach { $0.isHidden = true }
         
         if currentQueue.isEmpty {
             liquidController?.updateTrackInfo(title: "No Media", image: nil, isFav: false)
@@ -42,9 +44,11 @@ extension AppDelegate {
         
         guard let image = NSImage(contentsOf: url) else { nextFile(); return }
         
-        gifView?.isHidden = false
-        gifView?.image = image
-        gifView?.animates = true
+        gifViews.forEach {
+            $0.isHidden = false
+            $0.image = image
+            $0.animates = true
+        }
         updateScalingMode()
         
         // If Loop is OFF and Timer is OFF, we need to manually change when GIF ends
@@ -83,8 +87,6 @@ extension AppDelegate {
     func playVideo(at index: Int) {
         let url = currentQueue[index]; let item = AVPlayerItem(url: url)
         let activePlayer = (activePlayerIndex == 0) ? playerA : playerB
-        let activeLayer = (activePlayerIndex == 0) ? layerA : layerB
-        let hiddenLayer = (activePlayerIndex == 0) ? layerB : layerA
 
         pendingVideoReadyObservation?.invalidate()
         pendingVideoReadyObservation = nil
@@ -99,14 +101,25 @@ extension AppDelegate {
 
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.5)
-        activeLayer?.isHidden = false
-        activeLayer?.opacity = 1.0
-        hiddenLayer?.opacity = 0.0
+        let activeLayers = (activePlayerIndex == 0) ? layersA : layersB
+        let hiddenLayers = (activePlayerIndex == 0) ? layersB : layersA
+        for l in activeLayers {
+            l.isHidden = false
+            l.opacity = 1.0
+        }
+        for l in hiddenLayers {
+            l.opacity = 0.0
+        }
         CATransaction.commit()
 
-        let cleanupWorkItem = DispatchWorkItem { [weak hiddenLayer] in
-            hiddenLayer?.isHidden = true
-            hiddenLayer?.player?.replaceCurrentItem(with: nil)
+        let cleanupWorkItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            let toHide = (self.activePlayerIndex == 0) ? self.layersB : self.layersA
+            for l in toHide {
+                l.isHidden = true
+            }
+            let inactivePlayer = (self.activePlayerIndex == 0) ? self.playerB : self.playerA
+            inactivePlayer?.replaceCurrentItem(with: nil)
         }
         pendingHiddenLayerCleanupWorkItem = cleanupWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: cleanupWorkItem)
@@ -161,8 +174,8 @@ extension AppDelegate {
 
     func updatePlaybackState() { _ = syncAccessControlledState(); if isManualPaused || (focusPauseEnabled && !isDesktopFocused()) || (smartPauseEnabled && !showOnAllSpaces && isOccluded()) || (batterySaverEnabled && isOnBattery()) { performPause(); return }; performPlay(); updateVolumeState() }
 
-    func performPlay() { let p = (activePlayerIndex == 0) ? playerA : playerB; if p?.rate == 0 { p?.play() }; if !(gifView?.isHidden ?? true) { gifView?.animates = true; if !isLoopingCurrent && autoChangeInterval == 0 && gifTimer == nil { /* Restart GIF timer if needed logic here */ } } }
-    func performPause() { let p = (activePlayerIndex == 0) ? playerA : playerB; if p?.rate != 0 { p?.pause() }; if !(gifView?.isHidden ?? true) { gifView?.animates = false; gifTimer?.invalidate(); gifTimer = nil } }
+    func performPlay() { let p = (activePlayerIndex == 0) ? playerA : playerB; if p?.rate == 0 { p?.play() }; gifViews.forEach { if !$0.isHidden { $0.animates = true } } }
+    func performPause() { let p = (activePlayerIndex == 0) ? playerA : playerB; if p?.rate != 0 { p?.pause() }; gifViews.forEach { if !$0.isHidden { $0.animates = false } }; gifTimer?.invalidate(); gifTimer = nil }
     func updateVolumeState() { let v = (isMuted || (focusMuteEnabled && !isDesktopFocused())) ? 0 : volumeLevel; playerA?.volume = v; playerB?.volume = v }
 
     func resetPlaylistTimer() { playlistTimer?.invalidate(); guard autoChangeInterval > 0, !currentQueue.isEmpty else { return }; playlistTimer = Timer.scheduledTimer(withTimeInterval: autoChangeInterval, repeats: true) { [weak self] _ in self?.nextFile() } }

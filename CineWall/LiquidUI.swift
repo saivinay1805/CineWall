@@ -2763,7 +2763,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     @objc func togSpaces() {
         appDelegate?.showOnAllSpaces.toggle()
         appDelegate?.saveSettings()
-        appDelegate?.wallpaperWindow?.collectionBehavior = (appDelegate?.showOnAllSpaces ?? false) ? [.canJoinAllSpaces, .stationary, .ignoresCycle] : [.stationary, .ignoresCycle]
+        appDelegate?.wallpaperWindows.forEach { $0.collectionBehavior = (appDelegate?.showOnAllSpaces ?? false) ? [.canJoinAllSpaces, .stationary, .ignoresCycle] : [.stationary, .ignoresCycle] }
         appDelegate?.updatePlaybackState()
         updateSummaryLabels()
     }

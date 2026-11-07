@@ -41,14 +41,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     let sparkleUpdater = SparkleUpdater.shared
 
     // --- WALLPAPER ENGINE ---
-    var wallpaperWindow: ClickableWindow?
+    var wallpaperWindows: [ClickableWindow] = []
+    var wallpaperWindow: ClickableWindow? {
+        get { wallpaperWindows.first }
+        set {
+            if let val = newValue {
+                if !wallpaperWindows.contains(where: { $0 === val }) {
+                    wallpaperWindows.append(val)
+                }
+            } else {
+                wallpaperWindows.removeAll()
+            }
+        }
+    }
     var ghostWindow: NSWindow?
     var playerA: AVPlayer?
     var playerB: AVPlayer?
-    var layerA: AVPlayerLayer?
-    var layerB: AVPlayerLayer?
+    var layersA: [AVPlayerLayer] = []
+    var layersB: [AVPlayerLayer] = []
+    var layerA: AVPlayerLayer? { layersA.first }
+    var layerB: AVPlayerLayer? { layersB.first }
     var activePlayerIndex: Int = 0
-    var gifView: NSImageView?
+    var gifViews: [NSImageView] = []
+    var gifView: NSImageView? { gifViews.first }
     var pendingVideoReadyObservation: NSKeyValueObservation?
     var pendingHiddenLayerCleanupWorkItem: DispatchWorkItem?
     
