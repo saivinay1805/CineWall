@@ -88,13 +88,22 @@ final class PlayerThumbnailView: NSView {
         }
     }
 
+    var showsGradient: Bool = true {
+        didSet {
+            gradientOverlay.isHidden = !showsGradient
+        }
+    }
+
+    var onClick: (() -> Void)?
+
     private let gradientOverlay = CAGradientLayer()
 
-    override init(frame: NSRect) {
+    init(frame: NSRect = .zero, cornerRadius: CGFloat = 16, showsGradient: Bool = true) {
+        self.showsGradient = showsGradient
         super.init(frame: frame)
         wantsLayer = true
         layerContentsRedrawPolicy = .onSetNeedsDisplay
-        layer?.cornerRadius = 16
+        layer?.cornerRadius = cornerRadius
         layer?.masksToBounds = true
         layer?.borderWidth = 1.0
         layer?.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
@@ -106,20 +115,37 @@ final class PlayerThumbnailView: NSView {
             NSColor.black.withAlphaComponent(0.45).cgColor
         ]
         gradientOverlay.locations = [0.0, 0.45, 1.0]
+        gradientOverlay.isHidden = !showsGradient
         layer?.addSublayer(gradientOverlay)
+    }
+
+    override convenience init(frame: NSRect) {
+        self.init(frame: frame, cornerRadius: 16, showsGradient: true)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func mouseDown(with event: NSEvent) {
+        if let onClick {
+            onClick()
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
+
     override func layout() {
         super.layout()
         gradientOverlay.frame = bounds
-        layer?.contents = thumbnailImage
+        if let img = thumbnailImage {
+            layer?.contents = img
+        }
     }
 
     override func updateLayer() {
         super.updateLayer()
-        layer?.contents = thumbnailImage
+        if let img = thumbnailImage {
+            layer?.contents = img
+        }
     }
 }
 
@@ -250,7 +276,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private var librarySelectVideosButton: NSButton!
     private var libraryRemoveSelectedButton: NSButton!
     private var isSelectingPlaylistVideos: Bool = false
-    private var expandedArtworkView: NSImageView!
+    private var expandedArtworkView: PlayerThumbnailView!
     private var expandedTrackMarquee: MarqueeLabelView!
     private var expandedPlayButton: NSButton!
     private var expandedFavButton: NSButton!
@@ -450,14 +476,20 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         transportRow.addArrangedSubview(playButton)
         transportRow.addArrangedSubview(next)
 
-        playerCard.contentView.addSubview(thumbnailView)
-        playerCard.contentView.addSubview(compactTrackMarquee)
-        playerCard.contentView.addSubview(favButton)
+        thumbnailView.onClick = { [weak self] in
+            self?.showPlayerDetail(nil)
+        }
+
         let openButton = NSButton(title: "", target: self, action: #selector(showPlayerDetail))
         openButton.isBordered = false
         openButton.isTransparent = true
         openButton.translatesAutoresizingMaskIntoConstraints = false
-        playerCard.contentView.addSubview(openButton, positioned: .below, relativeTo: thumbnailView)
+        openButton.menu = thumbMenu
+
+        playerCard.contentView.addSubview(thumbnailView)
+        playerCard.contentView.addSubview(compactTrackMarquee)
+        playerCard.contentView.addSubview(openButton)
+        playerCard.contentView.addSubview(favButton)
         playerCard.contentView.addSubview(transportRow)
 
         NSLayoutConstraint.activate([
@@ -895,16 +927,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerDetailView = contentView
         playerDetailView.translatesAutoresizingMaskIntoConstraints = false
 
-        expandedArtworkView = NSImageView()
-        expandedArtworkView.wantsLayer = true
-        expandedArtworkView.layer?.cornerRadius = 14
-        expandedArtworkView.layer?.masksToBounds = true
-        expandedArtworkView.layer?.contentsGravity = .resizeAspectFill
-        expandedArtworkView.image = nil
-        expandedArtworkView.layer?.contents = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        expandedArtworkView = PlayerThumbnailView(cornerRadius: 14, showsGradient: false)
         expandedArtworkView.translatesAutoresizingMaskIntoConstraints = false
         expandedArtworkView.widthAnchor.constraint(equalToConstant: 120).isActive = true
         expandedArtworkView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        let initialImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        expandedArtworkView.thumbnailImage = initialImg
 
         expandedTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 16, weight: .bold), color: .white)
         expandedTrackMarquee.stringValue = "Not Playing"
@@ -2000,6 +2028,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         settingsDetailView.isHidden = (section != .settings)
         proDetailView.isHidden = (section != .pro)
 
+        if section == .player {
+            let displayImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+            expandedArtworkView?.thumbnailImage = displayImg
+            expandedTrackMarquee?.stringValue = compactTrackMarquee?.stringValue ?? trackTitle.stringValue
+        }
         if section == .playlist {
             playlistTableView.reloadData()
         }
@@ -2278,10 +2311,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         currentTrackThumbnail = image
         trackTitle.stringValue = title
         compactTrackMarquee?.stringValue = title
-        thumbnailView.thumbnailImage = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        let displayImg = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        thumbnailView.thumbnailImage = displayImg
         expandedTrackMarquee?.stringValue = title
-        expandedArtworkView?.image = nil
-        expandedArtworkView?.layer?.contents = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        expandedArtworkView?.thumbnailImage = displayImg
         updateFavIcon(isFav)
         expandedFavButton?.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
         expandedFavButton?.contentTintColor = isFav ? .systemRed : .white
@@ -2307,6 +2340,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     func refreshUI() {
         guard let app = appDelegate else { return }
+
+        if let current = currentTrackThumbnail {
+            thumbnailView.thumbnailImage = current
+            expandedArtworkView?.thumbnailImage = current
+        }
 
         playButton.image = NSImage(systemSymbolName: app.isManualPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)
         expandedPlayButton?.image = NSImage(systemSymbolName: app.isManualPaused ? "play.fill" : "pause.fill", accessibilityDescription: nil)
