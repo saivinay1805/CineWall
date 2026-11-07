@@ -192,8 +192,8 @@ public final class LockScreenWallpaperService: ObservableObject {
             revision: revision
         )
 
-        // 7. Wait briefly for extension acknowledgement
-        try await awaitReadiness(for: config, timeout: .seconds(3))
+        // 7. Wait for extension acknowledgement across all displays
+        try await awaitReadiness(for: config, timeout: .seconds(8))
 
         isEnabled = true
         status = "Lock Screen Synced"
@@ -211,6 +211,9 @@ public final class LockScreenWallpaperService: ObservableObject {
                       ack.revision == config.revision else {
                     allReady = false
                     break
+                }
+                if let error = ack.error {
+                    throw LockScreenFailure(message: error)
                 }
             }
             if allReady { return }

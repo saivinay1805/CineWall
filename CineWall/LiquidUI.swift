@@ -1045,7 +1045,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             rootStack.topAnchor.constraint(equalTo: playerDetailView.topAnchor, constant: 0),
             rootStack.leadingAnchor.constraint(equalTo: playerDetailView.leadingAnchor, constant: 0),
             rootStack.trailingAnchor.constraint(equalTo: playerDetailView.trailingAnchor, constant: 0),
-            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: playerDetailView.bottomAnchor, constant: 0),
+            rootStack.bottomAnchor.constraint(equalTo: playerDetailView.bottomAnchor),
 
             headerRow.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
             progressRow.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
@@ -2101,7 +2101,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             minimumHeight = 328
         case .player:
             bodyView = playerDetailView
-            minimumHeight = 144
+            minimumHeight = 168
         case .playlist:
             bodyView = playlistDetailView
             minimumHeight = 294

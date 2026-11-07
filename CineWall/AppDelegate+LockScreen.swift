@@ -51,11 +51,10 @@ extension AppDelegate {
 
     func syncCurrentVideoToIdleWallpaper(showAlerts: Bool = true, sourceURL: URL? = nil) {
         guard requireProAccess(for: .lockScreenSync) else { return }
-        guard lockScreenSyncEnabled else {
-            if showAlerts {
-                showAlert(title: "Lock Screen Sync Off", message: "Turn on Lock Screen Sync in Settings first.")
-            }
-            return
+        if !lockScreenSyncEnabled {
+            lockScreenSyncEnabled = true
+            saveSettings()
+            liquidController?.refreshUI()
         }
 
         let selectedURL = sourceURL

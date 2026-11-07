@@ -501,7 +501,10 @@ public final class LockScreenWallpaperSelection {
               let linked = node["Linked"] as? [String: Any],
               let content = linked["Content"] as? [String: Any],
               let choices = content["Choices"] as? [[String: Any]], !choices.isEmpty,
-              choices.allSatisfy({ $0["Provider"] as? String == "default" })
+              choices.allSatisfy({
+                  let p = $0["Provider"] as? String ?? ""
+                  return p == "default" || p.hasPrefix("com.apple.")
+              })
         else { return nil }
         return linked
     }
