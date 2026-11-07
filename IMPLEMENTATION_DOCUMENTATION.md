@@ -61,8 +61,8 @@ We added a real Free / Trial / Pro system to the app.
 
 Main implementation lives in:
 
-- [AppDelegate.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/AppDelegate.swift)
-- [LiquidUI.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUI.swift)
+- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
+- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
 
 ### 4.1 Access Model
 
@@ -139,7 +139,7 @@ We added and refined a dedicated Pro flow inside the Liquid UI menu.
 
 Main UI file:
 
-- [LiquidUI.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUI.swift)
+- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
 
 ### 5.1 Footer Navigation
 
@@ -166,7 +166,7 @@ The `Get License Key` button now opens your hosted checkout directly instead of 
 
 Current checkout URL is stored in:
 
-- [AppDelegate.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/AppDelegate.swift)
+- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
 
 ### 5.3 PRO Badges
 
@@ -224,7 +224,7 @@ We created a separate website deployment flow for CineWall.
 
 The website code now lives in:
 
-- [website](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website)
+- [website](./website)
 
 This folder is its own git repo and is connected to Vercel.
 
@@ -263,7 +263,7 @@ We built the activation backend in the website repo using a Vercel serverless fu
 
 File:
 
-- [api/activate-license.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/activate-license.js)
+- [api/activate-license.js](./website/api/activate-license.js)
 
 ### 10.1 What It Does
 
@@ -312,7 +312,7 @@ We later added a matching deactivation endpoint so local debug resets would not 
 
 File:
 
-- [api/deactivate-license.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/deactivate-license.js)
+- [api/deactivate-license.js](./website/api/deactivate-license.js)
 
 What it does:
 
@@ -332,8 +332,8 @@ After discussing local trial abuse and system clock rollbacks, we moved the tria
 
 Files:
 
-- [SimpleVideoWallpaper/AppDelegate.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/AppDelegate.swift)
-- [website/api/trial-status.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/trial-status.js)
+- [SimpleVideoWallpaper/AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
+- [website/api/trial-status.js](./website/api/trial-status.js)
 
 ### 11.1 How It Works
 
@@ -441,9 +441,9 @@ We added Sparkle integration to prepare for updates.
 
 Main pieces:
 
-- [SparkleUpdater.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/SparkleUpdater.swift)
-- [Info.plist](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/Info.plist)
-- [LiquidUI.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUI.swift)
+- [SparkleUpdater.swift](./SimpleVideoWallpaper/SparkleUpdater.swift)
+- [Info.plist](./SimpleVideoWallpaper/Info.plist)
+- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
 
 ### 13.1 What Was Added
 
@@ -476,9 +476,9 @@ We also built helper tooling for the release process.
 
 Files:
 
-- [prepare_sparkle_release.sh](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/scripts/prepare_sparkle_release.sh)
-- [SPARKLE_SETUP.md](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SPARKLE_SETUP.md)
-- [website/updates](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/updates)
+- [prepare_sparkle_release.sh](./scripts/prepare_sparkle_release.sh)
+- [SPARKLE_SETUP.md](./SPARKLE_SETUP.md)
+- [website/updates](./website/updates)
 
 ### 14.1 What the Script Does
 
@@ -559,8 +559,8 @@ We also did a long series of UI polish changes along the way:
 
 These changes mostly live in:
 
-- [LiquidUI.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUI.swift)
-- [LiquidUIComponents.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUIComponents.swift)
+- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
+- [LiquidUIComponents.swift](./SimpleVideoWallpaper/LiquidUIComponents.swift)
 
 ## 19. Website / Store / Pricing State
 
@@ -653,29 +653,29 @@ The system now looks like this:
 
 ### App
 
-- [AppDelegate.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/AppDelegate.swift)
-- [LiquidUI.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUI.swift)
-- [LiquidUIComponents.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/LiquidUIComponents.swift)
-- [SparkleUpdater.swift](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/SparkleUpdater.swift)
-- [Info.plist](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper/Info.plist)
-- [project.pbxproj](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SimpleVideoWallpaper.xcodeproj/project.pbxproj)
+- [AppDelegate.swift](./SimpleVideoWallpaper/AppDelegate.swift)
+- [LiquidUI.swift](./SimpleVideoWallpaper/LiquidUI.swift)
+- [LiquidUIComponents.swift](./SimpleVideoWallpaper/LiquidUIComponents.swift)
+- [SparkleUpdater.swift](./SimpleVideoWallpaper/SparkleUpdater.swift)
+- [Info.plist](./SimpleVideoWallpaper/Info.plist)
+- [project.pbxproj](./SimpleVideoWallpaper.xcodeproj/project.pbxproj)
 
 ### Website / backend / updates
 
-- [website/index.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/index.html)
-- [website/api/activate-license.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/activate-license.js)
-- [website/api/admin-stats.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/admin-stats.js)
-- [website/api/admin-test-installs.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/admin-test-installs.js)
-- [website/admin.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/admin.html)
-- [website/appcast.xml](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/appcast.xml)
-- [website/updates](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/updates)
-- [website/README.md](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/README.md)
+- [website/index.html](./website/index.html)
+- [website/api/activate-license.js](./website/api/activate-license.js)
+- [website/api/admin-stats.js](./website/api/admin-stats.js)
+- [website/api/admin-test-installs.js](./website/api/admin-test-installs.js)
+- [website/admin.html](./website/admin.html)
+- [website/appcast.xml](./website/appcast.xml)
+- [website/updates](./website/updates)
+- [website/README.md](./website/README.md)
 
 ### Release helper docs
 
-- [prepare_sparkle_release.sh](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/scripts/prepare_sparkle_release.sh)
-- [SPARKLE_SETUP.md](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/SPARKLE_SETUP.md)
-- [IMPLEMENTATION_DOCUMENTATION.md](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/IMPLEMENTATION_DOCUMENTATION.md)
+- [prepare_sparkle_release.sh](./scripts/prepare_sparkle_release.sh)
+- [SPARKLE_SETUP.md](./SPARKLE_SETUP.md)
+- [IMPLEMENTATION_DOCUMENTATION.md](./IMPLEMENTATION_DOCUMENTATION.md)
 
 ## 23. Plain-English Status
 
@@ -747,8 +747,8 @@ Important notes:
 
 Main files:
 
-- [website/api/_analytics.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/_analytics.js)
-- [website/api/admin-stats.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/admin-stats.js)
-- [website/api/admin-test-installs.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/api/admin-test-installs.js)
-- [website/admin.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/admin.html)
-- [website/admin.js](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/admin.js)
+- [website/api/_analytics.js](./website/api/_analytics.js)
+- [website/api/admin-stats.js](./website/api/admin-stats.js)
+- [website/api/admin-test-installs.js](./website/api/admin-test-installs.js)
+- [website/admin.html](./website/admin.html)
+- [website/admin.js](./website/admin.js)

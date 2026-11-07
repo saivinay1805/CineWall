@@ -12,7 +12,7 @@
 
 1. Open the project in full Xcode and let Swift Package Manager resolve `Sparkle`.
 2. Archive your signed app with Developer ID.
-3. Run [prepare_sparkle_release.sh](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/scripts/prepare_sparkle_release.sh) with your signed `.app` bundle.
+3. Run [prepare_sparkle_release.sh](./scripts/prepare_sparkle_release.sh) with your signed `.app` bundle.
 4. Host:
    - `appcast.xml`
    - signed release archives

@@ -15,7 +15,7 @@ This is a simple static landing page for `CineWall`.
 
 ## What To Replace Before Launch
 
-In [index.html](/Users/saivinaykumarreddyvavilla/Documents/SimpleVideoWallpaper/website/index.html):
+In [index.html](./website/index.html):
 
 - Replace `https://your-download-link.example.com` with your real download URL
 - Replace the Pro checkout link with your real hosted checkout URL if it changes
