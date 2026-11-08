@@ -237,6 +237,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     var idleSyncStatusLabel: NSTextField!
     var menuTintSlider: NSSlider!
     var menuTintValueLabel: NSTextField!
+    var ambientGlowToggle: NSButton!
+    var spanDisplaysToggle: NSButton?
     private var updatesStatusLabel: NSTextField!
     private var appVersionLabel: NSTextField!
     private var appStatusLabel: NSTextField!
@@ -1134,11 +1136,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         hideIconsToggle = createCheck("Hide Desktop Icons", action: #selector(togIcons))
         allSpacesToggle = createCheck("Show on All Spaces", action: #selector(togSpaces))
         [desktopTitle, hideIconsToggle!, allSpacesToggle!].forEach { desktopStack.addArrangedSubview($0) }
+        let hasMultipleScreens = NSScreen.screens.count > 1
+        if hasMultipleScreens {
+            let spanCheck = createCheck("Span Ultrawide Across Displays", action: #selector(togSpanDisplays))
+            spanDisplaysToggle = spanCheck
+            desktopStack.addArrangedSubview(spanCheck)
+        }
         desktopCard.contentView.addSubview(desktopStack)
-        desktopCard.heightAnchor.constraint(equalToConstant: 82).isActive = true
+        desktopCard.heightAnchor.constraint(equalToConstant: hasMultipleScreens ? 108 : 82).isActive = true
 
         let appearanceCard = nestedGroupCard()
-        appearanceCard.heightAnchor.constraint(equalToConstant: 86).isActive = true
+        appearanceCard.heightAnchor.constraint(equalToConstant: 122).isActive = true
         let appearanceTitle = NSTextField.liquidLabel("Menu Darkness", size: 14, weight: .semibold)
         menuTintValueLabel = NSTextField.liquidLabel("0%", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         let appearanceHeader = NSStackView(views: [appearanceTitle, NSView(), menuTintValueLabel])
@@ -1150,11 +1158,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         menuTintSlider.controlSize = .regular
         menuTintSlider.translatesAutoresizingMaskIntoConstraints = false
 
-        let appearanceHint = NSTextField.liquidLabel("Adds dark tint to menus.", size: 10.5, weight: .medium, color: .white.withAlphaComponent(0.65))
+        ambientGlowToggle = createCheck("Ambient Wallpaper Glow", action: #selector(togAmbientTint))
+
+        let appearanceHint = NSTextField.liquidLabel("Subtly accents glass cards with active wallpaper colors.", size: 10.5, weight: .medium, color: .white.withAlphaComponent(0.65))
         appearanceHint.maximumNumberOfLines = 1
         appearanceHint.lineBreakMode = .byTruncatingTail
 
-        let appearanceStack = NSStackView(views: [appearanceHeader, menuTintSlider, appearanceHint])
+        let appearanceStack = NSStackView(views: [appearanceHeader, menuTintSlider, ambientGlowToggle!, appearanceHint])
         appearanceStack.orientation = .vertical
         appearanceStack.alignment = .leading
         appearanceStack.spacing = 6
@@ -2640,8 +2650,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             : "Lock screen sync is turned off."
         menuTintSlider?.doubleValue = app.menuDarkTintStrength
         menuTintValueLabel?.stringValue = "\(Int((app.menuDarkTintStrength * 100).rounded()))%"
+        ambientGlowToggle?.state = app.ambientTintEnabled ? .on : .off
+        spanDisplaysToggle?.state = app.spanDisplaysEnabled ? .on : .off
         updatesStatusLabel?.stringValue = app.currentUpdateDescription()
         applyMenuTintStrength(CGFloat(app.menuDarkTintStrength))
+        applyAmbientColors(primary: app.currentAmbientPrimary, secondary: app.currentAmbientSecondary)
 
         playlistTableView?.reloadData()
         libraryPlaylistTableView?.reloadData()
@@ -3061,6 +3074,36 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         appDelegate?.focusMuteEnabled.toggle(); saveUp()
     }
     @objc func togIcons() { appDelegate?.hideDesktopIcons.toggle(); appDelegate?.applyWindowLevel(); saveUp() }
+    @objc func togAmbientTint() {
+        guard let app = appDelegate else { return }
+        app.ambientTintEnabled.toggle()
+        app.saveSettings()
+        applyAmbientColors(primary: app.currentAmbientPrimary, secondary: app.currentAmbientSecondary)
+        refreshUI()
+    }
+    @objc func togSpanDisplays() {
+        guard let app = appDelegate else { return }
+        app.spanDisplaysEnabled.toggle()
+        app.saveSettings()
+        app.updateDisplaySpanLayout()
+        refreshUI()
+    }
+
+    func applyAmbientColors(primary: NSColor?, secondary: NSColor?) {
+        let enabled = appDelegate?.ambientTintEnabled ?? true
+        detailCard?.applyAmbientColor(primary: primary, secondary: secondary, enabled: enabled)
+        func updateCards(in view: NSView) {
+            if let card = view as? LiquidGlassCardView {
+                card.applyAmbientColor(primary: primary, secondary: secondary, enabled: enabled)
+            }
+            for sub in view.subviews {
+                updateCards(in: sub)
+            }
+        }
+        if let mainStack = mainStack {
+            updateCards(in: mainStack)
+        }
+    }
     @objc func togSpaces() {
         appDelegate?.showOnAllSpaces.toggle()
         appDelegate?.saveSettings()

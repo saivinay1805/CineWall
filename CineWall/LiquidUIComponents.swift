@@ -281,6 +281,41 @@ class LiquidGlassCardView: NSView {
         strokeLayer.cornerRadius = radius
         CATransaction.commit()
     }
+
+    func applyAmbientColor(primary: NSColor?, secondary: NSColor?, enabled: Bool) {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.5)
+        if enabled, let primary = primary, let secondary = secondary {
+            glowLayer.colors = [
+                primary.withAlphaComponent(0.22).cgColor,
+                secondary.withAlphaComponent(0.08).cgColor,
+                NSColor.clear.cgColor
+            ]
+            glowLayer.opacity = 0.9
+            refractionLayer.colors = [
+                NSColor.clear.cgColor,
+                primary.withAlphaComponent(0.14).cgColor,
+                NSColor.clear.cgColor,
+                secondary.withAlphaComponent(0.08).cgColor,
+                NSColor.clear.cgColor
+            ]
+        } else {
+            glowLayer.colors = [
+                NSColor.white.withAlphaComponent(0.12).cgColor,
+                NSColor.white.withAlphaComponent(0.02).cgColor,
+                NSColor.clear.cgColor
+            ]
+            glowLayer.opacity = 0
+            refractionLayer.colors = [
+                NSColor.clear.cgColor,
+                NSColor.white.withAlphaComponent(0.10).cgColor,
+                NSColor.clear.cgColor,
+                NSColor.cyan.withAlphaComponent(0.05).cgColor,
+                NSColor.clear.cgColor
+            ]
+        }
+        CATransaction.commit()
+    }
 }
 
 final class DismissibleDetailCardView: LiquidGlassCardView {

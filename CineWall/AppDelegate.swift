@@ -13,6 +13,62 @@ enum IdleWallpaperSyncMode: String {
     case compatible
 }
 
+final class StatusDropOverlayView: NSView {
+    weak var targetButton: NSStatusBarButton?
+    var onDropURLs: (([URL]) -> Void)?
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        registerForDraggedTypes([.fileURL])
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func mouseDown(with event: NSEvent) {
+        guard let button = targetButton else { return }
+        if let action = button.action, let target = button.target {
+            NSApp.sendAction(action, to: target, from: button)
+        }
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        guard let button = targetButton else { return }
+        if let action = button.action, let target = button.target {
+            NSApp.sendAction(action, to: target, from: button)
+        }
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard let pboard = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !pboard.isEmpty else {
+            return []
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.targetButton?.alphaValue = 0.5
+        }
+        return .copy
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.targetButton?.alphaValue = 1.0
+        }
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.targetButton?.alphaValue = 1.0
+        }
+        guard let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty else {
+            return false
+        }
+        onDropURLs?(urls)
+        return true
+    }
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFieldDelegate {
     static let favoritesPlaylistName = "Favorites"
     static let appWebsiteURL = URL(string: "https://cinewall-site.vercel.app")!
@@ -66,6 +122,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     var gifView: NSImageView? { gifViews.first }
     var pendingVideoReadyObservation: NSKeyValueObservation?
     var pendingHiddenLayerCleanupWorkItem: DispatchWorkItem?
+
+    // Ambient Tinting & Multi-Display
+    var ambientTintEnabled: Bool = true
+    var spanDisplaysEnabled: Bool = false
+    var currentAmbientPrimary: NSColor?
+    var currentAmbientSecondary: NSColor?
+    var audioFadeTimer: Timer?
     
     // --- STATE ---
     var allFiles: [URL] = []
@@ -175,6 +238,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
             button.action = #selector(toggleLiquidPopover)
             button.target = self
             button.sendAction(on: [.leftMouseDown, .rightMouseDown])
+
+            let dropOverlay = StatusDropOverlayView(frame: button.bounds)
+            dropOverlay.targetButton = button
+            dropOverlay.autoresizingMask = [.width, .height]
+            dropOverlay.onDropURLs = { [weak self] urls in
+                self?.handleDroppedMedia(urls: urls)
+            }
+            button.addSubview(dropOverlay)
         }
         
         targetScreen = NSScreen.main
@@ -259,6 +330,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         NSApplication.shared.terminate(self)
     }
 
+    func handleDroppedMedia(urls: [URL]) {
+        guard let first = urls.first else { return }
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: first.path, isDirectory: &isDir) && isDir.boolValue {
+            loadFolder(folderUrl: first, autoStart: true)
+        } else {
+            let validExtensions = ["mp4", "mov", "m4v", "gif", "webm", "mkv"]
+            let mediaFiles = urls.filter { validExtensions.contains($0.pathExtension.lowercased()) }
+            guard !mediaFiles.isEmpty else { return }
+            lastFolderPath = mediaFiles[0].deletingLastPathComponent().path
+            allFiles = mediaFiles
+            currentQueue = mediaFiles
+            queueIndex = 0
+            saveSettings()
+            startPlayback()
+        }
+    }
+
     func saveSettings() {
         let d = UserDefaults.standard
         d.set(isMuted, forKey: "isMuted")
@@ -279,6 +368,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         d.set(autoSyncIdleWallpaper, forKey: "autoSyncIdleWallpaper")
         d.set(idleWallpaperSyncMode.rawValue, forKey: "idleWallpaperSyncMode")
         d.set(menuDarkTintStrength, forKey: "menuDarkTintStrength")
+        d.set(ambientTintEnabled, forKey: "ambientTintEnabled")
+        d.set(spanDisplaysEnabled, forKey: "spanDisplaysEnabled")
         d.set(playlists, forKey: "playlists")
         d.set(favorites, forKey: "favorites")
         if let path = lastFolderPath { d.set(path, forKey: "lastFolderPath") }
@@ -305,6 +396,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         autoSyncIdleWallpaper = d.bool(forKey: "autoSyncIdleWallpaper")
         if let raw = d.string(forKey: "idleWallpaperSyncMode"), let mode = IdleWallpaperSyncMode(rawValue: raw) { idleWallpaperSyncMode = mode }
         menuDarkTintStrength = d.object(forKey: "menuDarkTintStrength") == nil ? 0.0 : d.double(forKey: "menuDarkTintStrength")
+        ambientTintEnabled = d.object(forKey: "ambientTintEnabled") == nil ? true : d.bool(forKey: "ambientTintEnabled")
+        spanDisplaysEnabled = d.bool(forKey: "spanDisplaysEnabled")
         isLoopingCurrent = d.bool(forKey: "isLoopingCurrent")
         isPlaylistFilterEnabled = d.bool(forKey: "isPlaylistFilterEnabled")
         selectedPlaylistName = d.string(forKey: "selectedPlaylistName") ?? Self.favoritesPlaylistName

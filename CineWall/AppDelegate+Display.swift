@@ -86,6 +86,53 @@ extension AppDelegate {
             gv.layer?.contentsGravity = gContent
             gv.imageScaling = (scalingTag == 1) ? .scaleAxesIndependently : .scaleProportionallyUpOrDown
         }
+        updateDisplaySpanLayout()
+    }
+
+    func updateDisplaySpanLayout() {
+        let screens = NSScreen.screens
+        let g: AVLayerVideoGravity = (scalingTag == 1) ? .resizeAspectFill : (scalingTag == 2 ? .resizeAspect : .resize)
+
+        guard screens.count > 1, spanDisplaysEnabled else {
+            for (i, w) in wallpaperWindows.enumerated() {
+                guard let v = w.contentView else { continue }
+                v.layer?.masksToBounds = false
+                if i < layersA.count {
+                    layersA[i].frame = v.bounds
+                    layersA[i].videoGravity = g
+                }
+                if i < layersB.count {
+                    layersB[i].frame = v.bounds
+                    layersB[i].videoGravity = g
+                }
+                if i < gifViews.count {
+                    gifViews[i].frame = v.bounds
+                }
+            }
+            return
+        }
+
+        var totalUnion = screens[0].frame
+        for s in screens.dropFirst() { totalUnion = totalUnion.union(s.frame) }
+
+        for (i, s) in screens.enumerated() {
+            guard i < wallpaperWindows.count, let v = wallpaperWindows[i].contentView else { continue }
+            v.layer?.masksToBounds = true
+            let spanX = totalUnion.minX - s.frame.minX
+            let spanY = totalUnion.minY - s.frame.minY
+            let spanRect = NSRect(x: spanX, y: spanY, width: totalUnion.width, height: totalUnion.height)
+            if i < layersA.count {
+                layersA[i].frame = spanRect
+                layersA[i].videoGravity = .resizeAspectFill
+            }
+            if i < layersB.count {
+                layersB[i].frame = spanRect
+                layersB[i].videoGravity = .resizeAspectFill
+            }
+            if i < gifViews.count {
+                gifViews[i].frame = spanRect
+            }
+        }
     }
 
     func startStatsMonitor() {
