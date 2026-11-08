@@ -277,7 +277,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private var libraryRemoveSelectedButton: NSButton!
     private var isSelectingPlaylistVideos: Bool = false
     private var expandedArtworkView: PlayerThumbnailView!
-    private var expandedTrackMarquee: MarqueeLabelView!
+    private var expandedTrackTitle: NSTextField!
     private var expandedTrackSubtitle: NSTextField!
     private var expandedPlayButton: NSButton!
     private var expandedFavButton: NSButton!
@@ -309,7 +309,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     func setMenuVisible(_ visible: Bool) {
         compactTrackMarquee?.setMenuVisible(visible)
-        expandedTrackMarquee?.setMenuVisible(visible)
     }
 
     func setupUI(in root: NSView) {
@@ -916,36 +915,34 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         playerDetailView = contentView
         playerDetailView.translatesAutoresizingMaskIntoConstraints = false
 
-        // 1. Artwork: 56x56 square with continuous rounded corners
-        expandedArtworkView = PlayerThumbnailView(cornerRadius: 12, showsGradient: false)
+        // 1. Artwork: 48x48 square with continuous rounded corners
+        expandedArtworkView = PlayerThumbnailView(cornerRadius: 10, showsGradient: false)
         expandedArtworkView.translatesAutoresizingMaskIntoConstraints = false
-        expandedArtworkView.widthAnchor.constraint(equalToConstant: 56).isActive = true
-        expandedArtworkView.heightAnchor.constraint(equalToConstant: 56).isActive = true
         let initialImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         expandedArtworkView.thumbnailImage = initialImg
 
-        // 2. Title & Subtitle Stack
-        expandedTrackMarquee = MarqueeLabelView(font: NSFont.systemFont(ofSize: 15, weight: .bold), color: .white)
-        expandedTrackMarquee.stringValue = "Not Playing"
-        expandedTrackMarquee.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        expandedTrackMarquee.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        // 2. Title & Subtitle Stack (Static bold title with tail truncation)
+        expandedTrackTitle = NSTextField.liquidLabel("Not Playing", size: 14, weight: .bold, color: .white)
+        expandedTrackTitle.lineBreakMode = .byTruncatingTail
+        expandedTrackTitle.maximumNumberOfLines = 1
+        expandedTrackTitle.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        expandedTrackSubtitle = NSTextField.liquidLabel("Not Playing", size: 12, weight: .regular, color: .white.withAlphaComponent(0.65))
-        expandedTrackSubtitle.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        expandedTrackSubtitle = NSTextField.liquidLabel("CineWall", size: 12, weight: .regular, color: .white.withAlphaComponent(0.65))
         expandedTrackSubtitle.lineBreakMode = .byTruncatingTail
+        expandedTrackSubtitle.maximumNumberOfLines = 1
         expandedTrackSubtitle.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let infoStack = NSStackView(views: [expandedTrackMarquee, expandedTrackSubtitle])
+        let infoStack = NSStackView(views: [expandedTrackTitle, expandedTrackSubtitle])
         infoStack.orientation = .vertical
         infoStack.alignment = .leading
         infoStack.spacing = 2
         infoStack.translatesAutoresizingMaskIntoConstraints = false
 
-        // 3. Top Right Actions (Favorite heart if active, and '•••' more options)
-        expandedFavButton = NSButton.liquidSymbol(symbol: "heart.fill", pointSize: 14, weight: .semibold, target: self, action: #selector(toggleFav))
+        // 3. Top Right Actions (Favorite heart if active, and '•••' more options pinned to right)
+        expandedFavButton = NSButton.liquidSymbol(symbol: "heart.fill", pointSize: 13, weight: .semibold, target: self, action: #selector(toggleFav))
         expandedFavButton.contentTintColor = .systemRed
-        expandedFavButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        expandedFavButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        expandedFavButton.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        expandedFavButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
         expandedFavButton.toolTip = "Remove from Favorites"
         expandedFavButton.isHidden = true
 
@@ -958,45 +955,60 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let actionsStack = NSStackView(views: [expandedFavButton, expandedMoreButton])
         actionsStack.orientation = .horizontal
         actionsStack.alignment = .centerY
-        actionsStack.spacing = 6
+        actionsStack.spacing = 4
         actionsStack.translatesAutoresizingMaskIntoConstraints = false
 
-        // Header Row Stack
-        let headerRow = NSStackView(views: [expandedArtworkView, infoStack, actionsStack])
-        headerRow.orientation = .horizontal
-        headerRow.alignment = .centerY
-        headerRow.spacing = 12
-        headerRow.distribution = .fill
+        // Header Row Container: Artwork on left, Actions pinned to far right, InfoStack between them
+        let headerRow = NSView()
         headerRow.translatesAutoresizingMaskIntoConstraints = false
-        headerRow.setCustomSpacing(12, after: expandedArtworkView)
+        headerRow.addSubview(expandedArtworkView)
+        headerRow.addSubview(infoStack)
+        headerRow.addSubview(actionsStack)
+
+        NSLayoutConstraint.activate([
+            headerRow.heightAnchor.constraint(equalToConstant: 48),
+
+            expandedArtworkView.leadingAnchor.constraint(equalTo: headerRow.leadingAnchor),
+            expandedArtworkView.centerYAnchor.constraint(equalTo: headerRow.centerYAnchor),
+            expandedArtworkView.widthAnchor.constraint(equalToConstant: 48),
+            expandedArtworkView.heightAnchor.constraint(equalToConstant: 48),
+
+            actionsStack.trailingAnchor.constraint(equalTo: headerRow.trailingAnchor),
+            actionsStack.centerYAnchor.constraint(equalTo: headerRow.centerYAnchor),
+
+            infoStack.leadingAnchor.constraint(equalTo: expandedArtworkView.trailingAnchor, constant: 12),
+            infoStack.centerYAnchor.constraint(equalTo: headerRow.centerYAnchor),
+            infoStack.trailingAnchor.constraint(lessThanOrEqualTo: actionsStack.leadingAnchor, constant: -8)
+        ])
 
         // 4. Scrubber / Progress row
         progressSlider = NSSlider(value: 0, minValue: 0, maxValue: 1, target: self, action: #selector(seekVideo))
         progressSlider.controlSize = .small
         progressSlider.translatesAutoresizingMaskIntoConstraints = false
         progressSlider.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        
+        progressSlider.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
         playerElapsedLabel = NSTextField.liquidLabel("0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
         playerRemainingLabel = NSTextField.liquidLabel("-0:00", size: 11, weight: .medium, color: .white.withAlphaComponent(0.65))
         playerElapsedLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         playerRemainingLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         playerElapsedLabel.alignment = .left
         playerRemainingLabel.alignment = .right
-        playerElapsedLabel.widthAnchor.constraint(equalToConstant: 38).isActive = true
-        playerRemainingLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        playerElapsedLabel.widthAnchor.constraint(equalToConstant: 34).isActive = true
+        playerRemainingLabel.widthAnchor.constraint(equalToConstant: 38).isActive = true
 
         let progressRow = NSStackView(views: [playerElapsedLabel, progressSlider, playerRemainingLabel])
         progressRow.alignment = .centerY
         progressRow.spacing = 8
         progressRow.distribution = .fill
         progressRow.translatesAutoresizingMaskIntoConstraints = false
+        progressRow.heightAnchor.constraint(equalToConstant: 16).isActive = true
 
-        // 5. Bottom Row: Playlist button (bottom-left) and Transport Controls (centered)
-        addToPlaylistButton = NSButton.liquidSymbol(symbol: "list.bullet.rectangle", pointSize: 16, weight: .regular, target: self, action: #selector(showAddToPlaylistMenu))
+        // 5. Bottom Row: Playlist button (bottom-left) and Transport Controls (exact center)
+        addToPlaylistButton = NSButton.liquidSymbol(symbol: "list.bullet.rectangle", pointSize: 15, weight: .regular, target: self, action: #selector(showAddToPlaylistMenu))
         addToPlaylistButton.contentTintColor = .white.withAlphaComponent(0.85)
         addToPlaylistButton.toolTip = "Playlists"
-        addToPlaylistButton.widthAnchor.constraint(equalToConstant: 28).isActive = true
-        addToPlaylistButton.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        addToPlaylistButton.translatesAutoresizingMaskIntoConstraints = false
 
         let prev = NSButton.liquidSymbol(symbol: "backward.fill", pointSize: 16, weight: .semibold, target: self, action: #selector(doPrev))
         prev.contentTintColor = .white
@@ -1008,8 +1020,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         expandedPlayButton = NSButton.liquidSymbol(symbol: "play.fill", pointSize: 22, weight: .bold, target: self, action: #selector(togglePlay))
         expandedPlayButton.image = playImg
         expandedPlayButton.contentTintColor = .white
-        expandedPlayButton.widthAnchor.constraint(equalToConstant: 38).isActive = true
-        expandedPlayButton.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        expandedPlayButton.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        expandedPlayButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
 
         let next = NSButton.liquidSymbol(symbol: "forward.fill", pointSize: 16, weight: .semibold, target: self, action: #selector(doNext))
         next.contentTintColor = .white
@@ -1021,22 +1033,29 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         transportRow.spacing = 24
         transportRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let rightSpacer = NSView()
-        rightSpacer.translatesAutoresizingMaskIntoConstraints = false
-        rightSpacer.widthAnchor.constraint(equalToConstant: 28).isActive = true
-        rightSpacer.heightAnchor.constraint(equalToConstant: 28).isActive = true
-
-        let bottomRow = NSStackView(views: [addToPlaylistButton, transportRow, rightSpacer])
-        bottomRow.orientation = .horizontal
-        bottomRow.alignment = .centerY
-        bottomRow.distribution = .equalCentering
+        let bottomRow = NSView()
         bottomRow.translatesAutoresizingMaskIntoConstraints = false
+        bottomRow.addSubview(addToPlaylistButton)
+        bottomRow.addSubview(transportRow)
+
+        NSLayoutConstraint.activate([
+            bottomRow.heightAnchor.constraint(equalToConstant: 36),
+
+            addToPlaylistButton.leadingAnchor.constraint(equalTo: bottomRow.leadingAnchor),
+            addToPlaylistButton.centerYAnchor.constraint(equalTo: bottomRow.centerYAnchor),
+            addToPlaylistButton.widthAnchor.constraint(equalToConstant: 28),
+            addToPlaylistButton.heightAnchor.constraint(equalToConstant: 28),
+
+            transportRow.centerXAnchor.constraint(equalTo: bottomRow.centerXAnchor),
+            transportRow.centerYAnchor.constraint(equalTo: bottomRow.centerYAnchor)
+        ])
 
         // Root Vertical Stack
         let rootStack = DismissibleStackView(views: [headerRow, progressRow, bottomRow])
         rootStack.onBackgroundClick = { [weak self] in self?.hideDetail() }
         rootStack.orientation = .vertical
-        rootStack.spacing = 14
+        rootStack.spacing = 10
+        rootStack.distribution = .fill
         rootStack.translatesAutoresizingMaskIntoConstraints = false
 
         playerDetailView.addSubview(rootStack)
@@ -2031,7 +2050,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if section == .app || section == .player || section == .playlist || section == .library || section == .pro {
             bodyTopToHeaderConstraint.isActive = false
             bodyTopToCardConstraint.isActive = true
-            bodyTopToCardConstraint.constant = section == .player ? 16 : 18
+            bodyTopToCardConstraint.constant = section == .player ? 14 : 18
         } else {
             bodyTopToCardConstraint.isActive = false
             bodyTopToHeaderConstraint.isActive = true
@@ -2072,7 +2091,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             let displayImg = currentTrackThumbnail ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
             expandedArtworkView?.thumbnailImage = displayImg
             let title = compactTrackMarquee?.stringValue ?? trackTitle.stringValue
-            expandedTrackMarquee?.stringValue = title.isEmpty ? "Not Playing" : title
+            expandedTrackTitle?.stringValue = title.isEmpty ? "Not Playing" : title
             updateSubtitle()
             let isFav = appDelegate?.currentQueue.isEmpty == false && appDelegate?.containsVideo(path: appDelegate!.currentQueue[appDelegate!.queueIndex].path, inPlaylist: "Favorites") == true
             expandedFavButton?.image = NSImage(systemSymbolName: isFav ? "heart.fill" : "heart", accessibilityDescription: nil)
@@ -2101,7 +2120,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             minimumHeight = 328
         case .player:
             bodyView = playerDetailView
-            minimumHeight = 168
+            minimumHeight = 120
         case .playlist:
             bodyView = playlistDetailView
             minimumHeight = 294
@@ -2120,9 +2139,9 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
 
         let bodyHeight = max(bodyView.fittingSize.height, minimumHeight)
-        // Player: body pins to card top, so chrome = top(16) + bottom(18) = 34
+        // Player: body pins to card top (14) + bottom (18) = 32
         // Others: chrome = top(18) + header(~34) + gap(14) + bottom(18) = 84
-        let chromeHeight: CGFloat = (section == .player) ? 34 : 86
+        let chromeHeight: CGFloat = (section == .player) ? 32 : 86
         let paddedHeight = bodyHeight + chromeHeight
         return min(max(paddedHeight, 140), view.bounds.height - 16)
     }
@@ -2212,10 +2231,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             if let stack = sub as? NSStackView {
                 for (rIdx, row) in stack.arrangedSubviews.enumerated() {
                     log += "    row[\(rIdx)] (\(type(of: row))) frame: \(row.frame), isHidden: \(row.isHidden), alpha: \(row.alphaValue)\n"
-                    if let rowStack = row as? NSStackView {
-                        for (cIdx, child) in rowStack.arrangedSubviews.enumerated() {
-                            log += "      child[\(cIdx)] (\(type(of: child))) frame: \(child.frame), isHidden: \(child.isHidden), alpha: \(child.alphaValue)\n"
-                        }
+                    for (cIdx, child) in row.subviews.enumerated() {
+                        log += "      child[\(cIdx)] (\(type(of: child))) frame: \(child.frame), isHidden: \(child.isHidden), alpha: \(child.alphaValue)\n"
                     }
                 }
             }
@@ -2451,7 +2468,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         compactTrackMarquee?.stringValue = title
         let displayImg = image ?? NSImage(systemSymbolName: "film", accessibilityDescription: nil)
         thumbnailView.thumbnailImage = displayImg
-        expandedTrackMarquee?.stringValue = title.isEmpty ? "Not Playing" : title
+        expandedTrackTitle?.stringValue = title.isEmpty ? "Not Playing" : title
         expandedArtworkView?.thumbnailImage = displayImg
         updateSubtitle()
         updateFavIcon(isFav)
