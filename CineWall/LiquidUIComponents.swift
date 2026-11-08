@@ -345,98 +345,267 @@ final class DismissibleStackView: NSStackView {
 class LiquidGlassButton: NSButton {
     var cornerRadiusValue: CGFloat = 18 {
         didSet {
-            layer?.cornerRadius = cornerRadiusValue
-            strokeLayer.cornerRadius = cornerRadiusValue
-            needsLayout = true
+            updateCorners()
         }
     }
 
-    private let strokeLayer = CALayer()
+    private let backgroundGlassView = NSView()
+    private let visualEffect = NSVisualEffectView()
     private let tintLayer = CALayer()
-    private let refractionLayer = CAGradientLayer()
-    private let hoverHighlightLayer = CAGradientLayer()
+    private let specularLayer = CAGradientLayer()
+    private let hoverLayer = CALayer()
+    private let strokeLayer = CALayer()
+
+    private let contentStack = NSStackView()
+    let iconImageView = NSImageView()
+    let titleLabel = NSTextField()
     private var trackingArea: NSTrackingArea?
 
-    init(title: String, icon: String? = nil, cornerRadius: CGFloat = 18, target: AnyObject?, action: Selector) {
-        self.cornerRadiusValue = cornerRadius
-        super.init(frame: .zero)
-        self.title = title
-        if let icon = icon {
-            self.image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
-            self.imagePosition = .imageLeading
-            self.imageHugsTitle = true
+    override var title: String {
+        get { titleLabel.stringValue }
+        set {
+            titleLabel.stringValue = newValue
+            titleLabel.isHidden = newValue.isEmpty
+            super.title = ""
         }
-        self.target = target
-        self.action = action
-        self.isBordered = false
-        self.setButtonType(.momentaryPushIn)
-        self.focusRingType = .none
-        self.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        self.contentTintColor = .white.withAlphaComponent(0.95)
-        setupLiquidGlass()
     }
 
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        self.isBordered = false
-        self.setButtonType(.momentaryPushIn)
-        self.focusRingType = .none
-        setupLiquidGlass()
+    override var image: NSImage? {
+        get { iconImageView.image }
+        set {
+            iconImageView.image = newValue
+            iconImageView.isHidden = (newValue == nil)
+            super.image = nil
+        }
     }
 
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupLiquidGlass()
+    override var contentTintColor: NSColor? {
+        get { iconImageView.contentTintColor }
+        set {
+            let color = newValue ?? .white
+            iconImageView.contentTintColor = color
+            titleLabel.textColor = color
+            super.contentTintColor = color
+        }
     }
 
-    private func setupLiquidGlass() {
-        wantsLayer = true
-        layer?.cornerRadius = cornerRadiusValue
-        layer?.masksToBounds = true
-        layer?.backgroundColor = NSColor.clear.cgColor
+    override var font: NSFont? {
+        get { titleLabel.font }
+        set {
+            titleLabel.font = newValue ?? NSFont.systemFont(ofSize: 12, weight: .semibold)
+            super.font = newValue
+        }
+    }
 
-        installGlassEffect(into: self, cornerRadius: cornerRadiusValue, style: 1, blendWithinWindow: true)
-
-        tintLayer.backgroundColor = NSColor.white.withAlphaComponent(0.04).cgColor
-        tintLayer.zPosition = -10
-        layer?.addSublayer(tintLayer)
-
-        refractionLayer.colors = [
-            NSColor.clear.cgColor,
-            NSColor.white.withAlphaComponent(0.12).cgColor,
-            NSColor.clear.cgColor,
-            NSColor.cyan.withAlphaComponent(0.05).cgColor,
-            NSColor.clear.cgColor
-        ]
-        refractionLayer.locations = [0.0, 0.20, 0.45, 0.70, 1.0]
-        refractionLayer.startPoint = CGPoint(x: 0, y: 0.1)
-        refractionLayer.endPoint = CGPoint(x: 1, y: 0.9)
-        refractionLayer.opacity = 0.14
-        refractionLayer.zPosition = -8
-        layer?.addSublayer(refractionLayer)
-
-        hoverHighlightLayer.colors = [
-            NSColor.white.withAlphaComponent(0.14).cgColor,
-            NSColor.white.withAlphaComponent(0.04).cgColor
-        ]
-        hoverHighlightLayer.opacity = 0.0
-        hoverHighlightLayer.zPosition = -5
-        layer?.addSublayer(hoverHighlightLayer)
-
-        strokeLayer.borderWidth = 1
-        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.18).cgColor
-        strokeLayer.shadowColor = NSColor.black.withAlphaComponent(0.15).cgColor
-        strokeLayer.shadowOpacity = 0.25
-        strokeLayer.shadowRadius = 4
-        strokeLayer.shadowOffset = .zero
-        strokeLayer.zPosition = 50
-        layer?.addSublayer(strokeLayer)
+    override var imagePosition: NSControl.ImagePosition {
+        get { super.imagePosition }
+        set {
+            super.imagePosition = newValue
+            if newValue == .imageOnly {
+                titleLabel.isHidden = true
+            } else if newValue == .noImage {
+                iconImageView.isHidden = true
+            }
+        }
     }
 
     override var isEnabled: Bool {
         didSet {
-            alphaValue = isEnabled ? 1.0 : 0.5
+            alphaValue = isEnabled ? 1.0 : 0.45
         }
+    }
+
+    init(title: String, icon: String? = nil, cornerRadius: CGFloat = 18, target: AnyObject?, action: Selector) {
+        self.cornerRadiusValue = cornerRadius
+        super.init(frame: .zero)
+        self.target = target
+        self.action = action
+        commonInit()
+
+        self.title = title
+        if let icon = icon {
+            setIcon(name: icon, pointSize: 12, weight: .semibold)
+        }
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        commonInit()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+
+    private func commonInit() {
+        self.isBordered = false
+        self.setButtonType(.momentaryPushIn)
+        self.focusRingType = .none
+        super.title = ""
+        super.image = nil
+        wantsLayer = true
+
+        // Background Glass View
+        backgroundGlassView.wantsLayer = true
+        backgroundGlassView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(backgroundGlassView, positioned: .below, relativeTo: nil)
+
+        visualEffect.material = .hudWindow
+        visualEffect.blendingMode = .withinWindow
+        visualEffect.state = .active
+        visualEffect.translatesAutoresizingMaskIntoConstraints = false
+        backgroundGlassView.addSubview(visualEffect)
+
+        // Subtle dark glass tint
+        tintLayer.backgroundColor = NSColor.black.withAlphaComponent(0.08).cgColor
+        backgroundGlassView.layer?.addSublayer(tintLayer)
+
+        // Top specular reflection (liquid glass sheen)
+        specularLayer.colors = [
+            NSColor.white.withAlphaComponent(0.14).cgColor,
+            NSColor.white.withAlphaComponent(0.02).cgColor,
+            NSColor.clear.cgColor
+        ]
+        specularLayer.locations = [0.0, 0.40, 1.0]
+        specularLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        specularLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+        backgroundGlassView.layer?.addSublayer(specularLayer)
+
+        // Hover highlight
+        hoverLayer.backgroundColor = NSColor.white.withAlphaComponent(0.12).cgColor
+        hoverLayer.opacity = 0.0
+        backgroundGlassView.layer?.addSublayer(hoverLayer)
+
+        // Specular stroke / border
+        strokeLayer.borderWidth = 1
+        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
+        strokeLayer.shadowColor = NSColor.black.withAlphaComponent(0.25).cgColor
+        strokeLayer.shadowOpacity = 0.35
+        strokeLayer.shadowRadius = 4
+        strokeLayer.shadowOffset = .zero
+        backgroundGlassView.layer?.addSublayer(strokeLayer)
+
+        // Foreground Content - Layered strictly ABOVE glass
+        contentStack.orientation = .horizontal
+        contentStack.alignment = .centerY
+        contentStack.spacing = 6
+        contentStack.distribution = .gravityAreas
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.wantsLayer = true
+        contentStack.layer?.zPosition = 100
+        addSubview(contentStack, positioned: .above, relativeTo: nil)
+
+        iconImageView.imageScaling = .scaleProportionallyDown
+        iconImageView.contentTintColor = .white.withAlphaComponent(0.95)
+        iconImageView.setContentHuggingPriority(.required, for: .horizontal)
+        iconImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        iconImageView.isHidden = true
+        contentStack.addArrangedSubview(iconImageView)
+
+        titleLabel.isBezeled = false
+        titleLabel.isEditable = false
+        titleLabel.isSelectable = false
+        titleLabel.drawsBackground = false
+        titleLabel.textColor = .white.withAlphaComponent(0.95)
+        titleLabel.font = NSFont.systemFont(ofSize: 11.5, weight: .semibold)
+        titleLabel.alignment = .center
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleLabel.isHidden = true
+        contentStack.addArrangedSubview(titleLabel)
+
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.40)
+        shadow.shadowBlurRadius = 1.5
+        shadow.shadowOffset = NSSize(width: 0, height: -1)
+        iconImageView.shadow = shadow
+        titleLabel.shadow = shadow
+
+        NSLayoutConstraint.activate([
+            backgroundGlassView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundGlassView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            backgroundGlassView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundGlassView.trailingAnchor.constraint(equalTo: trailingAnchor),
+
+            visualEffect.topAnchor.constraint(equalTo: backgroundGlassView.topAnchor),
+            visualEffect.bottomAnchor.constraint(equalTo: backgroundGlassView.bottomAnchor),
+            visualEffect.leadingAnchor.constraint(equalTo: backgroundGlassView.leadingAnchor),
+            visualEffect.trailingAnchor.constraint(equalTo: backgroundGlassView.trailingAnchor),
+
+            contentStack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            contentStack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 2),
+            contentStack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -2)
+        ])
+
+        updateCorners()
+    }
+
+    func setIcon(name: String, pointSize: CGFloat = 12, weight: NSFont.Weight = .semibold) {
+        let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: weight)
+        iconImageView.image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        iconImageView.isHidden = (iconImageView.image == nil)
+    }
+
+    func setActive(_ active: Bool) {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.2)
+        if active {
+            tintLayer.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.35).cgColor
+            strokeLayer.borderColor = NSColor.systemBlue.withAlphaComponent(0.60).cgColor
+        } else {
+            tintLayer.backgroundColor = NSColor.black.withAlphaComponent(0.08).cgColor
+            strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
+        }
+        CATransaction.commit()
+    }
+
+    override var intrinsicContentSize: NSSize {
+        if !titleLabel.isHidden && !titleLabel.stringValue.isEmpty {
+            let labelSize = titleLabel.intrinsicContentSize
+            let iconWidth: CGFloat = (iconImageView.image != nil && !iconImageView.isHidden) ? 14 : 0
+            let spacing: CGFloat = iconWidth > 0 ? contentStack.spacing : 0
+            let width = labelSize.width + iconWidth + spacing + 20
+            let height = max(32, cornerRadiusValue * 2)
+            return NSSize(width: ceil(width), height: height)
+        } else {
+            let dim = cornerRadiusValue * 2
+            return NSSize(width: dim, height: dim)
+        }
+    }
+
+    private func updateCorners() {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        backgroundGlassView.layer?.cornerRadius = cornerRadiusValue
+        visualEffect.layer?.cornerRadius = cornerRadiusValue
+        strokeLayer.cornerRadius = cornerRadiusValue
+        specularLayer.cornerRadius = cornerRadiusValue
+        hoverLayer.cornerRadius = cornerRadiusValue
+        tintLayer.cornerRadius = cornerRadiusValue
+        // For circular icon buttons, disable directional specular gradient for pure circular lens clarity
+        let isCircle = bounds.width > 0 && abs(bounds.width - bounds.height) < 4
+        specularLayer.opacity = isCircle ? 0.0 : 1.0
+        CATransaction.commit()
+    }
+
+    override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        tintLayer.frame = backgroundGlassView.bounds
+        specularLayer.frame = backgroundGlassView.bounds
+        hoverLayer.frame = backgroundGlassView.bounds
+        strokeLayer.frame = backgroundGlassView.bounds.insetBy(dx: 0.5, dy: 0.5)
+        updateCorners()
+        CATransaction.commit()
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let p = convert(point, from: superview)
+        return bounds.contains(p) ? self : nil
     }
 
     override func updateTrackingAreas() {
@@ -455,8 +624,8 @@ class LiquidGlassButton: NSButton {
         guard isEnabled else { return }
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.18)
-        hoverHighlightLayer.opacity = 1.0
-        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.35).cgColor
+        hoverLayer.opacity = 1.0
+        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.40).cgColor
         CATransaction.commit()
     }
 
@@ -464,20 +633,24 @@ class LiquidGlassButton: NSButton {
         super.mouseExited(with: event)
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.18)
-        hoverHighlightLayer.opacity = 0.0
-        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.18).cgColor
+        hoverLayer.opacity = 0.0
+        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
         CATransaction.commit()
     }
 
-    override func layout() {
-        super.layout()
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
         CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        tintLayer.frame = bounds
-        refractionLayer.frame = bounds.insetBy(dx: -8, dy: -8)
-        hoverHighlightLayer.frame = bounds
-        strokeLayer.frame = bounds.insetBy(dx: 0.5, dy: 0.5)
-        strokeLayer.cornerRadius = cornerRadiusValue
+        CATransaction.setAnimationDuration(0.1)
+        contentStack.layer?.transform = CATransform3DMakeScale(0.96, 0.96, 1.0)
+        CATransaction.commit()
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.15)
+        contentStack.layer?.transform = CATransform3DIdentity
         CATransaction.commit()
     }
 }

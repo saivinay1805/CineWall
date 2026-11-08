@@ -1346,7 +1346,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let headerRow = createInlineDetailHeader(title: "Library", subtitle: "Manage playlists and add media in bulk.")
 
         let manageCard = nestedGroupCard()
-        manageCard.heightAnchor.constraint(equalToConstant: 130).isActive = true
+        manageCard.heightAnchor.constraint(equalToConstant: 144).isActive = true
         let manageStack = NSStackView()
         manageStack.orientation = .vertical
         manageStack.alignment = .leading
@@ -1369,10 +1369,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         manageButtons.spacing = 6
         manageButtons.translatesAutoresizingMaskIntoConstraints = false
 
-        let manageHeader = NSStackView(views: [libraryPlaylistNameLabel, NSView(), manageButtons])
+        let manageSpacer = NSView()
+        manageSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        manageSpacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let manageHeader = NSStackView(views: [libraryPlaylistNameLabel, manageSpacer, manageButtons])
         manageHeader.alignment = .centerY
         manageHeader.spacing = 10
         manageHeader.translatesAutoresizingMaskIntoConstraints = false
+        manageHeader.heightAnchor.constraint(equalToConstant: 28).isActive = true
 
         libraryCreatePlaylistField = NSTextField()
         libraryCreatePlaylistField.placeholderString = "Playlist name"
@@ -1413,7 +1417,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         manageCard.contentView.addSubview(manageStack)
 
         let listCard = nestedGroupCard()
-        listCard.heightAnchor.constraint(equalToConstant: 246).isActive = true
+        listCard.heightAnchor.constraint(equalToConstant: 260).isActive = true
         let listStack = NSStackView()
         listStack.orientation = .vertical
         listStack.alignment = .leading
@@ -1436,10 +1440,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         videoButtons.spacing = 6
         videoButtons.translatesAutoresizingMaskIntoConstraints = false
 
-        let videoHeader = NSStackView(views: [libraryVideosTitleLabel, NSView(), videoButtons])
+        let videoSpacer = NSView()
+        videoSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        videoSpacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let videoHeader = NSStackView(views: [libraryVideosTitleLabel, videoSpacer, videoButtons])
         videoHeader.alignment = .centerY
         videoHeader.spacing = 10
         videoHeader.translatesAutoresizingMaskIntoConstraints = false
+        videoHeader.heightAnchor.constraint(equalToConstant: 28).isActive = true
 
         let scrollView = NSScrollView()
         scrollView.drawsBackground = false
@@ -1676,10 +1684,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         communityCard.heightAnchor.constraint(greaterThanOrEqualToConstant: 160).isActive = true
         let communityTitle = NSTextField.liquidLabel("Community & Links", size: 14, weight: .semibold)
         
-        let gitHubButton = createPillButton("Star on GitHub (24★)", icon: "star.fill", action: #selector(openGitHubAction))
-        let issuesButton = createPillButton("Report Issue / Request", icon: "bubble.left.and.exclamationmark.bubble.right.fill", action: #selector(openIssuesAction))
-        let releasesButton = createPillButton("Releases & Updates", icon: "sparkles", action: #selector(openReleasesAction))
-        let updatesButton = createPillButton("Check for Updates…", icon: "arrow.triangle.2.circlepath", action: #selector(checkForUpdatesAction))
+        let gitHubButton = createPillButton("Star on GitHub", icon: "star.fill", action: #selector(openGitHubAction))
+        let issuesButton = createPillButton("Report Issue", icon: "bubble.left.and.exclamationmark.bubble.right.fill", action: #selector(openIssuesAction))
+        let releasesButton = createPillButton("Releases", icon: "sparkles", action: #selector(openReleasesAction))
+        let updatesButton = createPillButton("Check Updates", icon: "arrow.triangle.2.circlepath", action: #selector(checkForUpdatesAction))
+
+        [gitHubButton, issuesButton, releasesButton, updatesButton].forEach {
+            $0.font = NSFont.systemFont(ofSize: 10.0, weight: .semibold)
+        }
 
         let row1 = NSStackView(views: [gitHubButton, issuesButton])
         row1.distribution = .fillEqually
@@ -1893,8 +1905,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let config = NSImage.SymbolConfiguration(pointSize: size, weight: .semibold)
         button.image = button.image?.withSymbolConfiguration(config)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.widthAnchor.constraint(equalToConstant: diameter).isActive = true
-        button.heightAnchor.constraint(equalToConstant: diameter).isActive = true
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentHuggingPriority(.required, for: .vertical)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .vertical)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: diameter),
+            button.heightAnchor.constraint(equalToConstant: diameter)
+        ])
         return button
     }
 
@@ -2248,6 +2266,33 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
     func showSettingsDetailTest(completion: (() -> Void)? = nil) {
         showDetail(.settings, from: settingsCard) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
+    func showLibraryDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.library, from: libraryCard) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
+    func showProDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.pro, from: proFooterCardView ?? settingsCard) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
+    func showAppDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.app, from: appHeaderCard ?? settingsCard) { [weak self] in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 self?.dumpAndCapturePlayerDetail()
                 completion?()
@@ -2726,6 +2771,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     }
 
     private func updatePillButton(_ button: NSButton, active: Bool) {
+        if let glassBtn = button as? LiquidGlassButton {
+            glassBtn.setActive(active)
+            return
+        }
         button.layer?.backgroundColor = (active ? NSColor.systemBlue.withAlphaComponent(0.28) : NSColor.black.withAlphaComponent(0.08)).cgColor
         button.layer?.borderColor = (active ? NSColor.white.withAlphaComponent(0.18) : NSColor.white.withAlphaComponent(0.10)).cgColor
         button.contentTintColor = .white

@@ -287,6 +287,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil, suspensionBehavior: .deliverImmediately)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openDisplaySubmenuForTest), name: NSNotification.Name("com.cinewall.openDisplayDetail"), object: nil, suspensionBehavior: .deliverImmediately)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openLibrarySubmenuForTest), name: NSNotification.Name("com.cinewall.openLibraryDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openProSubmenuForTest), name: NSNotification.Name("com.cinewall.openProDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openAppSubmenuForTest), name: NSNotification.Name("com.cinewall.openAppDetail"), object: nil, suspensionBehavior: .deliverImmediately)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil, suspensionBehavior: .deliverImmediately)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerRestoreWallpaperForTest), name: NSNotification.Name("com.cinewall.restoreWallpaper"), object: nil, suspensionBehavior: .deliverImmediately)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(captureMainMenuForTest), name: NSNotification.Name("com.cinewall.captureMainMenu"), object: nil, suspensionBehavior: .deliverImmediately)
@@ -341,6 +344,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
             self?.openPopover()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 self?.liquidController?.showSettingsDetailTest()
+            }
+        }
+    }
+
+    @objc func openLibrarySubmenuForTest() {
+        if isPopoverOpen {
+            closePopover(force: true)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showLibraryDetailTest()
+            }
+        }
+    }
+
+    @objc func openProSubmenuForTest() {
+        if isPopoverOpen {
+            closePopover(force: true)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showProDetailTest()
+            }
+        }
+    }
+
+    @objc func openAppSubmenuForTest() {
+        if isPopoverOpen {
+            closePopover(force: true)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showAppDetailTest()
             }
         }
     }
