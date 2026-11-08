@@ -50,9 +50,6 @@ public enum VorssaintMotion {
     public static let cardExpandSpring = Spring(duration: 0.38, bounce: 0.22)
     public static let cardCollapseSpring = Spring(duration: 0.26, bounce: 0)
 
-    public static let liquidUnfoldSpring = Spring(duration: 0.35, bounce: 0.16)
-    public static let liquidFoldDuration: TimeInterval = 0.18
-
     public static let overshootLimit: CGFloat = 12
     public static let settledDistance: CGFloat = 0.5
 
@@ -2291,33 +2288,18 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
     }
 
-    // MARK: - Liquid Unfold & Fold Animation (Codenotch Inspired)
-    private func animateLiquidUnfold(to targetFrame: NSRect, completion: (() -> Void)? = nil) {
+    private func animateCardExpansion(from startFrame: NSRect, to targetFrame: NSRect, completion: (() -> Void)? = nil) {
         detailAnimationTimer?.invalidate()
         detailAnimationTimer = nil
         
-        detailCard.layer?.removeAllAnimations()
-        detailBodyHost.layer?.removeAllAnimations()
-        
-        // Pinned to top of menu, start with subtle vertical offset and height contraction
-        let offsetAmount: CGFloat = 16.0
-        let startY = targetFrame.origin.y + offsetAmount
-        let startH = max(targetFrame.height - offsetAmount, 80)
-        let startFrame = NSRect(x: targetFrame.origin.x, y: startY, width: targetFrame.width, height: startH)
+        let startTime = CACurrentMediaTime()
+        let duration = VorssaintMotion.settlingTime(from: startFrame, to: targetFrame)
         
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         detailCard.frame = startFrame
-        detailCard.alphaValue = 0.0
-        detailHeaderView.alphaValue = 0.0
-        detailBodyHost.alphaValue = 0.0
         detailCard.layoutSubtreeIfNeeded()
-        detailBodyHost.layoutSubtreeIfNeeded()
         CATransaction.commit()
-        
-        let spring = VorssaintMotion.liquidUnfoldSpring
-        let duration = spring.duration
-        let startTime = CACurrentMediaTime()
         
         let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
             guard let self = self else {
@@ -2331,29 +2313,19 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
-                self.detailCard.alphaValue = 1.0
                 self.detailHeaderView.alphaValue = 1.0
                 self.detailBodyHost.alphaValue = 1.0
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
                 completion?()
             } else {
-                let p = CGFloat(spring.progress(at: elapsed))
-                let currentY = startY + (targetFrame.origin.y - startY) * p
-                let currentH = startH + (targetFrame.height - startH) * p
-                let currentFrame = NSRect(x: targetFrame.origin.x, y: currentY, width: targetFrame.width, height: currentH)
-                
-                // Staggered cascade: glass surface first, header next, body cascades in
-                let cardAlpha = min(1.0, CGFloat(elapsed / 0.10))
-                let headerAlpha = max(0.0, min(1.0, CGFloat((elapsed - 0.04) / 0.14)))
-                let bodyAlpha = max(0.0, min(1.0, CGFloat((elapsed - 0.08) / 0.16)))
-                
+                let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
+                let contentAlpha = CGFloat(max(0.0, min(1.0, (elapsed - 0.06) / 0.22)))
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = currentFrame
-                self.detailCard.alphaValue = cardAlpha
-                self.detailHeaderView.alphaValue = headerAlpha
-                self.detailBodyHost.alphaValue = bodyAlpha
+                self.detailHeaderView.alphaValue = contentAlpha
+                self.detailBodyHost.alphaValue = contentAlpha
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
             }
@@ -2362,17 +2334,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailAnimationTimer = timer
     }
 
-    private func animateLiquidFold(completion: (() -> Void)? = nil) {
+    private func animateCardCollapse(from startFrame: NSRect, to targetFrame: NSRect, completion: (() -> Void)? = nil) {
         detailAnimationTimer?.invalidate()
         detailAnimationTimer = nil
         
-        let startFrame = self.detailCard.frame
-        let targetY = startFrame.origin.y + 14.0
-        let targetH = max(startFrame.height - 14.0, 80)
-        let targetFrame = NSRect(x: startFrame.origin.x, y: targetY, width: startFrame.width, height: targetH)
-        
-        let duration: TimeInterval = VorssaintMotion.liquidFoldDuration
         let startTime = CACurrentMediaTime()
+        let duration = max(VorssaintMotion.shrinkingWidth.duration, VorssaintMotion.shrinkingHeight.duration) * 1.05
         
         let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
             guard let self = self else {
@@ -2386,22 +2353,14 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
-                self.detailCard.alphaValue = 0.0
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
                 completion?()
             } else {
-                let tNorm = CGFloat(min(1.0, elapsed / duration))
-                let ease = tNorm * tNorm
-                let currentY = startFrame.origin.y + (targetY - startFrame.origin.y) * ease
-                let currentH = startFrame.height + (targetH - startFrame.height) * ease
-                let currentFrame = NSRect(x: startFrame.origin.x, y: currentY, width: startFrame.width, height: currentH)
-                let alpha = max(0.0, 1.0 - tNorm)
-                
+                let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = currentFrame
-                self.detailCard.alphaValue = alpha
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
             }
@@ -2416,39 +2375,48 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         view.layoutSubtreeIfNeeded()
         sourceView.superview?.layoutSubtreeIfNeeded()
         detailOverlay.layoutSubtreeIfNeeded()
-        
-        // 1. Tactile haptic spring squeeze on source trigger
-        CATransaction.begin()
-        let squeeze = CAKeyframeAnimation(keyPath: "transform.scale")
-        squeeze.values = [1.0, 0.94, 1.0]
-        squeeze.keyTimes = [0.0, 0.38, 1.0]
-        squeeze.duration = 0.22
-        squeeze.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        sourceView.layer?.add(squeeze, forKey: "tactileSqueeze")
-        CATransaction.commit()
-        
+        let convertedSourceFrame = detailOverlay.convert(sourceView.bounds, from: sourceView)
+        let overlayBounds = detailOverlay.bounds.insetBy(dx: -40, dy: -40)
+        if sourceView.window == view.window,
+           !convertedSourceFrame.isEmpty,
+           convertedSourceFrame.intersects(overlayBounds) {
+            detailSourceFrame = convertedSourceFrame
+        } else {
+            detailSourceFrame = detailTargetFrame(for: section)
+        }
         detailOverlay.isHidden = false
         detailOverlay.alphaValue = 1
         
+        detailCard.layer?.removeAllAnimations()
+        detailBodyHost.layer?.removeAllAnimations()
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        detailCard.frame = detailSourceFrame
+        detailCard.alphaValue = 1
+        detailHeaderView.alphaValue = 0
+        detailBodyHost.alphaValue = 0
+        detailCard.layoutSubtreeIfNeeded()
+        detailBodyHost.layoutSubtreeIfNeeded()
+        CATransaction.commit()
+        
         let targetFrame = detailTargetFrame(for: section)
         
-        // 2. Hide root glass window background
+        // Hide the main menu window background for all submenus so only the active submenu card is visible
         if let root = self.view as? LiquidView {
             root.setGlassOpacity(0.0)
         }
         detailCard.applyUserTintStrength(CGFloat(appDelegate?.menuDarkTintStrength ?? 0.0))
         
-        // 3. Smooth fade out of main stack
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.14
+            context.duration = 0.18
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             self.mainStack.animator().alphaValue = 0
         }, completionHandler: {
             self.mainStack.isHidden = true
         })
 
-        // 4. Liquid Unfold animation
-        animateLiquidUnfold(to: targetFrame, completion: completion)
+        animateCardExpansion(from: detailSourceFrame, to: targetFrame, completion: completion)
     }
 
     @objc private func hideDetailAction() {
@@ -2458,6 +2426,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     private func hideDetail() {
         guard let activeDetail, !detailOverlay.isHidden else { return }
 
+        let target = detailSourceFrame == .zero ? detailTargetFrame(for: activeDetail) : detailSourceFrame
+        
         if let root = self.view as? LiquidView {
             root.setGlassOpacity(1.0)
         }
@@ -2467,12 +2437,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         self.mainStack.isHidden = false
 
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.22
+            context.duration = 0.24
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.mainStack.animator().alphaValue = 1.0
+            self.mainStack.animator().alphaValue = 1
         })
 
-        animateLiquidFold { [weak self] in
+        let startFrame = self.detailCard.frame
+        animateCardCollapse(from: startFrame, to: target) { [weak self] in
             self?.finishHideDetail()
         }
     }
