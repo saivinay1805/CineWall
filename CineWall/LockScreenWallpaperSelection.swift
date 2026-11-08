@@ -106,6 +106,60 @@ public final class LockScreenWallpaperSelection {
         try synchronize(desktopDisplays: [], screenSaverDisplays: [])
     }
 
+    public func clearAllInjections() throws {
+        if FileManager.default.fileExists(atPath: journalURL.path) {
+            try? recover()
+        }
+
+        guard FileManager.default.fileExists(atPath: storeURL.path),
+              let bytes = try? Data(contentsOf: storeURL),
+              var root = (try? PropertyListSerialization.propertyList(from: bytes, format: nil)) as? [String: Any]
+        else { return }
+
+        var changed = false
+        func sanitize(_ dict: inout [String: Any]) {
+            for (key, val) in dict {
+                if var subDict = val as? [String: Any] {
+                    if let content = subDict["Content"] as? [String: Any],
+                       let choices = content["Choices"] as? [[String: Any]] {
+                        var newChoices = choices
+                        var modified = false
+                        for i in 0..<newChoices.count {
+                            if (newChoices[i]["Provider"] as? String) == LockScreenConfiguration.extensionIdentifier {
+                                newChoices[i]["Provider"] = "default"
+                                newChoices[i]["Configuration"] = Data()
+                                modified = true
+                            }
+                        }
+                        if modified {
+                            var newContent = content
+                            newContent["Choices"] = newChoices
+                            subDict["Content"] = newContent
+                            dict[key] = subDict
+                            changed = true
+                        }
+                    }
+                    sanitize(&subDict)
+                    dict[key] = subDict
+                }
+            }
+        }
+        sanitize(&root)
+
+        if changed {
+            if let data = try? Self.encode(root) {
+                try? data.write(to: storeURL, options: .atomic)
+                try? Self.reloadWallpaperAgent()
+            }
+        }
+
+        if FileManager.default.fileExists(atPath: journalURL.path) {
+            try? FileManager.default.removeItem(at: journalURL)
+        }
+        entries = []
+        hasPersistedJournal = false
+    }
+
     public func checkCompatibility() throws {
         let root =
             try PropertyListSerialization.propertyList(from: Data(contentsOf: storeURL), format: nil)

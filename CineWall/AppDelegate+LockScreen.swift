@@ -133,6 +133,20 @@ extension AppDelegate {
         LockScreenWallpaperService.shared.restoreSystemDefault()
     }
 
+    @objc func restoreSystemWallpaperFromLockScreen() {
+        cancelActiveIdleWallpaperSync()
+        lockScreenSyncEnabled = false
+        autoSyncIdleWallpaper = false
+        saveSettings()
+
+        LockScreenWallpaperService.shared.restoreSystemDefault()
+        liquidController?.refreshUI()
+        showAlert(
+            title: "macOS Wallpaper Restored",
+            message: "CineWall lock screen injection has been removed. macOS default wallpapers have been restored across all displays."
+        )
+    }
+
     func setDesktopWallpaperSnapshotForCurrentMedia() throws {
         // Handled natively by ExtensionKit
     }

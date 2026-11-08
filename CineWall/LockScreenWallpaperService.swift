@@ -237,10 +237,17 @@ public final class LockScreenWallpaperService: ObservableObject {
             try? data.write(to: configURL, options: .atomic)
         }
 
-        // 2. Revert Index.plist to original journaled entries
-        try? selection.recover()
+        // 2. Remove ready files and revision locks from exchange folder
+        if let files = try? fileManager.contentsOfDirectory(atPath: exchangeDirectory.path) {
+            for file in files where file.hasPrefix("ready-") || file.hasPrefix("released-") {
+                try? fileManager.removeItem(at: exchangeDirectory.appendingPathComponent(file))
+            }
+        }
 
-        // 3. Post Darwin notification
+        // 3. Clear all injections from Index.plist and restore macOS default wallpaper
+        try? selection.clearAllInjections()
+
+        // 4. Post Darwin notification
         postDarwinNotification()
 
         isEnabled = false

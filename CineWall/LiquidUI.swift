@@ -234,6 +234,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     var loginToggle: NSButton!
     var autoIdleSyncToggle: NSButton!
     var idleSyncButton: NSButton!
+    var restoreWallpaperButton: NSButton!
     var idleSyncStatusLabel: NSTextField!
     var menuTintSlider: NSSlider!
     var menuTintValueLabel: NSTextField!
@@ -1066,7 +1067,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         rootStack.onBackgroundClick = { [weak self] in self?.hideDetail() }
         rootStack.orientation = .vertical
         rootStack.alignment = .centerX
-        rootStack.spacing = 12
+        rootStack.spacing = 8
         rootStack.translatesAutoresizingMaskIntoConstraints = false
 
         let scalingTitle = NSTextField.liquidLabel("Scaling", size: 14, weight: .semibold)
@@ -1074,9 +1075,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         scalingSeg.segmentStyle = .rounded
         scalingSeg.controlSize = .regular
 
-        let timerTitle = createSectionTitleRow(title: "Timer", showsProBadge: false)
+        let timerTitle = NSTextField.liquidLabel("Timer", size: 14, weight: .semibold)
         timerLabel = NSTextField.liquidLabel("Off", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
-        timerLabel.heightAnchor.constraint(equalToConstant: 14).isActive = true
+        let timerHeader = NSStackView(views: [timerTitle, NSView(), timerLabel])
+        timerHeader.alignment = .centerY
+        timerHeader.spacing = 8
+        timerHeader.translatesAutoresizingMaskIntoConstraints = false
+
         let hoursInput = createTimerInputControl(placeholder: "00", action: #selector(timerChanged))
         let minutesInput = createTimerInputControl(placeholder: "00", action: #selector(timerChanged))
         let secondsInput = createTimerInputControl(placeholder: "00", action: #selector(timerChanged))
@@ -1108,20 +1113,23 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         timerRow.translatesAutoresizingMaskIntoConstraints = false
 
         let timerCard = nestedGroupCard()
-        timerCard.heightAnchor.constraint(equalToConstant: 124).isActive = true
-        let timerStack = NSStackView(views: [timerTitle, timerLabel, presetRow, timerRow])
+        timerCard.heightAnchor.constraint(equalToConstant: 104).isActive = true
+        let timerStack = NSStackView(views: [timerHeader, presetRow, timerRow])
         timerStack.orientation = .vertical
         timerStack.alignment = .leading
-        timerStack.spacing = 6
+        timerStack.spacing = 8
         timerStack.translatesAutoresizingMaskIntoConstraints = false
+        timerHeader.widthAnchor.constraint(equalTo: timerStack.widthAnchor).isActive = true
+        presetRow.widthAnchor.constraint(equalTo: timerStack.widthAnchor).isActive = true
+        timerRow.widthAnchor.constraint(equalTo: timerStack.widthAnchor).isActive = true
         timerCard.contentView.addSubview(timerStack)
 
         let scalingCard = nestedGroupCard()
-        scalingCard.heightAnchor.constraint(equalToConstant: 74).isActive = true
+        scalingCard.heightAnchor.constraint(equalToConstant: 68).isActive = true
         let scalingStack = NSStackView(views: [scalingTitle, scalingSeg])
         scalingStack.orientation = .vertical
         scalingStack.alignment = .leading
-        scalingStack.spacing = 8
+        scalingStack.spacing = 6
         scalingStack.translatesAutoresizingMaskIntoConstraints = false
         scalingCard.contentView.addSubview(scalingStack)
 
@@ -1143,10 +1151,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             desktopStack.addArrangedSubview(spanCheck)
         }
         desktopCard.contentView.addSubview(desktopStack)
-        desktopCard.heightAnchor.constraint(equalToConstant: hasMultipleScreens ? 108 : 82).isActive = true
+        desktopCard.heightAnchor.constraint(equalToConstant: hasMultipleScreens ? 110 : 84).isActive = true
 
         let appearanceCard = nestedGroupCard()
-        appearanceCard.heightAnchor.constraint(equalToConstant: 122).isActive = true
+        appearanceCard.heightAnchor.constraint(equalToConstant: 114).isActive = true
         let appearanceTitle = NSTextField.liquidLabel("Menu Darkness", size: 14, weight: .semibold)
         menuTintValueLabel = NSTextField.liquidLabel("0%", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         let appearanceHeader = NSStackView(views: [appearanceTitle, NSView(), menuTintValueLabel])
@@ -1163,12 +1171,24 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let appearanceHint = NSTextField.liquidLabel("Subtly accents glass cards with active wallpaper colors.", size: 10.5, weight: .medium, color: .white.withAlphaComponent(0.65))
         appearanceHint.maximumNumberOfLines = 1
         appearanceHint.lineBreakMode = .byTruncatingTail
+        let hintRow = NSStackView()
+        hintRow.orientation = .horizontal
+        hintRow.alignment = .centerY
+        hintRow.spacing = 4
+        hintRow.translatesAutoresizingMaskIntoConstraints = false
+        let indentSpacer = NSView()
+        indentSpacer.translatesAutoresizingMaskIntoConstraints = false
+        indentSpacer.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        hintRow.addArrangedSubview(indentSpacer)
+        hintRow.addArrangedSubview(appearanceHint)
 
-        let appearanceStack = NSStackView(views: [appearanceHeader, menuTintSlider, ambientGlowToggle!, appearanceHint])
+        let appearanceStack = NSStackView(views: [appearanceHeader, menuTintSlider, ambientGlowToggle!, hintRow])
         appearanceStack.orientation = .vertical
         appearanceStack.alignment = .leading
         appearanceStack.spacing = 6
         appearanceStack.translatesAutoresizingMaskIntoConstraints = false
+        appearanceHeader.widthAnchor.constraint(equalTo: appearanceStack.widthAnchor).isActive = true
+        menuTintSlider.widthAnchor.constraint(equalTo: appearanceStack.widthAnchor).isActive = true
         appearanceCard.contentView.addSubview(appearanceStack)
 
         [timerCard, scalingCard, desktopCard, appearanceCard].forEach {
@@ -1178,16 +1198,16 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         displayDetailView.addSubview(rootStack)
 
         NSLayoutConstraint.activate([
-            rootStack.topAnchor.constraint(equalTo: displayDetailView.topAnchor, constant: 8),
+            rootStack.topAnchor.constraint(equalTo: displayDetailView.topAnchor, constant: 4),
             rootStack.centerXAnchor.constraint(equalTo: displayDetailView.centerXAnchor),
             rootStack.leadingAnchor.constraint(greaterThanOrEqualTo: displayDetailView.leadingAnchor),
             rootStack.trailingAnchor.constraint(lessThanOrEqualTo: displayDetailView.trailingAnchor),
-            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: displayDetailView.bottomAnchor, constant: -6)
+            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: displayDetailView.bottomAnchor, constant: -4)
         ])
-        constrainEdges(of: timerStack, to: timerCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
-        constrainEdges(of: scalingStack, to: scalingCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
-        constrainEdges(of: desktopStack, to: desktopCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
-        constrainEdges(of: appearanceStack, to: appearanceCard.contentView, inset: NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
+        constrainEdges(of: timerStack, to: timerCard.contentView, inset: NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
+        constrainEdges(of: scalingStack, to: scalingCard.contentView, inset: NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
+        constrainEdges(of: desktopStack, to: desktopCard.contentView, inset: NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
+        constrainEdges(of: appearanceStack, to: appearanceCard.contentView, inset: NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
     }
 
     private func buildPlaylistDetail() {
@@ -1475,14 +1495,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         lockScreenEnabledToggle = createCheck("Enable Lock Screen Sync", action: #selector(togLockScreenSyncEnabled))
         autoIdleSyncToggle = createCheck("Auto Sync Lock Screen Wallpaper", action: #selector(togAutoIdleSync))
         idleSyncButton = createPillButton("Sync Current to Lock Screen", icon: "arrow.triangle.2.circlepath", action: #selector(syncIdleWallpaper))
+        restoreWallpaperButton = createPillButton("Restore macOS Wallpaper", icon: "arrow.counterclockwise", action: #selector(restoreDefaultWallpaper))
         idleSyncStatusLabel = NSTextField.liquidLabel("Lock screen ready.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
         idleSyncStatusLabel.maximumNumberOfLines = 2
         idleSyncStatusLabel.lineBreakMode = .byWordWrapping
         let lockScreenTitle = createSectionTitleRow(title: "Lock Screen Settings", showsProBadge: false)
 
-        [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, idleSyncButton!, idleSyncStatusLabel!].forEach {
+        [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, idleSyncButton!, restoreWallpaperButton!, idleSyncStatusLabel!].forEach {
             lockScreenStack.addArrangedSubview($0)
         }
+        idleSyncButton.widthAnchor.constraint(equalTo: lockScreenStack.widthAnchor).isActive = true
+        restoreWallpaperButton.widthAnchor.constraint(equalTo: lockScreenStack.widthAnchor).isActive = true
         lockScreenCard.contentView.addSubview(lockScreenStack)
 
         rootStack.addArrangedSubview(smartCard)
@@ -1783,6 +1806,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         autoIdleSyncToggle?.isEnabled = isLockScreenEnabled
         idleSyncButton?.alphaValue = isLockScreenEnabled ? 1.0 : 0.72
         idleSyncButton?.isEnabled = isLockScreenEnabled && !(app.idleWallpaperSyncInProgress)
+        restoreWallpaperButton?.alphaValue = 1.0
+        restoreWallpaperButton?.isEnabled = !(app.idleWallpaperSyncInProgress)
         smartPauseToggle?.alphaValue = isSmartPro ? 1.0 : 0.6
         batterySaverToggle?.alphaValue = isSmartPro ? 1.0 : 0.6
         focusPauseToggle?.alphaValue = isSmartPro ? 1.0 : 0.6
@@ -2050,7 +2075,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             case .settings:
                 bodyTopToHeaderConstraint.constant = 18
             case .display:
-                bodyTopToHeaderConstraint.constant = 24
+                bodyTopToHeaderConstraint.constant = 18
             default:
                 bodyTopToHeaderConstraint.constant = 20
             }
@@ -2118,13 +2143,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             minimumHeight = 294
         case .display:
             bodyView = displayDetailView
-            minimumHeight = 506
+            minimumHeight = (NSScreen.screens.count > 1) ? 432 : 408
         case .library:
             bodyView = libraryDetailView
             minimumHeight = 454
         case .settings:
             bodyView = settingsDetailView
-            minimumHeight = 392
+            minimumHeight = 440
         case .pro:
             bodyView = proDetailView
             minimumHeight = 360
@@ -2203,6 +2228,15 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
     }
 
+    func showDisplayDetailTest(completion: (() -> Void)? = nil) {
+        showDetail(.display, from: displayCard) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                self?.dumpAndCapturePlayerDetail()
+                completion?()
+            }
+        }
+    }
+
     func showSettingsDetailTest(completion: (() -> Void)? = nil) {
         showDetail(.settings, from: settingsCard) { [weak self] in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -2222,13 +2256,15 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             log += "  rootSub[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
         }
         
-        for (idx, sub) in playerDetailView.subviews.enumerated() {
-            log += "  playerSub[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
-            if let stack = sub as? NSStackView {
-                for (rIdx, row) in stack.arrangedSubviews.enumerated() {
-                    log += "    row[\(rIdx)] (\(type(of: row))) frame: \(row.frame), isHidden: \(row.isHidden), alpha: \(row.alphaValue)\n"
-                    for (cIdx, child) in row.subviews.enumerated() {
-                        log += "      child[\(cIdx)] (\(type(of: child))) frame: \(child.frame), isHidden: \(child.isHidden), alpha: \(child.alphaValue)\n"
+        for (idx, sub) in detailBodyHost.subviews.enumerated() {
+            log += "  activeBody[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
+            if let contentView = sub as? DismissibleContentView {
+                for (cIdx, child) in contentView.subviews.enumerated() {
+                    log += "    contentChild[\(cIdx)] (\(type(of: child))) frame: \(child.frame)\n"
+                    if let stack = child as? NSStackView {
+                        for (rIdx, row) in stack.arrangedSubviews.enumerated() {
+                            log += "      arrangedRow[\(rIdx)] (\(type(of: row))) frame: \(row.frame)\n"
+                        }
                     }
                 }
             }
@@ -2645,6 +2681,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let isSyncing = app.idleWallpaperSyncInProgress
         idleSyncButton.title = isSyncing ? "Syncing Lock Screen..." : "Sync Current to Lock Screen"
         idleSyncButton.isEnabled = !isSyncing
+        restoreWallpaperButton?.isEnabled = !isSyncing
         idleSyncStatusLabel?.stringValue = app.lockScreenSyncEnabled
             ? (isSyncing ? "Syncing lock screen across all displays..." : "Lock screen synced across all displays.")
             : "Lock screen sync is turned off."
@@ -2850,6 +2887,9 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     @objc func syncIdleWallpaper() {
         guard requireProAccess(.lockScreenSync) else { return }
         appDelegate?.syncCurrentVideoToIdleWallpaper()
+    }
+    @objc func restoreDefaultWallpaper() {
+        appDelegate?.restoreSystemWallpaperFromLockScreen()
     }
     @objc func revealFile() { appDelegate?.revealCurrentInFinder() }
     @objc func selectPlaylistFromTable(_ sender: Any?) {

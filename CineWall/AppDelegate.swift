@@ -3,7 +3,7 @@ import AVFoundation
 import ServiceManagement
 
 let liquidMenuWidth: CGFloat = 320
-let liquidMenuHeight: CGFloat = 520
+let liquidMenuHeight: CGFloat = 550
 let cineWallAerialCategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A001"
 let cineWallAerialSubcategoryID = "91F55C9A-8E4B-4C1D-9A8C-2B759F17A002"
 let cineWallWallpaperStoreBackupFileName = "Index.pre-cinewall.plist"
@@ -279,11 +279,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         
         NotificationCenter.default.addObserver(self, selector: #selector(screenDidChange), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(sessionUnlocked), name: NSNotification.Name("com.apple.screenIsUnlocked"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(toggleLiquidPopover), name: NSNotification.Name("com.cinewall.togglePopover"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil)
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(captureMainMenuForTest), name: NSNotification.Name("com.cinewall.captureMainMenu"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(toggleLiquidPopover), name: NSNotification.Name("com.cinewall.togglePopover"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openDisplaySubmenuForTest), name: NSNotification.Name("com.cinewall.openDisplayDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerRestoreWallpaperForTest), name: NSNotification.Name("com.cinewall.restoreWallpaper"), object: nil, suspensionBehavior: .deliverImmediately)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(captureMainMenuForTest), name: NSNotification.Name("com.cinewall.captureMainMenu"), object: nil, suspensionBehavior: .deliverImmediately)
     }
 
     @objc func captureMainMenuForTest() {
@@ -299,6 +301,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         syncCurrentVideoToIdleWallpaper(showAlerts: false)
     }
 
+    @objc func triggerRestoreWallpaperForTest() {
+        restoreSystemWallpaperFromLockScreen()
+    }
+
     @objc func openPlayerSubmenuForTest() {
         if isPopoverOpen {
             closePopover(force: true)
@@ -307,6 +313,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
             self?.openPopover()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 self?.liquidController?.showPlayerDetailTest()
+            }
+        }
+    }
+
+    @objc func openDisplaySubmenuForTest() {
+        if isPopoverOpen {
+            closePopover(force: true)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self?.liquidController?.showDisplayDetailTest()
             }
         }
     }
