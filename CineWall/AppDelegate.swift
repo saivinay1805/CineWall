@@ -212,6 +212,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openPlayerSubmenuForTest), name: NSNotification.Name("com.cinewall.openPlayerDetail"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(openSettingsSubmenuForTest), name: NSNotification.Name("com.cinewall.openSettingsDetail"), object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(triggerLockScreenSyncForTest), name: NSNotification.Name("com.cinewall.syncLockScreen"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(captureMainMenuForTest), name: NSNotification.Name("com.cinewall.captureMainMenu"), object: nil)
+    }
+
+    @objc func captureMainMenuForTest() {
+        if !isPopoverOpen {
+            openPopover()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.liquidController?.dumpAndCaptureMainMenu()
+        }
     }
 
     @objc func triggerLockScreenSyncForTest() {

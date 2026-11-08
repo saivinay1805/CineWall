@@ -357,15 +357,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         iconView.contentTintColor = .white
         iconView.imageScaling = .scaleProportionallyUpOrDown
         iconView.translatesAutoresizingMaskIntoConstraints = false
-
-        let iconCircle = NSView()
-        iconCircle.wantsLayer = true
-        iconCircle.layer?.cornerRadius = 19
-        iconCircle.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.12).cgColor
-        iconCircle.translatesAutoresizingMaskIntoConstraints = false
-        iconCircle.widthAnchor.constraint(equalToConstant: 38).isActive = true
-        iconCircle.heightAnchor.constraint(equalToConstant: 38).isActive = true
-        iconCircle.addSubview(iconView)
+        iconView.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 16).isActive = true
 
         let logo = NSTextField.liquidLabel("CineWall", size: 14.5, weight: .bold)
         logo.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -384,10 +377,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         textStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         textStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        let textRow = NSStackView(views: [iconCircle, textStack])
+        let textRow = NSStackView(views: [iconView, textStack])
         textRow.orientation = .horizontal
         textRow.alignment = .centerY
-        textRow.spacing = 9
+        textRow.spacing = 10
         textRow.translatesAutoresizingMaskIntoConstraints = false
 
         appChip.contentView.addSubview(textRow)
@@ -416,12 +409,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         header.addArrangedSubview(pinCard)
 
         NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 24),
-            iconView.heightAnchor.constraint(equalToConstant: 12),
-
-            textRow.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor, constant: 11),
+            textRow.leadingAnchor.constraint(equalTo: appChip.contentView.leadingAnchor, constant: 14),
             textRow.trailingAnchor.constraint(lessThanOrEqualTo: appChip.contentView.trailingAnchor, constant: -8),
             textRow.centerYAnchor.constraint(equalTo: appChip.contentView.centerYAnchor),
 
@@ -458,20 +446,38 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                                                color: .white.withAlphaComponent(0.96))
         compactTrackMarquee.stringValue = "Not Playing"
 
-        favButton = createCircleButton(icon: "heart", size: 12, action: #selector(toggleFav), diameter: 24)
+        favButton = NSButton.liquidSymbol(symbol: "heart", pointSize: 13, weight: .semibold, target: self, action: #selector(toggleFav))
+        favButton.contentTintColor = .white
         favButton.toolTip = "Add to Favorites"
+        favButton.translatesAutoresizingMaskIntoConstraints = false
+        favButton.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        favButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
 
         let transportRow = NSStackView()
         transportRow.alignment = .centerY
-        transportRow.spacing = 6
+        transportRow.spacing = 14
         transportRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let prev = createCircleButton(icon: "backward.fill", size: 11, action: #selector(doPrev), diameter: 26)
+        let prev = NSButton.liquidSymbol(symbol: "backward.fill", pointSize: 12, weight: .semibold, target: self, action: #selector(doPrev))
         prev.toolTip = "Previous"
-        playButton = createCircleButton(icon: "play.fill", size: 14, action: #selector(togglePlay), diameter: 32)
+        prev.contentTintColor = .white
+        prev.translatesAutoresizingMaskIntoConstraints = false
+        prev.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        prev.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        playButton = NSButton.liquidSymbol(symbol: "play.fill", pointSize: 16, weight: .bold, target: self, action: #selector(togglePlay))
         playButton.toolTip = "Play/Pause"
-        let next = createCircleButton(icon: "forward.fill", size: 11, action: #selector(doNext), diameter: 26)
+        playButton.contentTintColor = .white
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        playButton.widthAnchor.constraint(equalToConstant: 26).isActive = true
+        playButton.heightAnchor.constraint(equalToConstant: 26).isActive = true
+
+        let next = NSButton.liquidSymbol(symbol: "forward.fill", pointSize: 12, weight: .semibold, target: self, action: #selector(doNext))
         next.toolTip = "Next"
+        next.contentTintColor = .white
+        next.translatesAutoresizingMaskIntoConstraints = false
+        next.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        next.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         transportRow.addArrangedSubview(prev)
         transportRow.addArrangedSubview(playButton)
@@ -575,8 +581,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         soundCard.widthAnchor.constraint(equalToConstant: 282).isActive = true
 
         let soundLabel = NSTextField.liquidLabel("Sound", size: 13, weight: .semibold)
-        volButton = createCircleButton(icon: "speaker.wave.2.fill", size: 13, action: #selector(toggleMute), diameter: 32)
+        volButton = NSButton.liquidSymbol(symbol: "speaker.wave.2.fill", pointSize: 14, weight: .medium, target: self, action: #selector(toggleMute))
+        volButton.contentTintColor = .white
         volButton.toolTip = "Mute"
+        volButton.translatesAutoresizingMaskIntoConstraints = false
+        volButton.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        volButton.heightAnchor.constraint(equalToConstant: 22).isActive = true
+
         volSlider = NSSlider(value: 0.5, minValue: 0, maxValue: 1, target: self, action: #selector(volumeChanged))
         volSlider.controlSize = .small
         volSlider.toolTip = "Volume"
@@ -630,18 +641,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         card.heightAnchor.constraint(equalToConstant: 60).isActive = true
         card.widthAnchor.constraint(equalToConstant: 282).isActive = true
 
-        let toggleButton = NSButton(title: "", target: self, action: #selector(togglePlaylistMode))
-        toggleButton.isBordered = false
-        toggleButton.translatesAutoresizingMaskIntoConstraints = false
-        toggleButton.wantsLayer = true
-        toggleButton.layer?.cornerRadius = 19
-        toggleButton.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.12).cgColor
+        let toggleButton = NSButton.liquidSymbol(symbol: "music.note.list", pointSize: 18, weight: .medium, target: self, action: #selector(togglePlaylistMode))
+        toggleButton.contentTintColor = .white
         toggleButton.toolTip = "Toggle playlist mode on/off"
-
-        let toggleIcon = NSImageView(image: NSImage(systemSymbolName: "music.note.list", accessibilityDescription: nil)!)
-        toggleIcon.contentTintColor = .white
-        toggleIcon.translatesAutoresizingMaskIntoConstraints = false
-        toggleButton.addSubview(toggleIcon)
+        toggleButton.translatesAutoresizingMaskIntoConstraints = false
+        toggleButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        toggleButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         let titleRow = createSectionTitleRow(title: "Playlists & Library", showsProBadge: false)
         let sLabel = NSTextField.liquidLabel("Off • Favorites", size: 10.5, weight: .regular, color: .white.withAlphaComponent(0.65))
@@ -654,18 +659,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         textStack.spacing = 2
         textStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let folderPill = NSView()
-        folderPill.wantsLayer = true
-        folderPill.layer?.cornerRadius = 19
-        folderPill.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.08).cgColor
-        folderPill.translatesAutoresizingMaskIntoConstraints = false
-        folderPill.widthAnchor.constraint(equalToConstant: 38).isActive = true
-        folderPill.heightAnchor.constraint(equalToConstant: 38).isActive = true
-
-        let folderIcon = NSImageView(image: NSImage(systemSymbolName: "folder.fill", accessibilityDescription: nil)!)
+        let folderConfig = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        let folderImg = NSImage(systemSymbolName: "folder.fill", accessibilityDescription: nil)?.withSymbolConfiguration(folderConfig)
+        let folderIcon = NSImageView(image: folderImg ?? NSImage())
         folderIcon.contentTintColor = .white.withAlphaComponent(0.85)
         folderIcon.translatesAutoresizingMaskIntoConstraints = false
-        folderPill.addSubview(folderIcon)
+        folderIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        folderIcon.heightAnchor.constraint(equalToConstant: 20).isActive = true
 
         let overlayBtn = NSButton(title: "", target: self, action: #selector(showPlaylistLibraryDetail(_:)))
         overlayBtn.isBordered = false
@@ -675,28 +675,18 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
         card.contentView.addSubview(toggleButton)
         card.contentView.addSubview(textStack)
-        card.contentView.addSubview(folderPill)
+        card.contentView.addSubview(folderIcon)
         card.contentView.addSubview(overlayBtn, positioned: .below, relativeTo: toggleButton)
 
         NSLayoutConstraint.activate([
-            toggleButton.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 11),
+            toggleButton.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 14),
             toggleButton.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
-            toggleButton.widthAnchor.constraint(equalToConstant: 38),
-            toggleButton.heightAnchor.constraint(equalToConstant: 38),
-            toggleIcon.centerXAnchor.constraint(equalTo: toggleButton.centerXAnchor),
-            toggleIcon.centerYAnchor.constraint(equalTo: toggleButton.centerYAnchor),
-            toggleIcon.widthAnchor.constraint(equalToConstant: 18),
-            toggleIcon.heightAnchor.constraint(equalToConstant: 18),
 
-            folderPill.trailingAnchor.constraint(equalTo: card.contentView.trailingAnchor, constant: -11),
-            folderPill.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
-            folderIcon.centerXAnchor.constraint(equalTo: folderPill.centerXAnchor),
-            folderIcon.centerYAnchor.constraint(equalTo: folderPill.centerYAnchor),
-            folderIcon.widthAnchor.constraint(equalToConstant: 18),
-            folderIcon.heightAnchor.constraint(equalToConstant: 18),
+            folderIcon.trailingAnchor.constraint(equalTo: card.contentView.trailingAnchor, constant: -16),
+            folderIcon.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
 
-            textStack.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 10),
-            textStack.trailingAnchor.constraint(lessThanOrEqualTo: folderPill.leadingAnchor, constant: -8),
+            textStack.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 12),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: folderIcon.leadingAnchor, constant: -8),
             textStack.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
 
             overlayBtn.topAnchor.constraint(equalTo: card.contentView.topAnchor),
@@ -721,25 +711,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         overlayBtn.translatesAutoresizingMaskIntoConstraints = false
         overlayBtn.toolTip = "Open \(title)"
         
-        let iconView = NSImageView(image: NSImage(systemSymbolName: icon, accessibilityDescription: nil)!)
+        let iconConfig = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+        let iconImage = NSImage(systemSymbolName: icon, accessibilityDescription: nil)?.withSymbolConfiguration(iconConfig)
+        let iconView = NSImageView(image: iconImage ?? NSImage())
         iconView.contentTintColor = .white
         iconView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let iconCircle = NSView()
-        iconCircle.wantsLayer = true
-        iconCircle.layer?.cornerRadius = 19
-        iconCircle.layer?.backgroundColor = iconColor.cgColor
-        iconCircle.translatesAutoresizingMaskIntoConstraints = false
-        iconCircle.widthAnchor.constraint(equalToConstant: 38).isActive = true
-        iconCircle.heightAnchor.constraint(equalToConstant: 38).isActive = true
-        
-        iconCircle.addSubview(iconView)
-        NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: iconCircle.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: iconCircle.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 18),
-            iconView.heightAnchor.constraint(equalToConstant: 18)
-        ])
+        iconView.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 22).isActive = true
         
         let titleRow = createSectionTitleRow(title: title, showsProBadge: showsProBadge)
         let sLabel = NSTextField.liquidLabel(subtitle, size: 10, weight: .regular, color: .white.withAlphaComponent(0.6))
@@ -752,17 +730,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         stack.spacing = 1
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        let textRow = NSStackView(views: [iconCircle, stack])
+        let textRow = NSStackView(views: [iconView, stack])
         textRow.orientation = .horizontal
         textRow.alignment = .centerY
-        textRow.spacing = 8
+        textRow.spacing = 10
         textRow.translatesAutoresizingMaskIntoConstraints = false
         
         card.contentView.addSubview(textRow)
         card.contentView.addSubview(overlayBtn, positioned: .above, relativeTo: nil)
 
         NSLayoutConstraint.activate([
-            textRow.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 10),
+            textRow.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 14),
             textRow.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -8),
             textRow.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor)
         ])
@@ -2288,6 +2266,32 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         }
     }
 
+    func dumpAndCaptureMainMenu() {
+        view.layoutSubtreeIfNeeded()
+        let viewBounds = view.bounds
+        if viewBounds.width > 0 && viewBounds.height > 0 {
+            if let rep = view.bitmapImageRepForCachingDisplay(in: viewBounds) {
+                view.cacheDisplay(in: viewBounds, to: rep)
+                if let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_main_menu.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_main_menu.png via cacheDisplay (%dx%d)", Int(viewBounds.width), Int(viewBounds.height))
+                }
+            }
+            if !FileManager.default.fileExists(atPath: "/tmp/cinewall_main_menu.png") {
+                let image = NSImage(size: viewBounds.size)
+                image.lockFocus()
+                if let ctx = NSGraphicsContext.current?.cgContext {
+                    view.layer?.render(in: ctx)
+                }
+                image.unlockFocus()
+                if let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "/tmp/cinewall_main_menu.png"))
+                    NSLog("[CineWall] Saved /tmp/cinewall_main_menu.png via layer render (%dx%d)", Int(viewBounds.width), Int(viewBounds.height))
+                }
+            }
+        }
+    }
+
     private func animateCardExpansion(from startFrame: NSRect, to targetFrame: NSRect, completion: (() -> Void)? = nil) {
         detailAnimationTimer?.invalidate()
         detailAnimationTimer = nil
@@ -2540,7 +2544,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
         shuffleBtn?.contentTintColor = app.isShuffle ? .systemBlue : .white
         loopBtn?.contentTintColor = app.isLoopingCurrent ? .systemBlue : .white
-        playlistToggleButton?.layer?.backgroundColor = (app.isPlaylistFilterEnabled ? NSColor.systemBlue : NSColor.black.withAlphaComponent(0.12)).cgColor
+        playlistToggleButton?.contentTintColor = app.isPlaylistFilterEnabled ? .systemBlue : .white
 
         pinButton.image = NSImage(systemSymbolName: app.isPinned ? "pin.fill" : "pin", accessibilityDescription: nil)
         pinButton.contentTintColor = app.isPinned ? .systemBlue : .white.withAlphaComponent(0.75)
