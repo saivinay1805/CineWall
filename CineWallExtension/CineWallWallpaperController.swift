@@ -16,6 +16,15 @@ public final class CineWallWallpaperController {
     public private(set) var configuration: LockScreenConfiguration?
     private var observers: [NSObjectProtocol] = []
     public let displayPower = FastDisplayPowerProbe.system
+    public private(set) var isScreenLocked: Bool = isScreenLockedNow()
+
+    public static func isScreenLockedNow() -> Bool {
+        guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else { return false }
+        if let num = (session["CGSSessionScreenIsLocked"] as? NSNumber)?.boolValue {
+            return num
+        }
+        return (session["CGSSessionScreenIsLocked"] as? Bool) ?? false
+    }
 
     private lazy var reevaluation = FastLockScreenReevaluationBurst(perform: { [weak self] in
         self?.surfaces.values.forEach { $0.applyPolicy() }
@@ -27,6 +36,7 @@ public final class CineWallWallpaperController {
     public func start() {
         guard !started else { return }
         started = true
+        isScreenLocked = Self.isScreenLockedNow()
         try? CineWallWallpaperRuntime.load()
         reload()
 
@@ -46,15 +56,18 @@ public final class CineWallWallpaperController {
             )
         }
 
-        for (name, cause) in [
-            ("com.apple.screenIsLocked", "screen locked"),
-            ("com.apple.screenIsUnlocked", "screen unlocked"),
+        for (name, cause, locked) in [
+            ("com.apple.screenIsLocked", "screen locked", true),
+            ("com.apple.screenIsUnlocked", "screen unlocked", false),
         ] {
             observers.append(
                 DistributedNotificationCenter.default().addObserver(
                     forName: .init(name), object: nil, queue: .main
                 ) { [weak self] _ in
-                    MainActor.assumeIsolated { self?.presentationEnvironmentChanged(cause: cause) }
+                    MainActor.assumeIsolated {
+                        self?.isScreenLocked = locked
+                        self?.presentationEnvironmentChanged(cause: cause)
+                    }
                 }
             )
         }
@@ -297,7 +310,13 @@ public final class CineWallWallpaperController {
         }
         if let request {
             if let mode = CineWallWallpaperRuntime.field("presentationMode", in: request) {
-                surface.presentation = CineWallWallpaperRuntime.enumCase(mode)
+                let caseName = CineWallWallpaperRuntime.enumCase(mode)
+                surface.presentation = caseName
+                if caseName == "locked" {
+                    isScreenLocked = true
+                } else if caseName == "default" && !Self.isScreenLockedNow() {
+                    isScreenLocked = false
+                }
             }
             if let activity = CineWallWallpaperRuntime.field("activityState", in: request) {
                 surface.activity = CineWallWallpaperRuntime.enumCase(activity)

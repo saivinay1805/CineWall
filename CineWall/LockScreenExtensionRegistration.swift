@@ -44,7 +44,11 @@ public actor LockScreenExtensionRegistration {
 
         let registered = try await registrations()
         let others = registered.map(\.url).filter { $0.standardizedFileURL.path != intended.standardizedFileURL.path }
-        if others.isEmpty, registered.contains(where: { $0.url.standardizedFileURL.path == intended.standardizedFileURL.path }) {
+        for other in others {
+            _ = try? await Self.runCommand(Self.pluginKit, ["-r", other.path])
+        }
+
+        if others.isEmpty, registered.contains(where: { $0.url.standardizedFileURL.path == intended.standardizedFileURL.path && $0.mark == .elected }) {
             try checkElection(registered, intended: intended)
             return intended
         }

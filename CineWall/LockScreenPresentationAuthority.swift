@@ -153,8 +153,19 @@ public enum FastWallpaperPresentationAuthority {
         }
 
         public init(dictionary: [String: Any]?) {
-            self.locked = dictionary?["CGSSessionScreenIsLocked"] as? Bool ?? false
-            self.onConsole = dictionary?["kCGSSessionOnConsoleKey"] as? Bool ?? true
+            let lockedVal = dictionary?["CGSSessionScreenIsLocked"]
+            if let num = (lockedVal as? NSNumber)?.boolValue {
+                self.locked = num
+            } else if let b = lockedVal as? Bool {
+                self.locked = b
+            } else if let i = lockedVal as? Int {
+                self.locked = (i != 0)
+            } else {
+                self.locked = false
+            }
+            self.onConsole = (dictionary?["kCGSSessionOnConsoleKey"] as? NSNumber)?.boolValue
+                ?? (dictionary?["kCGSSessionOnConsoleKey"] as? Bool)
+                ?? true
         }
 
         public static func current() -> SessionState {

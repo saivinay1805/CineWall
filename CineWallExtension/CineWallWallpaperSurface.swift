@@ -338,11 +338,12 @@ public final class CineWallWallpaperSurface: LockScreenSurfaceLifecycle {
 
     private var authorityRequest: FastWallpaperPresentationAuthority.Request {
         let session = FastWallpaperPresentationAuthority.SessionState.current()
+        let isLocked = CineWallWallpaperController.shared.isScreenLocked || session.locked
         return FastWallpaperPresentationAuthority.Request(
             role: preview ? .preview : .lockScreen,
             userPaused: scene.paused,
             displaysAsleep: CineWallWallpaperController.shared.displayPower.displaysAsleep(for: displayID),
-            sessionLocked: session.locked,
+            sessionLocked: isLocked,
             sessionOnConsole: session.onConsole,
             presentationMode: presentation,
             hostActivity: activity == "suspended" ? .suspended : .active,
