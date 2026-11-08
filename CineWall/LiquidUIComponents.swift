@@ -246,30 +246,6 @@ class LiquidGlassCardView: NSView {
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(effectiveAlpha).cgColor
         CATransaction.commit()
     }
-
-    func setGlassEffectHidden(_ hidden: Bool) {
-        for subview in subviews {
-            if subview is NSVisualEffectView || String(describing: type(of: subview)) == "NSGlassEffectView" {
-                subview.isHidden = hidden
-            }
-        }
-    }
-
-    func setTintHidden(_ hidden: Bool) {
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        tintLayer.isHidden = hidden
-        CATransaction.commit()
-    }
-
-    func setStrokeHidden(_ hidden: Bool) {
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        strokeLayer.isHidden = hidden
-        refractionLayer.isHidden = hidden
-        glowLayer.isHidden = hidden
-        CATransaction.commit()
-    }
 }
 
 final class DismissibleDetailCardView: LiquidGlassCardView {
