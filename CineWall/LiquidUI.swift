@@ -235,6 +235,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     var autoIdleSyncToggle: NSButton!
     var idleSyncButton: NSButton!
     var restoreWallpaperButton: NSButton!
+    var restoreOnQuitToggle: NSButton!
     var idleSyncStatusLabel: NSTextField!
     var menuTintSlider: NSSlider!
     var menuTintValueLabel: NSTextField!
@@ -1076,9 +1077,21 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         scalingSeg.controlSize = .regular
 
         let timerTitle = NSTextField.liquidLabel("Timer", size: 14, weight: .semibold)
+        timerTitle.setContentHuggingPriority(.required, for: .horizontal)
+        timerTitle.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         timerLabel = NSTextField.liquidLabel("Off", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
-        let timerHeader = NSStackView(views: [timerTitle, NSView(), timerLabel])
+        timerLabel.setContentHuggingPriority(.required, for: .horizontal)
+        timerLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let timerSpacer = NSView()
+        timerSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        timerSpacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let timerHeader = NSStackView(views: [timerTitle, timerSpacer, timerLabel])
+        timerHeader.orientation = .horizontal
         timerHeader.alignment = .centerY
+        timerHeader.distribution = .fill
         timerHeader.spacing = 8
         timerHeader.translatesAutoresizingMaskIntoConstraints = false
 
@@ -1098,18 +1111,27 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             createTimerPresetButton("5m", seconds: 300)
         ])
         presetRow.alignment = .centerY
-        presetRow.spacing = 6
+        presetRow.spacing = 5
         presetRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let hoursLabel = NSTextField.liquidLabel("HH", size: 10, weight: .semibold, color: .white.withAlphaComponent(0.65))
-        let minutesLabel = NSTextField.liquidLabel("MM", size: 10, weight: .semibold, color: .white.withAlphaComponent(0.65))
-        let secondsLabel = NSTextField.liquidLabel("SS", size: 10, weight: .semibold, color: .white.withAlphaComponent(0.65))
+        let hoursLabel = NSTextField.liquidLabel("HH", size: 10.5, weight: .semibold, color: .white.withAlphaComponent(0.75))
+        hoursLabel.setContentHuggingPriority(.required, for: .horizontal)
+        hoursLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let minutesLabel = NSTextField.liquidLabel("MM", size: 10.5, weight: .semibold, color: .white.withAlphaComponent(0.75))
+        minutesLabel.setContentHuggingPriority(.required, for: .horizontal)
+        minutesLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let secondsLabel = NSTextField.liquidLabel("SS", size: 10.5, weight: .semibold, color: .white.withAlphaComponent(0.75))
+        secondsLabel.setContentHuggingPriority(.required, for: .horizontal)
+        secondsLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         let setTimerButton = createCompactPillButton("Set", action: #selector(timerChanged))
-        setTimerButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
+        setTimerButton.widthAnchor.constraint(equalToConstant: 38).isActive = true
 
         let timerRow = NSStackView(views: [hoursLabel, hoursInput.container, minutesLabel, minutesInput.container, secondsLabel, secondsInput.container, setTimerButton])
         timerRow.alignment = .centerY
-        timerRow.spacing = 6
+        timerRow.spacing = 4
         timerRow.translatesAutoresizingMaskIntoConstraints = false
 
         let timerCard = nestedGroupCard()
@@ -1156,9 +1178,21 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let appearanceCard = nestedGroupCard()
         appearanceCard.heightAnchor.constraint(equalToConstant: 114).isActive = true
         let appearanceTitle = NSTextField.liquidLabel("Menu Darkness", size: 14, weight: .semibold)
+        appearanceTitle.setContentHuggingPriority(.required, for: .horizontal)
+        appearanceTitle.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         menuTintValueLabel = NSTextField.liquidLabel("0%", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
-        let appearanceHeader = NSStackView(views: [appearanceTitle, NSView(), menuTintValueLabel])
+        menuTintValueLabel.setContentHuggingPriority(.required, for: .horizontal)
+        menuTintValueLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let appearanceSpacer = NSView()
+        appearanceSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        appearanceSpacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let appearanceHeader = NSStackView(views: [appearanceTitle, appearanceSpacer, menuTintValueLabel])
+        appearanceHeader.orientation = .horizontal
         appearanceHeader.alignment = .centerY
+        appearanceHeader.distribution = .fill
         appearanceHeader.spacing = 8
         appearanceHeader.translatesAutoresizingMaskIntoConstraints = false
 
@@ -1494,6 +1528,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
         lockScreenEnabledToggle = createCheck("Enable Lock Screen Sync", action: #selector(togLockScreenSyncEnabled))
         autoIdleSyncToggle = createCheck("Auto Sync Lock Screen Wallpaper", action: #selector(togAutoIdleSync))
+        restoreOnQuitToggle = createCheck("Restore Wallpaper on Quit", action: #selector(togRestoreOnQuit))
         idleSyncButton = createPillButton("Sync Current to Lock Screen", icon: "arrow.triangle.2.circlepath", action: #selector(syncIdleWallpaper))
         restoreWallpaperButton = createPillButton("Restore macOS Wallpaper", icon: "arrow.counterclockwise", action: #selector(restoreDefaultWallpaper))
         idleSyncStatusLabel = NSTextField.liquidLabel("Lock screen ready.", size: 11, weight: .medium, color: .white.withAlphaComponent(0.72))
@@ -1501,7 +1536,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         idleSyncStatusLabel.lineBreakMode = .byWordWrapping
         let lockScreenTitle = createSectionTitleRow(title: "Lock Screen Settings", showsProBadge: false)
 
-        [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, idleSyncButton!, restoreWallpaperButton!, idleSyncStatusLabel!].forEach {
+        [lockScreenTitle, lockScreenEnabledToggle!, autoIdleSyncToggle!, restoreOnQuitToggle!, idleSyncButton!, restoreWallpaperButton!, idleSyncStatusLabel!].forEach {
             lockScreenStack.addArrangedSubview($0)
         }
         idleSyncButton.widthAnchor.constraint(equalTo: lockScreenStack.widthAnchor).isActive = true
@@ -1804,6 +1839,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         lockScreenEnabledToggle?.alphaValue = isLockScreenPro ? 1.0 : 0.6
         autoIdleSyncToggle?.alphaValue = isLockScreenEnabled ? 1.0 : 0.6
         autoIdleSyncToggle?.isEnabled = isLockScreenEnabled
+        restoreOnQuitToggle?.alphaValue = isLockScreenPro ? 1.0 : 0.6
+        restoreOnQuitToggle?.isEnabled = isLockScreenPro
         idleSyncButton?.alphaValue = isLockScreenEnabled ? 1.0 : 0.72
         idleSyncButton?.isEnabled = isLockScreenEnabled && !(app.idleWallpaperSyncInProgress)
         restoreWallpaperButton?.alphaValue = 1.0
@@ -1851,47 +1888,26 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                                     size: CGFloat,
                                     action: Selector,
                                     diameter: CGFloat = 34) -> NSButton {
-        let button = NSButton.liquidSymbol(symbol: icon, pointSize: size, target: self, action: action)
-        button.wantsLayer = true
-        button.layer?.cornerRadius = diameter / 2
-        button.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.08).cgColor
-        button.layer?.borderWidth = 1
-        button.layer?.borderColor = NSColor.white.withAlphaComponent(0.10).cgColor
+        let button = LiquidGlassButton(title: "", icon: nil, cornerRadius: diameter / 2, target: self, action: action)
+        button.image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
+        let config = NSImage.SymbolConfiguration(pointSize: size, weight: .semibold)
+        button.image = button.image?.withSymbolConfiguration(config)
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.widthAnchor.constraint(equalToConstant: diameter).isActive = true
         button.heightAnchor.constraint(equalToConstant: diameter).isActive = true
         return button
     }
 
     private func createPillButton(_ title: String, icon: String, action: Selector) -> NSButton {
-        let button = NSButton(title: title, target: self, action: action)
-        button.image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
-        button.imagePosition = .imageLeading
-        button.imageHugsTitle = true
-        button.isBordered = false
-        button.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        button.contentTintColor = .white.withAlphaComponent(0.9)
-        button.wantsLayer = true
-        button.layer?.cornerRadius = 18
-        button.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.10).cgColor
-        button.layer?.borderWidth = 1
-        button.layer?.borderColor = NSColor.white.withAlphaComponent(0.10).cgColor
+        let button = LiquidGlassButton(title: title, icon: icon, cornerRadius: 18, target: self, action: action)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.heightAnchor.constraint(equalToConstant: 36).isActive = true
         return button
     }
 
     private func createCompactPillButton(_ title: String, action: Selector) -> NSButton {
-        let button = NSButton(title: title, target: self, action: action)
-        button.isBordered = false
-        button.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
-        button.contentTintColor = .white
-        button.focusRingType = .none
-        button.setButtonType(.momentaryPushIn)
-        button.wantsLayer = true
-        button.layer?.cornerRadius = 16
-        button.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.10).cgColor
-        button.layer?.borderWidth = 1
-        button.layer?.borderColor = NSColor.white.withAlphaComponent(0.10).cgColor
+        let button = LiquidGlassButton(title: title, icon: nil, cornerRadius: 16, target: self, action: action)
+        button.font = NSFont.systemFont(ofSize: 10.5, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.heightAnchor.constraint(equalToConstant: 32).isActive = true
         return button
@@ -1901,20 +1917,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let button = createCompactPillButton(title, action: #selector(applyTimerPreset(_:)))
         button.tag = seconds
         button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
         button.contentTintColor = .white.withAlphaComponent(0.95)
-        button.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        button.widthAnchor.constraint(equalToConstant: 34).isActive = true
         return button
     }
 
     private func createTimerInputControl(placeholder: String, action: Selector) -> (container: NSView, field: NSTextField) {
-        let container = NSView()
-        container.wantsLayer = true
-        container.layer?.cornerRadius = 12
-        container.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.10).cgColor
-        container.layer?.borderWidth = 1
-        container.layer?.borderColor = NSColor.white.withAlphaComponent(0.10).cgColor
+        let container = LiquidGlassCardView(cornerRadius: 12, tintAlpha: 0.03)
+        container.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        container.widthAnchor.constraint(equalToConstant: 36).isActive = true
         container.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let field = NSTextField()
@@ -1934,12 +1947,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         field.action = action
         field.maximumNumberOfLines = 1
         field.lineBreakMode = .byClipping
-        container.addSubview(field)
+        container.contentView.addSubview(field)
 
         NSLayoutConstraint.activate([
-            field.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            field.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            field.widthAnchor.constraint(equalTo: container.widthAnchor, constant: -8),
+            field.centerXAnchor.constraint(equalTo: container.contentView.centerXAnchor),
+            field.centerYAnchor.constraint(equalTo: container.contentView.centerYAnchor),
+            field.widthAnchor.constraint(equalTo: container.contentView.widthAnchor, constant: -6),
             field.heightAnchor.constraint(equalToConstant: 18)
         ])
 
@@ -1947,12 +1960,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     }
 
     private func createWideTextInputControl(placeholder: String) -> (container: NSView, field: NSTextField) {
-        let container = NSView()
-        container.wantsLayer = true
-        container.layer?.cornerRadius = 12
-        container.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.10).cgColor
-        container.layer?.borderWidth = 1
-        container.layer?.borderColor = NSColor.white.withAlphaComponent(0.10).cgColor
+        let container = LiquidGlassCardView(cornerRadius: 12, tintAlpha: 0.03)
+        container.configureNeutralGlass(tintAlpha: 0.05, glowOpacity: 0.0, refractionOpacity: 0.10)
         container.translatesAutoresizingMaskIntoConstraints = false
         container.heightAnchor.constraint(equalToConstant: 36).isActive = true
 
@@ -1970,12 +1979,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         field.translatesAutoresizingMaskIntoConstraints = false
         field.maximumNumberOfLines = 1
         field.lineBreakMode = .byClipping
-        container.addSubview(field)
+        container.contentView.addSubview(field)
 
         NSLayoutConstraint.activate([
-            field.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
-            field.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            field.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            field.leadingAnchor.constraint(equalTo: container.contentView.leadingAnchor, constant: 12),
+            field.trailingAnchor.constraint(equalTo: container.contentView.trailingAnchor, constant: -12),
+            field.centerYAnchor.constraint(equalTo: container.contentView.centerYAnchor),
             field.heightAnchor.constraint(equalToConstant: 18)
         ])
 
@@ -2678,6 +2687,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         loginToggle.state = SMAppService.mainApp.status == .enabled ? .on : .off
         lockScreenEnabledToggle.state = app.lockScreenSyncEnabled ? .on : .off
         autoIdleSyncToggle.state = app.autoSyncIdleWallpaper ? .on : .off
+        restoreOnQuitToggle?.state = app.restoreWallpaperOnQuit ? .on : .off
         let isSyncing = app.idleWallpaperSyncInProgress
         idleSyncButton.title = isSyncing ? "Syncing Lock Screen..." : "Sync Current to Lock Screen"
         idleSyncButton.isEnabled = !isSyncing
@@ -3169,6 +3179,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
     @objc func togAutoIdleSync() {
         guard requireProAccess(.lockScreenSync) else { refreshUI(); return }
         appDelegate?.autoSyncIdleWallpaper.toggle(); appDelegate?.saveSettings(); appDelegate?.scheduleIdleWallpaperSyncIfNeeded(); refreshUI()
+    }
+    @objc func togRestoreOnQuit() {
+        guard let app = appDelegate else { return }
+        app.restoreWallpaperOnQuit.toggle()
+        app.saveSettings()
+        refreshUI()
     }
     @objc func menuTintChanged() {
         let value = menuTintSlider.doubleValue

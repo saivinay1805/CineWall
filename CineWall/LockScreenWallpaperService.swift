@@ -99,12 +99,26 @@ public final class LockScreenWallpaperService: ObservableObject {
             try data.write(to: projectJSON, options: .atomic)
         }
 
+        pruneRevisions(keepingHash: hash)
+
         return (
             hash: hash,
             relProjectPath: "\(revisionRelDir)/project.json",
             relAssetsPath: revisionRelDir,
             filename: videoURL.lastPathComponent
         )
+    }
+
+    public func pruneRevisions(keepingHash: String? = nil) {
+        let revisionsDir = exchangeDirectory.appendingPathComponent("revisions", isDirectory: true)
+        guard let entries = try? fileManager.contentsOfDirectory(atPath: revisionsDir.path) else { return }
+        for entry in entries {
+            if let keepingHash, entry == keepingHash {
+                continue
+            }
+            let entryPath = revisionsDir.appendingPathComponent(entry)
+            try? fileManager.removeItem(at: entryPath)
+        }
     }
 
     // MARK: - Publishing to ExtensionKit
@@ -243,6 +257,7 @@ public final class LockScreenWallpaperService: ObservableObject {
                 try? fileManager.removeItem(at: exchangeDirectory.appendingPathComponent(file))
             }
         }
+        pruneRevisions(keepingHash: nil)
 
         // 3. Clear all injections from Index.plist and restore macOS default wallpaper
         try? selection.clearAllInjections()

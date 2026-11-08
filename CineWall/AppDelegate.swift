@@ -160,6 +160,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     var syncedAerialAssetID: String?
     var lockScreenSyncEnabled: Bool = false
     var autoSyncIdleWallpaper: Bool = false
+    var restoreWallpaperOnQuit: Bool = false
     var lastAutoSyncedMediaPath: String?
     var idleSyncWorkItem: DispatchWorkItem?
     var idleWallpaperSyncMode: IdleWallpaperSyncMode = .compatible
@@ -265,6 +266,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {
+        if restoreWallpaperOnQuit {
+            LockScreenWallpaperService.shared.restoreSystemDefault()
+        }
         saveSettings()
     }
 
@@ -344,6 +348,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     // (Standard Helpers - Minimized for brevity as they haven't changed)
 
     func terminateApp() {
+        if restoreWallpaperOnQuit {
+            LockScreenWallpaperService.shared.restoreSystemDefault()
+        }
         saveSettings()
         NSApplication.shared.terminate(self)
     }
@@ -384,6 +391,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         d.set(autoChangeInterval, forKey: "autoChangeInterval")
         d.set(lockScreenSyncEnabled, forKey: "lockScreenSyncEnabled")
         d.set(autoSyncIdleWallpaper, forKey: "autoSyncIdleWallpaper")
+        d.set(restoreWallpaperOnQuit, forKey: "restoreWallpaperOnQuit")
         d.set(idleWallpaperSyncMode.rawValue, forKey: "idleWallpaperSyncMode")
         d.set(menuDarkTintStrength, forKey: "menuDarkTintStrength")
         d.set(ambientTintEnabled, forKey: "ambientTintEnabled")
@@ -412,6 +420,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
         lastAutoSyncedMediaPath = d.string(forKey: "lastAutoSyncedMediaPath")
         lockScreenSyncEnabled = d.bool(forKey: "lockScreenSyncEnabled")
         autoSyncIdleWallpaper = d.bool(forKey: "autoSyncIdleWallpaper")
+        restoreWallpaperOnQuit = d.bool(forKey: "restoreWallpaperOnQuit")
         if let raw = d.string(forKey: "idleWallpaperSyncMode"), let mode = IdleWallpaperSyncMode(rawValue: raw) { idleWallpaperSyncMode = mode }
         menuDarkTintStrength = d.object(forKey: "menuDarkTintStrength") == nil ? 0.0 : d.double(forKey: "menuDarkTintStrength")
         ambientTintEnabled = d.object(forKey: "ambientTintEnabled") == nil ? true : d.bool(forKey: "ambientTintEnabled")
