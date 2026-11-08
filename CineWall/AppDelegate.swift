@@ -216,6 +216,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
 
     @objc func captureMainMenuForTest() {
+        liquidController?.resetToMainMenu()
         if !isPopoverOpen {
             openPopover()
         }
@@ -229,26 +230,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFiel
     }
 
     @objc func openPlayerSubmenuForTest() {
-        if isPopoverOpen {
-            closePopover(force: true)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.openPopover()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+        if !isPopoverOpen {
+            openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.liquidController?.showPlayerDetailTest()
             }
+        } else {
+            liquidController?.showPlayerDetailTest()
         }
     }
 
     @objc func openSettingsSubmenuForTest() {
-        if isPopoverOpen {
-            closePopover(force: true)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.openPopover()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+        if !isPopoverOpen {
+            openPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.liquidController?.showSettingsDetailTest()
             }
+        } else {
+            liquidController?.showSettingsDetailTest()
         }
     }
     

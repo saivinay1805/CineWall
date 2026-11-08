@@ -2291,8 +2291,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         let startTime = CACurrentMediaTime()
         let duration = VorssaintMotion.settlingTime(from: startFrame, to: targetFrame)
         
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         detailCard.frame = startFrame
         detailCard.layoutSubtreeIfNeeded()
+        CATransaction.commit()
         
         let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
             guard let self = self else {
@@ -2303,18 +2306,24 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             if elapsed >= duration {
                 t.invalidate()
                 self.detailAnimationTimer = nil
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
                 self.detailHeaderView.alphaValue = 1.0
                 self.detailBodyHost.alphaValue = 1.0
                 self.detailCard.layoutSubtreeIfNeeded()
+                CATransaction.commit()
                 completion?()
             } else {
                 let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
-                self.detailCard.frame = currentFrame
                 let contentAlpha = CGFloat(max(0.0, min(1.0, (elapsed - 0.06) / 0.22)))
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.detailCard.frame = currentFrame
                 self.detailHeaderView.alphaValue = contentAlpha
                 self.detailBodyHost.alphaValue = contentAlpha
                 self.detailCard.layoutSubtreeIfNeeded()
+                CATransaction.commit()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -2337,13 +2346,19 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             if elapsed >= duration {
                 t.invalidate()
                 self.detailAnimationTimer = nil
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
                 self.detailCard.layoutSubtreeIfNeeded()
+                CATransaction.commit()
                 completion?()
             } else {
                 let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
                 self.detailCard.frame = currentFrame
                 self.detailCard.layoutSubtreeIfNeeded()
+                CATransaction.commit()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -2371,31 +2386,72 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailCard.layer?.removeAllAnimations()
         detailBodyHost.layer?.removeAllAnimations()
         
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        detailCard.frame = detailSourceFrame
-        detailCard.alphaValue = 1
-        detailHeaderView.alphaValue = 0
-        detailBodyHost.alphaValue = 0
-        detailCard.layoutSubtreeIfNeeded()
-        detailBodyHost.layoutSubtreeIfNeeded()
-        CATransaction.commit()
-        
         let targetFrame = detailTargetFrame(for: section)
         
-        if let root = self.view as? LiquidView {
-            root.setGlassOpacity(0.0)
-        }
-        
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.18
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.mainStack.animator().alphaValue = 0
-        }, completionHandler: {
-            self.mainStack.isHidden = true
-        })
+        if section == .player {
+            detailCard.setGlassEffectHidden(false)
+            detailCard.setTintHidden(false)
+            detailCard.setStrokeHidden(false)
+            detailCard.applyUserTintStrength(CGFloat(appDelegate?.menuDarkTintStrength ?? 0.0))
+            
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            detailCard.frame = detailSourceFrame
+            detailCard.alphaValue = 1
+            detailHeaderView.alphaValue = 0
+            detailBodyHost.alphaValue = 0
+            detailCard.layoutSubtreeIfNeeded()
+            detailBodyHost.layoutSubtreeIfNeeded()
+            CATransaction.commit()
+            
+            if let root = self.view as? LiquidView {
+                root.setGlassOpacity(0.0)
+            }
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.16
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.mainStack.animator().alphaValue = 0
+            }, completionHandler: {
+                self.mainStack.isHidden = true
+            })
 
-        animateCardExpansion(from: detailSourceFrame, to: targetFrame, completion: completion)
+            animateCardExpansion(from: detailSourceFrame, to: targetFrame, completion: completion)
+        } else {
+            // For full-menu submenus (.settings, .display, .library, .playlist, .app, .pro):
+            // Keep root window glass & darkness 100% solid, steady, and dark!
+            // Do NOT fade root glass to 0.0! Do NOT animate an expanding duplicate dark card!
+            detailCard.setGlassEffectHidden(true)
+            detailCard.setTintHidden(true)
+            detailCard.setStrokeHidden(true)
+            
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            detailCard.frame = targetFrame
+            detailCard.alphaValue = 1
+            detailHeaderView.alphaValue = 0
+            detailBodyHost.alphaValue = 0
+            detailCard.layoutSubtreeIfNeeded()
+            detailBodyHost.layoutSubtreeIfNeeded()
+            CATransaction.commit()
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.16
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.mainStack.animator().alphaValue = 0
+            }, completionHandler: {
+                self.mainStack.isHidden = true
+            })
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.20
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.detailHeaderView.animator().alphaValue = 1.0
+                self.detailBodyHost.animator().alphaValue = 1.0
+            }, completionHandler: {
+                completion?()
+            })
+        }
     }
 
     @objc private func hideDetailAction() {
@@ -2407,23 +2463,45 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
         let target = detailSourceFrame == .zero ? detailTargetFrame(for: activeDetail) : detailSourceFrame
         
-        if let root = self.view as? LiquidView {
-            root.setGlassOpacity(1.0)
-        }
-        
-        self.setDetailContentVisible(false)
-        self.mainStack.alphaValue = 0
-        self.mainStack.isHidden = false
+        if activeDetail == .player {
+            if let root = self.view as? LiquidView {
+                root.setGlassOpacity(1.0)
+            }
+            
+            self.setDetailContentVisible(false)
+            self.mainStack.alphaValue = 0
+            self.mainStack.isHidden = false
 
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.24
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.mainStack.animator().alphaValue = 1
-        })
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.20
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.mainStack.animator().alphaValue = 1
+            })
 
-        let startFrame = self.detailCard.frame
-        animateCardCollapse(from: startFrame, to: target) { [weak self] in
-            self?.finishHideDetail()
+            let startFrame = self.detailCard.frame
+            animateCardCollapse(from: startFrame, to: target) { [weak self] in
+                self?.finishHideDetail()
+            }
+        } else {
+            // For full-menu submenus:
+            // Background is already 100% solid and dark. Crossfade back to mainStack smoothly!
+            self.mainStack.alphaValue = 0
+            self.mainStack.isHidden = false
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.16
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.detailHeaderView.animator().alphaValue = 0
+                self.detailBodyHost.animator().alphaValue = 0
+            })
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.20
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.mainStack.animator().alphaValue = 1.0
+            }, completionHandler: { [weak self] in
+                self?.finishHideDetail()
+            })
         }
     }
 
@@ -2446,12 +2524,13 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if !detailOverlay.isHidden {
             detailOverlay.isHidden = true
             detailCard.alphaValue = 1
+            let wasPlayer = (activeDetail == .player)
             activeDetail = nil
             detailSourceFrame = .zero
             setDetailContentVisible(true)
             mainStack.isHidden = false
             mainStack.alphaValue = 1
-            if let root = view as? LiquidView { root.setGlassOpacity(1.0) }
+            if wasPlayer, let root = view as? LiquidView { root.setGlassOpacity(1.0) }
             if let current = currentTrackThumbnail {
                 thumbnailView.thumbnailImage = current
             }

@@ -74,10 +74,13 @@ class LiquidView: NSView {
 
     override func layout() {
         super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.frame = bounds
         refractionLayer.frame = bounds.insetBy(dx: -26, dy: -26)
         strokeLayer.frame = bounds.insetBy(dx: 0.5, dy: 0.5)
         strokeLayer.cornerRadius = 30
+        CATransaction.commit()
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { .copy }
@@ -110,7 +113,10 @@ class LiquidView: NSView {
     func applyUserTintStrength(_ strength: CGFloat) {
         userTintStrength = max(0, min(1, strength))
         let alpha = min(0.65, baseTintAlpha + (userTintStrength * 0.30))
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(alpha).cgColor
+        CATransaction.commit()
     }
 }
 
@@ -185,17 +191,23 @@ class LiquidGlassCardView: NSView {
 
     override func layout() {
         super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.frame = bounds
         glowLayer.frame = bounds
         refractionLayer.frame = bounds.insetBy(dx: -18, dy: -18)
         strokeLayer.frame = bounds.insetBy(dx: 0.5, dy: 0.5)
         strokeLayer.cornerRadius = layer?.cornerRadius ?? 24
+        CATransaction.commit()
     }
 
     func configureGlassAccents(glowOpacity: Float, refractionOpacity: Float, tintOpacity: Float = 1.0) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         glowLayer.opacity = glowOpacity
         refractionLayer.opacity = refractionOpacity
         tintLayer.opacity = tintOpacity
+        CATransaction.commit()
     }
 
     func configureNeutralGlass(tintAlpha: CGFloat = 0.06,
@@ -203,14 +215,19 @@ class LiquidGlassCardView: NSView {
                                refractionOpacity: Float = 0.12) {
         baseTintAlpha = tintAlpha
         let effectiveAlpha = min(0.55, baseTintAlpha + (userTintStrength * 0.22))
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(effectiveAlpha).cgColor
         glowLayer.opacity = glowOpacity
         refractionLayer.opacity = refractionOpacity
+        CATransaction.commit()
     }
 
     func configureAsPureGlass() {
         baseTintAlpha = 0.0
         let tintAlpha = min(0.12, userTintStrength * 0.08)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(tintAlpha).cgColor
         glowLayer.opacity = 0
         refractionLayer.opacity = 0.05
@@ -218,12 +235,40 @@ class LiquidGlassCardView: NSView {
         strokeLayer.shadowColor = NSColor.black.withAlphaComponent(0.08).cgColor
         strokeLayer.shadowOpacity = 0.22
         strokeLayer.shadowRadius = 7
+        CATransaction.commit()
     }
 
     func applyUserTintStrength(_ strength: CGFloat) {
         userTintStrength = max(0, min(1, strength))
         let effectiveAlpha = min(0.55, baseTintAlpha + (userTintStrength * 0.22))
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(effectiveAlpha).cgColor
+        CATransaction.commit()
+    }
+
+    func setGlassEffectHidden(_ hidden: Bool) {
+        for subview in subviews {
+            if subview is NSVisualEffectView || String(describing: type(of: subview)) == "NSGlassEffectView" {
+                subview.isHidden = hidden
+            }
+        }
+    }
+
+    func setTintHidden(_ hidden: Bool) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        tintLayer.isHidden = hidden
+        CATransaction.commit()
+    }
+
+    func setStrokeHidden(_ hidden: Bool) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        strokeLayer.isHidden = hidden
+        refractionLayer.isHidden = hidden
+        glowLayer.isHidden = hidden
+        CATransaction.commit()
     }
 }
 
