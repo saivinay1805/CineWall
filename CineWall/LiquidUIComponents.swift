@@ -96,18 +96,45 @@ class LiquidView: NSView {
     }
 
     func setGlassOpacity(_ opacity: Float) {
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.36
+        if opacity > 0 {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            self.strokeLayer.isHidden = false
+            self.tintLayer.isHidden = false
+            self.refractionLayer.isHidden = false
+            CATransaction.commit()
+            for subview in self.subviews {
+                if subview is NSVisualEffectView || String(describing: type(of: subview)).contains("Glass") {
+                    subview.isHidden = false
+                }
+            }
+        }
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.24
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             self.strokeLayer.opacity = opacity
             self.tintLayer.opacity = opacity
             self.refractionLayer.opacity = opacity * 0.5
             for subview in self.subviews {
-                if subview is NSVisualEffectView || String(describing: type(of: subview)) == "NSGlassEffectView" {
+                if subview is NSVisualEffectView || String(describing: type(of: subview)).contains("Glass") {
                     subview.animator().alphaValue = CGFloat(opacity)
                 }
             }
-        }
+        }, completionHandler: {
+            if opacity == 0 {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.strokeLayer.isHidden = true
+                self.tintLayer.isHidden = true
+                self.refractionLayer.isHidden = true
+                CATransaction.commit()
+                for subview in self.subviews {
+                    if subview is NSVisualEffectView || String(describing: type(of: subview)).contains("Glass") {
+                        subview.isHidden = true
+                    }
+                }
+            }
+        })
     }
 
     func applyUserTintStrength(_ strength: CGFloat) {

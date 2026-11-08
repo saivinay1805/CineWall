@@ -2196,6 +2196,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         log += "detailBodyHost frame: \(detailBodyHost.frame), isHidden: \(detailBodyHost.isHidden), alpha: \(detailBodyHost.alphaValue)\n"
         log += "playerDetailView frame: \(playerDetailView.frame), isHidden: \(playerDetailView.isHidden), alpha: \(playerDetailView.alphaValue)\n"
         
+        for (idx, sub) in view.subviews.enumerated() {
+            log += "  rootSub[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
+        }
+        
         for (idx, sub) in playerDetailView.subviews.enumerated() {
             log += "  playerSub[\(idx)] (\(type(of: sub))) frame: \(sub.frame), isHidden: \(sub.isHidden), alpha: \(sub.alphaValue)\n"
             if let stack = sub as? NSStackView {
@@ -2398,7 +2402,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         
         let targetFrame = detailTargetFrame(for: section)
         
-        // Persistent Menu Darkness: root window glass & darkness remain solid at all times
+        // Hide the main menu window background for all submenus so only the active submenu card is visible
+        if let root = self.view as? LiquidView {
+            root.setGlassOpacity(0.0)
+        }
+        detailCard.applyUserTintStrength(CGFloat(appDelegate?.menuDarkTintStrength ?? 0.0))
         
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.18
@@ -2419,6 +2427,10 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         guard let activeDetail, !detailOverlay.isHidden else { return }
 
         let target = detailSourceFrame == .zero ? detailTargetFrame(for: activeDetail) : detailSourceFrame
+        
+        if let root = self.view as? LiquidView {
+            root.setGlassOpacity(1.0)
+        }
         
         self.setDetailContentVisible(false)
         self.mainStack.alphaValue = 0
@@ -2460,6 +2472,7 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             setDetailContentVisible(true)
             mainStack.isHidden = false
             mainStack.alphaValue = 1
+            if let root = view as? LiquidView { root.setGlassOpacity(1.0) }
             if let current = currentTrackThumbnail {
                 thumbnailView.thumbnailImage = current
             }
