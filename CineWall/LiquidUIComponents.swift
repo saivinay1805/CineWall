@@ -273,6 +273,14 @@ class LiquidGlassCardView: NSView {
         tintLayer.backgroundColor = NSColor.black.withAlphaComponent(effectiveAlpha).cgColor
         CATransaction.commit()
     }
+
+    func updateCornerRadius(_ radius: CGFloat) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.cornerRadius = radius
+        strokeLayer.cornerRadius = radius
+        CATransaction.commit()
+    }
 }
 
 final class DismissibleDetailCardView: LiquidGlassCardView {

@@ -50,8 +50,24 @@ public enum VorssaintMotion {
     public static let cardExpandSpring = Spring(duration: 0.38, bounce: 0.22)
     public static let cardCollapseSpring = Spring(duration: 0.26, bounce: 0)
 
+    public static let codenotchUnfold = Spring(duration: 0.44, bounce: 0.16)
+    public static let codenotchFold = Spring(duration: 0.34, bounce: 0.08)
+
     public static let overshootLimit: CGFloat = 12
     public static let settledDistance: CGFloat = 0.5
+
+    public static func interpolateRectUnified(from start: NSRect, to end: NSRect, progress: Double) -> NSRect {
+        let p = CGFloat(progress)
+        let x = start.origin.x + (end.origin.x - start.origin.x) * p
+        let y = start.origin.y + (end.origin.y - start.origin.y) * p
+        let w = start.size.width + (end.size.width - start.size.width) * p
+        let h = start.size.height + (end.size.height - start.size.height) * p
+        return NSRect(x: x, y: y, width: max(10, w), height: max(10, h))
+    }
+
+    public static func settlingTime(spring: Spring) -> TimeInterval {
+        return spring.duration * 1.15
+    }
 
     public static func spring(from: CGFloat, to: CGFloat, isWidth: Bool) -> Spring {
         let base = to > from ? (isWidth ? growingWidth : growingHeight) : (isWidth ? shrinkingWidth : shrinkingHeight)
@@ -66,16 +82,12 @@ public enum VorssaintMotion {
     }
 
     public static func interpolateRect(from start: NSRect, to end: NSRect, time: TimeInterval) -> NSRect {
-        let x = interpolate(from: start.origin.x, to: end.origin.x, isWidth: true, time: time)
-        let y = interpolate(from: start.origin.y, to: end.origin.y, isWidth: false, time: time)
-        let w = interpolate(from: start.size.width, to: end.size.width, isWidth: true, time: time)
-        let h = interpolate(from: start.size.height, to: end.size.height, isWidth: false, time: time)
-        return NSRect(x: x, y: y, width: max(0, w), height: max(0, h))
+        let p = codenotchUnfold.progress(at: time)
+        return interpolateRectUnified(from: start, to: end, progress: p)
     }
 
     public static func settlingTime(from start: NSRect, to end: NSRect) -> TimeInterval {
-        let maxDuration = max(growingWidth.duration, growingHeight.duration)
-        return maxDuration * 1.15
+        return codenotchUnfold.duration * 1.15
     }
 }
 
@@ -2292,12 +2304,17 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailAnimationTimer?.invalidate()
         detailAnimationTimer = nil
         
+        let spring = VorssaintMotion.codenotchUnfold
         let startTime = CACurrentMediaTime()
-        let duration = VorssaintMotion.settlingTime(from: startFrame, to: targetFrame)
+        let duration = VorssaintMotion.settlingTime(spring: spring)
         
+        let initialRadius: CGFloat = (startFrame.height < 100) ? 26.0 : 24.0
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         detailCard.frame = startFrame
+        detailCard.updateCornerRadius(initialRadius)
+        detailHeaderView.alphaValue = 0.0
+        detailBodyHost.alphaValue = 0.0
         detailCard.layoutSubtreeIfNeeded()
         CATransaction.commit()
         
@@ -2313,19 +2330,39 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
+                self.detailCard.updateCornerRadius(30.0)
                 self.detailHeaderView.alphaValue = 1.0
                 self.detailBodyHost.alphaValue = 1.0
+                self.mainStack.alphaValue = 0.0
+                self.mainStack.isHidden = true
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
                 completion?()
             } else {
-                let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
-                let contentAlpha = CGFloat(max(0.0, min(1.0, (elapsed - 0.06) / 0.22)))
+                let p = spring.progress(at: elapsed)
+                let currentFrame = VorssaintMotion.interpolateRectUnified(from: startFrame, to: targetFrame, progress: p)
+                
+                // Corner radius interpolates smoothly from source card to target submenu
+                let startRadius: CGFloat = (startFrame.height < 100) ? 26.0 : 24.0
+                let targetRadius: CGFloat = 30.0
+                let currentRadius = startRadius + (targetRadius - startRadius) * CGFloat(max(0.0, min(1.0, p)))
+                
+                // Main menu dissolves smoothly in lockstep as the card expands
+                let mainAlpha = CGFloat(max(0.0, 1.0 - p / 0.45))
+                
+                // Header (back button and title) unfurls once the card is underway (p > 0.22)
+                let headerAlpha = CGFloat(max(0.0, min(1.0, (p - 0.22) / 0.38)))
+                
+                // Submenu body controls unfurl as card nears full size (p > 0.38)
+                let bodyAlpha = CGFloat(max(0.0, min(1.0, (p - 0.38) / 0.45)))
+                
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = currentFrame
-                self.detailHeaderView.alphaValue = contentAlpha
-                self.detailBodyHost.alphaValue = contentAlpha
+                self.detailCard.updateCornerRadius(currentRadius)
+                self.detailHeaderView.alphaValue = headerAlpha
+                self.detailBodyHost.alphaValue = bodyAlpha
+                self.mainStack.alphaValue = mainAlpha
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
             }
@@ -2338,8 +2375,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailAnimationTimer?.invalidate()
         detailAnimationTimer = nil
         
+        let spring = VorssaintMotion.codenotchFold
         let startTime = CACurrentMediaTime()
-        let duration = max(VorssaintMotion.shrinkingWidth.duration, VorssaintMotion.shrinkingHeight.duration) * 1.05
+        let duration = VorssaintMotion.settlingTime(spring: spring)
+        
+        self.mainStack.isHidden = false
         
         let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] t in
             guard let self = self else {
@@ -2353,14 +2393,36 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = targetFrame
+                let finalRadius: CGFloat = (targetFrame.height < 100) ? 26.0 : 24.0
+                self.detailCard.updateCornerRadius(finalRadius)
+                self.detailHeaderView.alphaValue = 0.0
+                self.detailBodyHost.alphaValue = 0.0
+                self.mainStack.alphaValue = 1.0
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
                 completion?()
             } else {
-                let currentFrame = VorssaintMotion.interpolateRect(from: startFrame, to: targetFrame, time: elapsed)
+                let p = spring.progress(at: elapsed)
+                let currentFrame = VorssaintMotion.interpolateRectUnified(from: startFrame, to: targetFrame, progress: p)
+                
+                // Corner radius contracts back to source card radius
+                let startRadius: CGFloat = 30.0
+                let targetRadius: CGFloat = (targetFrame.height < 100) ? 26.0 : 24.0
+                let currentRadius = startRadius + (targetRadius - startRadius) * CGFloat(max(0.0, min(1.0, p)))
+                
+                // Controls dissolve quickly in the first 28% of collapse
+                let contentAlpha = CGFloat(max(0.0, 1.0 - p / 0.28))
+                
+                // Main menu emerges smoothly in lockstep to catch the contracting card
+                let mainAlpha = CGFloat(max(0.0, min(1.0, (p - 0.18) / 0.65)))
+                
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 self.detailCard.frame = currentFrame
+                self.detailCard.updateCornerRadius(currentRadius)
+                self.detailHeaderView.alphaValue = contentAlpha
+                self.detailBodyHost.alphaValue = contentAlpha
+                self.mainStack.alphaValue = mainAlpha
                 self.detailCard.layoutSubtreeIfNeeded()
                 CATransaction.commit()
             }
@@ -2390,10 +2452,12 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         detailCard.layer?.removeAllAnimations()
         detailBodyHost.layer?.removeAllAnimations()
         
+        let initialRadius: CGFloat = (detailSourceFrame.height < 100) ? 26.0 : 24.0
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         detailCard.frame = detailSourceFrame
         detailCard.alphaValue = 1
+        detailCard.updateCornerRadius(initialRadius)
         detailHeaderView.alphaValue = 0
         detailBodyHost.alphaValue = 0
         detailCard.layoutSubtreeIfNeeded()
@@ -2407,14 +2471,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             root.setGlassOpacity(0.0)
         }
         detailCard.applyUserTintStrength(CGFloat(appDelegate?.menuDarkTintStrength ?? 0.0))
-        
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.18
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.mainStack.animator().alphaValue = 0
-        }, completionHandler: {
-            self.mainStack.isHidden = true
-        })
 
         animateCardExpansion(from: detailSourceFrame, to: targetFrame, completion: completion)
     }
@@ -2431,16 +2487,6 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         if let root = self.view as? LiquidView {
             root.setGlassOpacity(1.0)
         }
-        
-        self.setDetailContentVisible(false)
-        self.mainStack.alphaValue = 0
-        self.mainStack.isHidden = false
-
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.24
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.mainStack.animator().alphaValue = 1
-        })
 
         let startFrame = self.detailCard.frame
         animateCardCollapse(from: startFrame, to: target) { [weak self] in
@@ -2455,6 +2501,11 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         self.detailCard.alphaValue = 1
         self.activeDetail = nil
         self.detailSourceFrame = .zero
+        self.mainStack.isHidden = false
+        self.mainStack.alphaValue = 1.0
+        if let root = self.view as? LiquidView {
+            root.setGlassOpacity(1.0)
+        }
         self.setDetailContentVisible(true)
         if let current = currentTrackThumbnail {
             self.thumbnailView.thumbnailImage = current
