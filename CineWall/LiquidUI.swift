@@ -357,8 +357,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         iconView.contentTintColor = .white
         iconView.imageScaling = .scaleProportionallyUpOrDown
         iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        iconView.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        iconView.widthAnchor.constraint(equalToConstant: 38).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 22).isActive = true
 
         let logo = NSTextField.liquidLabel("CineWall", size: 14.5, weight: .bold)
         logo.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -648,24 +648,19 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
         toggleButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
         toggleButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
-        let titleRow = createSectionTitleRow(title: "Playlists & Library", showsProBadge: false)
+        let titleLabel = NSTextField.liquidLabel("Playlists & Library", size: 14, weight: .semibold, color: .white)
+        titleLabel.alignment = .center
+
         let sLabel = NSTextField.liquidLabel("Off • Favorites", size: 10.5, weight: .regular, color: .white.withAlphaComponent(0.65))
+        sLabel.alignment = .center
         sLabel.lineBreakMode = .byTruncatingTail
         sLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let textStack = NSStackView(views: [titleRow, sLabel])
+        let textStack = NSStackView(views: [titleLabel, sLabel])
         textStack.orientation = .vertical
-        textStack.alignment = .leading
+        textStack.alignment = .centerX
         textStack.spacing = 2
         textStack.translatesAutoresizingMaskIntoConstraints = false
-
-        let folderConfig = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        let folderImg = NSImage(systemSymbolName: "folder.fill", accessibilityDescription: nil)?.withSymbolConfiguration(folderConfig)
-        let folderIcon = NSImageView(image: folderImg ?? NSImage())
-        folderIcon.contentTintColor = .white.withAlphaComponent(0.85)
-        folderIcon.translatesAutoresizingMaskIntoConstraints = false
-        folderIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        folderIcon.heightAnchor.constraint(equalToConstant: 20).isActive = true
 
         let overlayBtn = NSButton(title: "", target: self, action: #selector(showPlaylistLibraryDetail(_:)))
         overlayBtn.isBordered = false
@@ -675,23 +670,20 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
 
         card.contentView.addSubview(toggleButton)
         card.contentView.addSubview(textStack)
-        card.contentView.addSubview(folderIcon)
         card.contentView.addSubview(overlayBtn, positioned: .below, relativeTo: toggleButton)
 
         NSLayoutConstraint.activate([
             toggleButton.leadingAnchor.constraint(equalTo: card.contentView.leadingAnchor, constant: 14),
             toggleButton.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
 
-            folderIcon.trailingAnchor.constraint(equalTo: card.contentView.trailingAnchor, constant: -16),
-            folderIcon.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
-
-            textStack.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 12),
-            textStack.trailingAnchor.constraint(lessThanOrEqualTo: folderIcon.leadingAnchor, constant: -8),
+            textStack.centerXAnchor.constraint(equalTo: card.contentView.centerXAnchor),
             textStack.centerYAnchor.constraint(equalTo: card.contentView.centerYAnchor),
+            textStack.leadingAnchor.constraint(greaterThanOrEqualTo: toggleButton.trailingAnchor, constant: 8),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: card.contentView.trailingAnchor, constant: -14),
 
             overlayBtn.topAnchor.constraint(equalTo: card.contentView.topAnchor),
             overlayBtn.bottomAnchor.constraint(equalTo: card.contentView.bottomAnchor),
-            overlayBtn.leadingAnchor.constraint(equalTo: textStack.leadingAnchor),
+            overlayBtn.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor),
             overlayBtn.trailingAnchor.constraint(equalTo: card.contentView.trailingAnchor)
         ])
 
