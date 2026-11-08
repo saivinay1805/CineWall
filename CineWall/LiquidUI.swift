@@ -2775,8 +2775,8 @@ final class LiquidMenuController: NSViewController, NSTableViewDataSource, NSTab
             glassBtn.setActive(active)
             return
         }
-        button.layer?.backgroundColor = (active ? NSColor.systemBlue.withAlphaComponent(0.28) : NSColor.black.withAlphaComponent(0.08)).cgColor
-        button.layer?.borderColor = (active ? NSColor.white.withAlphaComponent(0.18) : NSColor.white.withAlphaComponent(0.10)).cgColor
+        button.layer?.backgroundColor = (active ? NSColor.systemBlue.withAlphaComponent(0.28) : NSColor.white.withAlphaComponent(0.08)).cgColor
+        button.layer?.borderColor = (active ? NSColor.white.withAlphaComponent(0.24) : NSColor.white.withAlphaComponent(0.14)).cgColor
         button.contentTintColor = .white
     }
 

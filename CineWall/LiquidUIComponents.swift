@@ -350,7 +350,6 @@ class LiquidGlassButton: NSButton {
     }
 
     private let backgroundGlassView = NSView()
-    private let visualEffect = NSVisualEffectView()
     private let tintLayer = CALayer()
     private let specularLayer = CAGradientLayer()
     private let hoverLayer = CALayer()
@@ -448,23 +447,21 @@ class LiquidGlassButton: NSButton {
 
         // Background Glass View
         backgroundGlassView.wantsLayer = true
+        backgroundGlassView.layer?.masksToBounds = true
         backgroundGlassView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(backgroundGlassView, positioned: .below, relativeTo: nil)
 
-        visualEffect.material = .hudWindow
-        visualEffect.blendingMode = .withinWindow
-        visualEffect.state = .active
-        visualEffect.translatesAutoresizingMaskIntoConstraints = false
-        backgroundGlassView.addSubview(visualEffect)
+        // Install genuine liquid glass effect (same crystal-clear refractive glass as LiquidGlassCardView)
+        installGlassEffect(into: backgroundGlassView, cornerRadius: cornerRadiusValue, style: 1, blendWithinWindow: true)
 
-        // Subtle dark glass tint
-        tintLayer.backgroundColor = NSColor.black.withAlphaComponent(0.08).cgColor
+        // Liquid glass white sheen tint (PURE CLEAR GLASS - ZERO BLACK TINT)
+        tintLayer.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
         backgroundGlassView.layer?.addSublayer(tintLayer)
 
         // Top specular reflection (liquid glass sheen)
         specularLayer.colors = [
-            NSColor.white.withAlphaComponent(0.14).cgColor,
-            NSColor.white.withAlphaComponent(0.02).cgColor,
+            NSColor.white.withAlphaComponent(0.18).cgColor,
+            NSColor.white.withAlphaComponent(0.03).cgColor,
             NSColor.clear.cgColor
         ]
         specularLayer.locations = [0.0, 0.40, 1.0]
@@ -473,16 +470,16 @@ class LiquidGlassButton: NSButton {
         backgroundGlassView.layer?.addSublayer(specularLayer)
 
         // Hover highlight
-        hoverLayer.backgroundColor = NSColor.white.withAlphaComponent(0.12).cgColor
+        hoverLayer.backgroundColor = NSColor.white.withAlphaComponent(0.14).cgColor
         hoverLayer.opacity = 0.0
         backgroundGlassView.layer?.addSublayer(hoverLayer)
 
-        // Specular stroke / border
-        strokeLayer.borderWidth = 1
-        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
-        strokeLayer.shadowColor = NSColor.black.withAlphaComponent(0.25).cgColor
-        strokeLayer.shadowOpacity = 0.35
-        strokeLayer.shadowRadius = 4
+        // Specular stroke / border (crystal white refraction border, ZERO black shadow)
+        strokeLayer.borderWidth = 1.0
+        strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.24).cgColor
+        strokeLayer.shadowColor = NSColor.clear.cgColor
+        strokeLayer.shadowOpacity = 0.0
+        strokeLayer.shadowRadius = 0
         strokeLayer.shadowOffset = .zero
         backgroundGlassView.layer?.addSublayer(strokeLayer)
 
@@ -529,11 +526,6 @@ class LiquidGlassButton: NSButton {
             backgroundGlassView.leadingAnchor.constraint(equalTo: leadingAnchor),
             backgroundGlassView.trailingAnchor.constraint(equalTo: trailingAnchor),
 
-            visualEffect.topAnchor.constraint(equalTo: backgroundGlassView.topAnchor),
-            visualEffect.bottomAnchor.constraint(equalTo: backgroundGlassView.bottomAnchor),
-            visualEffect.leadingAnchor.constraint(equalTo: backgroundGlassView.leadingAnchor),
-            visualEffect.trailingAnchor.constraint(equalTo: backgroundGlassView.trailingAnchor),
-
             contentStack.centerXAnchor.constraint(equalTo: centerXAnchor),
             contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
             contentStack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 2),
@@ -556,8 +548,8 @@ class LiquidGlassButton: NSButton {
             tintLayer.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.35).cgColor
             strokeLayer.borderColor = NSColor.systemBlue.withAlphaComponent(0.60).cgColor
         } else {
-            tintLayer.backgroundColor = NSColor.black.withAlphaComponent(0.08).cgColor
-            strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.20).cgColor
+            tintLayer.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
+            strokeLayer.borderColor = NSColor.white.withAlphaComponent(0.24).cgColor
         }
         CATransaction.commit()
     }
@@ -580,12 +572,16 @@ class LiquidGlassButton: NSButton {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         backgroundGlassView.layer?.cornerRadius = cornerRadiusValue
-        visualEffect.layer?.cornerRadius = cornerRadiusValue
+        for sub in backgroundGlassView.subviews {
+            sub.setValue(cornerRadiusValue, forKey: "cornerRadius")
+            sub.layer?.cornerRadius = cornerRadiusValue
+            sub.layer?.masksToBounds = true
+        }
         strokeLayer.cornerRadius = cornerRadiusValue
         specularLayer.cornerRadius = cornerRadiusValue
         hoverLayer.cornerRadius = cornerRadiusValue
         tintLayer.cornerRadius = cornerRadiusValue
-        // For circular icon buttons, disable directional specular gradient for pure circular lens clarity
+        // For circular icon buttons, keep specular subtle or clear
         let isCircle = bounds.width > 0 && abs(bounds.width - bounds.height) < 4
         specularLayer.opacity = isCircle ? 0.0 : 1.0
         CATransaction.commit()
@@ -595,6 +591,9 @@ class LiquidGlassButton: NSButton {
         super.layout()
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        for sub in backgroundGlassView.subviews {
+            sub.frame = backgroundGlassView.bounds
+        }
         tintLayer.frame = backgroundGlassView.bounds
         specularLayer.frame = backgroundGlassView.bounds
         hoverLayer.frame = backgroundGlassView.bounds
@@ -813,7 +812,7 @@ func installGlassEffect(into host: NSView, cornerRadius: CGFloat, style: Int, bl
 
     let effect = NSVisualEffectView(frame: host.bounds)
     effect.autoresizingMask = [.width, .height]
-    effect.material = blendWithinWindow ? .hudWindow : .popover
+    effect.material = blendWithinWindow ? .popover : .popover
     effect.blendingMode = blendWithinWindow ? .withinWindow : .behindWindow
     effect.state = .active
     effect.appearance = NSAppearance(named: .vibrantDark)
