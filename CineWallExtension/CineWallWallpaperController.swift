@@ -133,13 +133,22 @@ public final class CineWallWallpaperController {
                   surface.scene == scene, self.surfaces.values.contains(where: { $0 === surface }),
                   !(readyError is CancellationError) || error != nil
             else { return }
-            CineWallWallpaperRuntime.log("Surface on display \(scene.displayID) acknowledged readiness for revision=\(configuration.revision)")
+            let ackDisplayID = surface.displayID ?? scene.displayID
+            CineWallWallpaperRuntime.log("Surface on display \(ackDisplayID) acknowledged readiness for revision=\(configuration.revision)")
             Self.record(
                 LockScreenReadiness(
-                    revision: configuration.revision, displayID: scene.displayID,
+                    revision: configuration.revision, displayID: ackDisplayID,
                     error: (error ?? readyError)?.localizedDescription, held: surface.heldNotice
                 )
             )
+            if ackDisplayID != scene.displayID {
+                Self.record(
+                    LockScreenReadiness(
+                        revision: configuration.revision, displayID: scene.displayID,
+                        error: (error ?? readyError)?.localizedDescription, held: surface.heldNotice
+                    )
+                )
+            }
         }
     }
 

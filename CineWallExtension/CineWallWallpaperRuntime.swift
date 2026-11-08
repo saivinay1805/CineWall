@@ -71,7 +71,10 @@ public enum CineWallWallpaperRuntime {
         guard cls.responds(to: sel) else {
             throw failure("CAContext does not respond to remoteContextWithOptions:")
         }
-        let options: [String: Any] = [:]
+        var options: [String: Any] = [:]
+        if let displayID {
+            options["displayId"] = displayID
+        }
         guard let ctx = cls.perform(sel, with: options)?.takeUnretainedValue() as? CAContext else {
             throw failure("Failed to create remote CAContext.")
         }

@@ -85,6 +85,15 @@ public final class LockScreenWallpaperSelection {
         self.journalURL = journalURL
         self.reload = reload
         self.persistJournal = persistJournal
+        loadJournal()
+    }
+
+    private func loadJournal() {
+        guard FileManager.default.fileExists(atPath: journalURL.path),
+              let data = try? Data(contentsOf: journalURL),
+              let decoded = try? PropertyListDecoder().decode([Entry].self, from: data) else { return }
+        entries = decoded
+        hasPersistedJournal = !decoded.isEmpty
     }
 
     public func recover() throws {

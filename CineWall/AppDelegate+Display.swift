@@ -44,6 +44,7 @@ extension AppDelegate {
         }
         updateScalingMode()
         updatePlaybackState()
+        scheduleIdleWallpaperSyncIfNeeded()
     }
 
     @objc func bringToCurrentDesktop() {
